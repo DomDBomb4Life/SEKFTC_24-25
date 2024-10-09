@@ -23,27 +23,13 @@ public class DriveV2 extends LinearOpMode {
     public void runOpMode() {
         // Create the robot classes
         DriveTrain mecanumWheels = new DriveTrain(this);
-        launcher  = new PlaneLauncher(this);
-        claw =  new Claw(this);
-
-        // Initialize hardware maps
-        arm = new ArmPipeline(this);
+ 
 
         waitForStart();
 
         while (opModeIsActive()) {
             // Put run blocks here that get looped
             mecanumWheels.drive(this);
-
-            // Open and close the claw
-            claw.OpenClose();
-
-            // Run the airplane launcher
-            launcher.Launch(this);
-
-            // Run the arm code
-            arm.moveLift();
-
             // Update telemetry
             telemetry.update();
         }
