@@ -1,4 +1,5 @@
-package org.firstinspires.ftc.teamcode.robot;
+package org.firstinspires.ftc.teamcode.subsystems;
+
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -83,7 +84,7 @@ public class ViperLift {
         // Average the positions of both motors
         return (leftLiftMotor.getCurrentPosition() + rightLiftMotor.getCurrentPosition()) / 2;
     }
-
+//TODO
     // Check if lift is at target position
     public boolean isAtTarget() {
         return !leftLiftMotor.isBusy() && !rightLiftMotor.isBusy();

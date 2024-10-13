@@ -1,6 +1,6 @@
 // File: Wrist.java
 // Package declaration
-package org.firstinspires.ftc.teamcode.robot;
+package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -58,9 +58,8 @@ public class Wrist {
         double servoRangeDegrees = 180.0; // Adjust if your servo has a different range
         return wristServo.getPosition() * servoRangeDegrees;
     }
-
-    // Update method (if needed for future enhancements)
-    public void update() {
-        // Implement any periodic updates if necessary
+    public boolean isAtTarget() {
+        // Assuming the wrist servo moves instantly; otherwise, implement checking
+        return Math.abs(wristServo.getPosition() - targetPosition) < POSITION_THRESHOLD;
     }
 }
