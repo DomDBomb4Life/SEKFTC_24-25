@@ -34,8 +34,8 @@ public class Arm {
     }
 
     private void configureMotor(DcMotor motor) {
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
@@ -61,6 +61,12 @@ public class Arm {
 
         // Apply power (adjust as necessary)
         armMotor.setPower(0.5); // Use a moderate power for smooth movement
+    }
+
+    // Manual control method
+    public void setManualPower(double power) {
+        armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        armMotor.setPower(power);
     }
 
     // Convert angle to encoder counts

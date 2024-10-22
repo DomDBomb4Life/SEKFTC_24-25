@@ -35,8 +35,8 @@ public class ViperLift {
     }
 
     private void configureMotor(DcMotor motor) {
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
@@ -64,6 +64,14 @@ public class ViperLift {
         // Apply power (adjust as necessary)
         leftLiftMotor.setPower(1.0);
         rightLiftMotor.setPower(1.0);
+    }
+
+    // Manual control method
+    public void setManualPower(double power) {
+        leftLiftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightLiftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftLiftMotor.setPower(power);
+        rightLiftMotor.setPower(power);
     }
 
     // Stop the lift

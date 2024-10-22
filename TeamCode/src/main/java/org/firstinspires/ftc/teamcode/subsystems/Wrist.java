@@ -34,6 +34,11 @@ public class Wrist {
         wristServo.setPosition(targetPosition);
     }
 
+    // Manual control method
+    public void setManualPosition(double position) {
+        setPosition(position);
+    }
+
     // Set wrist angle (in degrees)
     public void setAngle(double angleDegrees) {
         // Convert degrees to servo position
