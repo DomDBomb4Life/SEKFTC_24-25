@@ -1,3 +1,4 @@
+// File: Arm.java
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,7 +14,7 @@ public class Arm {
     private static final double ANGLE_MAX = 180.0;
 
     // Encoder counts per revolution (CPR) for the motor
-    private static final int ENCODER_CPR = 1440; // Example value, adjust based on your motor
+    private static final int ENCODER_CPR = 1120; // Adjust based on your motor (e.g., Neverest 40)
     private static final double GEAR_RATIO = 1.0; // Adjust if gears are used
     private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
 
@@ -23,7 +24,7 @@ public class Arm {
     // Constructor
     public Arm(HardwareMap hardwareMap) {
         // Initialize motor
-        armMotor = hardwareMap.get(DcMotor.class, "armMotor");
+        armMotor = hardwareMap.get(DcMotor.class, "Arm");
 
         // Motor configuration
         configureMotor(armMotor);
@@ -102,13 +103,7 @@ public class Arm {
         moveToAngle(90.0); // Hanging position angle
     }
 
-    // Placeholder for future state integration
-    public void moveToStatePosition(/*RobotState state*/) {
-        // This method will map states to angles in the future
-        // For now, it's a placeholder
-    }
-
-    // Update method to be called periodically
+    // Update method to be called periodically (if needed)
     public void update() {
         // Implement PID control or additional logic if necessary
     }

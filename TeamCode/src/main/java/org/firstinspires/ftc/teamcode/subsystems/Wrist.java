@@ -1,5 +1,4 @@
 // File: Wrist.java
-// Package declaration
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.hardware.Servo;
@@ -14,10 +13,15 @@ public class Wrist {
     private static final double WRIST_MIN_POSITION = 0.0;     // Adjust based on your hardware
     private static final double WRIST_MAX_POSITION = 1.0;     // Adjust based on your hardware
 
+    private static final double POSITION_THRESHOLD = 0.02; // Threshold for position checking
+
+    // Target position
+    private double targetPosition = WRIST_MIN_POSITION;
+
     // Constructor
     public Wrist(HardwareMap hardwareMap) {
         // Initialize the servo
-        wristServo = hardwareMap.get(Servo.class, "wristServo");
+        wristServo = hardwareMap.get(Servo.class, "WristServo");
 
         // Set initial position
         setPosition(WRIST_MIN_POSITION); // Start at the minimum position
@@ -26,8 +30,8 @@ public class Wrist {
     // Set wrist position (normalized from 0.0 to 1.0)
     public void setPosition(double position) {
         // Clamp the position within limits
-        double clampedPosition = Math.max(WRIST_MIN_POSITION, Math.min(position, WRIST_MAX_POSITION));
-        wristServo.setPosition(clampedPosition);
+        targetPosition = Math.max(WRIST_MIN_POSITION, Math.min(position, WRIST_MAX_POSITION));
+        wristServo.setPosition(targetPosition);
     }
 
     // Set wrist angle (in degrees)
@@ -44,7 +48,7 @@ public class Wrist {
         double normalizedPosition = angleDegrees / servoRangeDegrees;
 
         // Clamp normalized position between 0.0 and 1.0
-        return Math.max(0.0, Math.min(normalizedPosition, 1.0));
+        return Math.max(WRIST_MIN_POSITION, Math.min(normalizedPosition, WRIST_MAX_POSITION));
     }
 
     // Get current servo position
@@ -58,8 +62,14 @@ public class Wrist {
         double servoRangeDegrees = 180.0; // Adjust if your servo has a different range
         return wristServo.getPosition() * servoRangeDegrees;
     }
+
+    // Check if wrist is at target position
     public boolean isAtTarget() {
-        // Assuming the wrist servo moves instantly; otherwise, implement checking
         return Math.abs(wristServo.getPosition() - targetPosition) < POSITION_THRESHOLD;
+    }
+
+    // Update method (if needed)
+    public void update() {
+        // Implement any periodic updates or checks if necessary
     }
 }

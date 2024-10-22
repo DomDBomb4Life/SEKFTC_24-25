@@ -1,5 +1,5 @@
+// File: ViperLift.java
 package org.firstinspires.ftc.teamcode.subsystems;
-
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -14,25 +14,20 @@ public class ViperLift {
     private static final int POSITION_MIN = 0;         // Fully retracted position
     private static final int POSITION_MAX = 5000;      // Fully extended position (example value)
 
-    // PID coefficients
-    private static final double kP = 0.005;
-    private static final double kI = 0.0;
-    private static final double kD = 0.0;
-
     // Target position
     private int targetPosition = POSITION_MIN;
 
     // Constructor
     public ViperLift(HardwareMap hardwareMap) {
         // Initialize motors
-        leftLiftMotor = hardwareMap.get(DcMotor.class, "leftLiftMotor");
-        rightLiftMotor = hardwareMap.get(DcMotor.class, "rightLiftMotor");
+        leftLiftMotor = hardwareMap.get(DcMotor.class, "LiftL");
+        rightLiftMotor = hardwareMap.get(DcMotor.class, "LiftR");
 
         // Motor configurations
         configureMotor(leftLiftMotor);
         configureMotor(rightLiftMotor);
 
-        // Change the direction of one of the motors
+        // Change the direction of one of the motors if necessary
         rightLiftMotor.setDirection(DcMotor.Direction.REVERSE);
 
         // Set initial positions
@@ -84,13 +79,13 @@ public class ViperLift {
         // Average the positions of both motors
         return (leftLiftMotor.getCurrentPosition() + rightLiftMotor.getCurrentPosition()) / 2;
     }
-//TODO
+
     // Check if lift is at target position
     public boolean isAtTarget() {
         return !leftLiftMotor.isBusy() && !rightLiftMotor.isBusy();
     }
 
-    // Update method to be called in the main loop
+    // Update method to be called in the main loop (if needed)
     public void update() {
         // Implement PID control or other control logic here if necessary
     }
@@ -104,7 +99,7 @@ public class ViperLift {
         moveToPosition(POSITION_MAX);
     }
 
-    // Implement safety checks
+    // Implement safety checks (if necessary)
     public void safetyCheck() {
         // Add code to monitor sensors and stop motors if necessary
     }

@@ -1,5 +1,4 @@
 // File: Claw.java
-// Package declaration
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.hardware.Servo;
@@ -17,7 +16,7 @@ public class Claw {
     // Constructor
     public Claw(HardwareMap hardwareMap) {
         // Initialize the servo
-        clawServo = hardwareMap.get(Servo.class, "clawServo");
+        clawServo = hardwareMap.get(Servo.class, "ClawServo");
 
         // Set initial position
         close(); // Start with the claw closed
@@ -40,12 +39,12 @@ public class Claw {
 
     // Check if the claw is open
     public boolean isOpen() {
-        return clawServo.getPosition() == CLAW_OPEN_POSITION;
+        return Math.abs(clawServo.getPosition() - CLAW_OPEN_POSITION) < 0.05;
     }
 
     // Check if the claw is closed
     public boolean isClosed() {
-        return clawServo.getPosition() == CLAW_CLOSED_POSITION;
+        return Math.abs(clawServo.getPosition() - CLAW_CLOSED_POSITION) < 0.05;
     }
 
     // Update method (if needed for future enhancements)
