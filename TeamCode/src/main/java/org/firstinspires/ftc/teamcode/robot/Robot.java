@@ -2,7 +2,7 @@
 package org.firstinspires.ftc.teamcode.robot;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import org.firstinspires.ftc.teamcode.subsystems.ViperLift;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.Claw;
@@ -11,6 +11,10 @@ import org.firstinspires.ftc.teamcode.robot.states.HomeState;
 import org.firstinspires.ftc.teamcode.robot.states.HangingState;
 import org.firstinspires.ftc.teamcode.robot.states.ScoringBasketState;
 import org.firstinspires.ftc.teamcode.robot.states.IdleState;
+import org.firstinspires.ftc.teamcode.vision.VisionSystem;
+import org.firstinspires.ftc.teamcode.localization.Localization;
+import org.firstinspires.ftc.teamcode.aimbot.AimbotController;
+import org.firstinspires.ftc.teamcode.drive.DriveTrain;
 
 public class Robot {
 
@@ -29,8 +33,13 @@ public class Robot {
     public ScoringBasketState scoringBasketState;
     public IdleState idleState;
 
+    // New components
+    public VisionSystem visionSystem;
+    public Localization localization;
+    public AimbotController aimbotController;
+
     // Constructor
-    public Robot(HardwareMap hardwareMap) {
+    public Robot(HardwareMap hardwareMap, DriveTrain driveTrain) {
         // Initialize hardware components
         viperLift = new ViperLift(hardwareMap);
         arm = new Arm(hardwareMap);
@@ -46,10 +55,29 @@ public class Robot {
         // Set initial state
         currentState = RobotState.IDLE;
         idleState.activate();
+
+        // Initialize vision system
+        visionSystem = new VisionSystem(hardwareMap);
+
+        // Initialize localization
+        localization = new Localization(hardwareMap, visionSystem);
+
+        // Initialize aimbot controller
+        aimbotController = new AimbotController(localization, driveTrain);
     }
 
     // Update method called periodically
     public void update() {
+        // Update vision system
+        visionSystem.update();
+
+        // Update localization
+        localization.update();
+
+        // Update aimbot
+        aimbotController.update();
+
+        // Update states
         switch (currentState) {
             case HOME:
                 homeState.update();
@@ -76,6 +104,15 @@ public class Robot {
                 // Handle other states or idle behavior
                 break;
         }
+    }
+
+    // Methods to handle aimbot
+    public void activateAimbot(Pose2d targetPose) {
+        aimbotController.activate(targetPose);
+    }
+
+    public void deactivateAimbot() {
+        aimbotController.deactivate();
     }
 
     // Methods to handle button presses

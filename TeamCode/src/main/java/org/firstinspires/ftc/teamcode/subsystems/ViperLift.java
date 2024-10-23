@@ -12,7 +12,7 @@ public class ViperLift {
 
     // Encoder positions
     private static final int POSITION_MIN = 0;         // Fully retracted position
-    private static final int POSITION_MAX = 5000;      // Fully extended position (example value)
+    private static final int POSITION_MAX = 11700;      // Fully extended position (example value)
 
     // Target position
     private int targetPosition = POSITION_MIN;
@@ -28,7 +28,7 @@ public class ViperLift {
         configureMotor(rightLiftMotor);
 
         // Change the direction of one of the motors if necessary
-        rightLiftMotor.setDirection(DcMotor.Direction.REVERSE);
+        leftLiftMotor.setDirection(DcMotor.Direction.REVERSE);
 
         // Set initial positions
         resetEncoders();

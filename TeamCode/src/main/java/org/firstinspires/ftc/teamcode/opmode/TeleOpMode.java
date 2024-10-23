@@ -3,9 +3,9 @@ package org.firstinspires.ftc.teamcode.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-
 import org.firstinspires.ftc.teamcode.drive.DriveTrain;
 import org.firstinspires.ftc.teamcode.robot.Robot;
+import com.acmerobotics.roadrunner.geometry.Pose2d; // Add import for Pose2d
 
 @TeleOp(name = "TeleOp Mode")
 public class TeleOpMode extends LinearOpMode {
@@ -16,18 +16,20 @@ public class TeleOpMode extends LinearOpMode {
     // Variable to track dev mode
     private boolean devMode = false;
 
+    // Variable to track aimbot activation button state
+    private boolean previousAimbotButtonPressed = false;
+
     @Override
     public void runOpMode() {
         // Initialize the drivetrain
-        driveTrain = new DriveTrain(this);
+        driveTrain = new DriveTrain(hardwareMap);
 
-        // Initialize the robot
-        robot = new Robot(hardwareMap);
+        // Initialize the robot with the drivetrain
+        robot = new Robot(hardwareMap, driveTrain);
 
         // Variables to track button states for edge detection
         boolean previousRightTriggerPressed = false;
         boolean previousHomeButtonPressed = false;
-        boolean previousClawButtonPressed = false;
         boolean previousHangingButtonPressed = false;
         boolean previousScoringButtonPressed = false;
         boolean previousSelectButtonPressed = false;
@@ -35,8 +37,30 @@ public class TeleOpMode extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            // Handle drivetrain control
-            driveTrain.drive(this);
+            // Aimbot activation
+            boolean aimbotButtonPressed = gamepad1.a;
+            if (aimbotButtonPressed && !previousAimbotButtonPressed) {
+                if (robot.aimbotController.isActive()) {
+                    robot.deactivateAimbot();
+                } else {
+                    // Set target pose, could be based on vision data
+                    Pose2d targetPose = robot.localization.getCurrentPose(); // Placeholder, replace with actual target
+                    robot.activateAimbot(targetPose);
+                }
+            }
+            previousAimbotButtonPressed = aimbotButtonPressed;
+
+            // If aimbot is active, skip manual driving
+            if (!robot.aimbotController.isActive()) {
+                // Handle drivetrain control
+                driveTrain.drive(
+                    gamepad1.left_stick_y,
+                    gamepad1.left_stick_x,
+                    gamepad1.right_stick_x,
+                    gamepad1.left_trigger,
+                    gamepad1.right_trigger
+                );
+            }
 
             // Handle select button press to toggle dev mode
             boolean selectButtonPressed = gamepad2.back; // Assuming back button is the select button
@@ -57,16 +81,16 @@ public class TeleOpMode extends LinearOpMode {
                 previousHomeButtonPressed = gamepad2.y;
 
                 // Switch Variation Button (e.g., right trigger)
-                if (gamepad2.right_trigger > 0.5 && !previousRightTriggerPressed) {
+                boolean rightTriggerPressed = gamepad2.right_trigger > 0.5;
+                if (rightTriggerPressed && !previousRightTriggerPressed) {
                     robot.onSwitchVariationButtonPressed();
                 }
-                previousRightTriggerPressed = gamepad2.right_trigger > 0.5;
+                previousRightTriggerPressed = rightTriggerPressed;
 
                 // Claw Toggle Button (e.g., gamepad2.b)
-                if (gamepad2.b && !previousClawButtonPressed) {
+                if (gamepad2.b) {
                     robot.onClawToggleButtonPressed();
                 }
-                previousClawButtonPressed = gamepad2.b;
 
                 // Hanging Button (e.g., gamepad2.a)
                 if (gamepad2.a && !previousHangingButtonPressed) {
@@ -108,13 +132,12 @@ public class TeleOpMode extends LinearOpMode {
                     robot.wrist.setManualPosition(robot.wrist.getPosition() - 0.01);
                 }
 
-                // Manual control of Claw using gamepad2.a and gamepad2.b
-                if (gamepad2.a && !previousClawButtonPressed) {
-                    robot.claw.open();
-                } else if (gamepad2.b && !previousClawButtonPressed) {
-                    robot.claw.close();
+                // Manual control of Claw using gamepad2 dpad left/right
+                if (gamepad2.dpad_right) {
+                    robot.claw.setManualPosition(robot.claw.getPosition() + 0.01);
+                } else if (gamepad2.dpad_left) {
+                    robot.claw.setManualPosition(robot.claw.getPosition() - 0.01);
                 }
-                previousClawButtonPressed = gamepad2.a || gamepad2.b;
 
                 // Telemetry for dev mode
                 telemetry.addData("Mode", "Dev Mode");
@@ -127,7 +150,8 @@ public class TeleOpMode extends LinearOpMode {
             }
 
             // Telemetry common to both modes
-            // Add any other telemetry values you need
+            telemetry.addData("Drive Speed", driveTrain.getSpeed());
+            telemetry.addData("Aimbot Active", robot.aimbotController.isActive());
             telemetry.update();
         }
     }
