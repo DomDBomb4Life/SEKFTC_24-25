@@ -14,7 +14,7 @@ public class Arm {
     private static final double ANGLE_MAX = 180.0;
 
     // Encoder counts per revolution (CPR) for the motor
-    private static final int ENCODER_CPR = 1120; // Adjust based on your motor (e.g., Neverest 40)
+    private static final int ENCODER_CPR = 538; // Adjust based on your motor
     private static final double GEAR_RATIO = 1.0; // Adjust if gears are used
     private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
 
@@ -63,10 +63,9 @@ public class Arm {
         armMotor.setPower(0.5); // Use a moderate power for smooth movement
     }
 
-    // Manual control method
-    public void setManualPower(double power) {
-        armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        armMotor.setPower(power);
+    // Adjust target angle incrementally
+    public void adjustTargetAngle(double increment) {
+        moveToAngle(targetAngle + increment);
     }
 
     // Convert angle to encoder counts
@@ -89,6 +88,11 @@ public class Arm {
     public double getCurrentAngle() {
         int currentPosition = armMotor.getCurrentPosition();
         return countsToAngle(currentPosition);
+    }
+
+    // Get target angle
+    public double getTargetAngle() {
+        return targetAngle;
     }
 
     // Check if arm is at target angle

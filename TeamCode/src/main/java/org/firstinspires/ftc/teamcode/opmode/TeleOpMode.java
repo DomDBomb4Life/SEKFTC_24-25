@@ -89,17 +89,38 @@ public class TeleOpMode extends LinearOpMode {
                 telemetry.addData("Hanging Step", robot.hangingState.getCurrentStep());
                 telemetry.addData("Scoring Step", robot.scoringBasketState.getCurrentStep());
                 telemetry.addData("Home Variation", robot.homeState.getCurrentVariation());
+
+
+                telemetry.addData("ViperLift Position", robot.viperLift.getCurrentPosition());
+                telemetry.addData("ViperLift Target", robot.viperLift.getTargetPosition());
+                telemetry.addData("Arm Angle", robot.arm.getCurrentAngle());
+                telemetry.addData("Arm Target", robot.arm.getTargetAngle());
+                telemetry.addData("Wrist Position", robot.wrist.getPosition());
+                telemetry.addData("Claw Position", robot.claw.getPosition());
             } else {
                 // Dev mode
                 // Provide manual control over the subsystems
 
+                // Threshold to prevent unintentional adjustments
+                double threshold = 0.05;
+
+                // Scale factors for adjustments
+                double armIncrementScale = 1.0;      // Degrees per input unit
+                int liftIncrementScale = 50;         // Encoder counts per input unit
+
                 // Manual control of ViperLift using gamepad2 left stick y
-                double viperLiftPower = -gamepad2.left_stick_y; // Up is negative
-                robot.viperLift.setManualPower(viperLiftPower);
+                double liftInput = -gamepad2.left_stick_y; // Up is negative
+                if (Math.abs(liftInput) > threshold) {
+                    int liftIncrement = (int) (liftInput * liftIncrementScale);
+                    robot.viperLift.adjustTargetPosition(liftIncrement);
+                }
 
                 // Manual control of Arm using gamepad2 right stick y
-                double armPower = -gamepad2.right_stick_y; // Up is negative
-                robot.arm.setManualPower(armPower);
+                double armInput = -gamepad2.right_stick_y; // Up is negative
+                if (Math.abs(armInput) > threshold) {
+                    double armIncrement = armInput * armIncrementScale;
+                    robot.arm.adjustTargetAngle(armIncrement);
+                }
 
                 // Manual control of Wrist using gamepad2 dpad up/down
                 if (gamepad2.dpad_up) {
@@ -119,15 +140,14 @@ public class TeleOpMode extends LinearOpMode {
                 // Telemetry for dev mode
                 telemetry.addData("Mode", "Dev Mode");
                 telemetry.addData("ViperLift Position", robot.viperLift.getCurrentPosition());
-                telemetry.addData("ViperLift Power", viperLiftPower);
-                telemetry.addData("Arm Position", robot.arm.getCurrentAngle());
-                telemetry.addData("Arm Power", armPower);
+                telemetry.addData("ViperLift Target", robot.viperLift.getTargetPosition());
+                telemetry.addData("Arm Angle", robot.arm.getCurrentAngle());
+                telemetry.addData("Arm Target", robot.arm.getTargetAngle());
                 telemetry.addData("Wrist Position", robot.wrist.getPosition());
                 telemetry.addData("Claw Position", robot.claw.getPosition());
             }
 
             // Telemetry common to both modes
-            // Add any other telemetry values you need
             telemetry.update();
         }
     }

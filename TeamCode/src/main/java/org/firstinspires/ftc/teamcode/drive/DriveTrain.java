@@ -36,8 +36,8 @@ public class DriveTrain {
      */
     public void drive(LinearOpMode opMode) {
         //this part updates controller
-        leftStickY = opMode.gamepad1.left_stick_y;
-        leftStickX = -opMode.gamepad1.left_stick_x;
+        leftStickY = -opMode.gamepad1.left_stick_y;
+        leftStickX = opMode.gamepad1.left_stick_x;
         pivot = -opMode.gamepad1.right_stick_x;
         updateSpeed(opMode);
         //this parts set power values
