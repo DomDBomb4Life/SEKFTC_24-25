@@ -19,13 +19,12 @@ public class TeleOpMode extends LinearOpMode {
     @Override
     public void runOpMode() {
         // Initialize the drivetrain
-        driveTrain = new DriveTrain(this);
+        driveTrain = new DriveTrain(hardwareMap);
 
         // Initialize the robot
         robot = new Robot(hardwareMap);
 
         // Variables to track button states for edge detection
-        boolean previousRightTriggerPressed = false;
         boolean previousHomeButtonPressed = false;
         boolean previousClawButtonPressed = false;
         boolean previousHangingButtonPressed = false;
@@ -35,13 +34,21 @@ public class TeleOpMode extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            // Handle drivetrain control
-            driveTrain.drive(this);
+            // Read gamepad inputs
+            double leftStickY = -gamepad1.left_stick_y;
+            double leftStickX = gamepad1.left_stick_x;
+            double rightStickX = -gamepad1.right_stick_x;
 
-            // Handle select button press to toggle dev mode
-            boolean selectButtonPressed = gamepad2.back; // Assuming back button is the select button
+            // Update speed based on triggers
+            driveTrain.updateSpeed(gamepad1.left_trigger, gamepad1.right_trigger);
+
+            // Handle drivetrain control
+            driveTrain.drive(leftStickY, leftStickX, rightStickX);
+
+            // Toggle dev mode
+            boolean selectButtonPressed = gamepad2.back;
             if (selectButtonPressed && !previousSelectButtonPressed) {
-                devMode = !devMode; // Toggle dev mode
+                devMode = !devMode;
             }
             previousSelectButtonPressed = selectButtonPressed;
 
@@ -50,7 +57,7 @@ public class TeleOpMode extends LinearOpMode {
 
                 // Handle button presses
 
-                // Home State Button (e.g., gamepad2.y)
+                // Home State Button (gamepad2.y)
                 if (gamepad2.y && !previousHomeButtonPressed) {
                     robot.onHomeButtonPressed();
                 }
@@ -62,41 +69,32 @@ public class TeleOpMode extends LinearOpMode {
                 }
                 previousRightTriggerPressed = gamepad2.right_trigger > 0.5;
 
-                // Claw Toggle Button (e.g., gamepad2.b)
+                // Claw Toggle Button (gamepad2.b)
                 if (gamepad2.b && !previousClawButtonPressed) {
                     robot.onClawToggleButtonPressed();
                 }
                 previousClawButtonPressed = gamepad2.b;
 
-                // Hanging Button (e.g., gamepad2.a)
+                // Hanging Button (gamepad2.a)
                 if (gamepad2.a && !previousHangingButtonPressed) {
                     robot.onHangingButtonPressed();
                 }
                 previousHangingButtonPressed = gamepad2.a;
 
-                // Scoring Basket Button (e.g., gamepad2.x)
+                // Scoring Button (gamepad2.x)
                 if (gamepad2.x && !previousScoringButtonPressed) {
-                    robot.onScoringBasketButtonPressed();
+                    robot.onScoringButtonPressed();
                 }
                 previousScoringButtonPressed = gamepad2.x;
 
-                // Update the robot state
+                // Update the robot
                 robot.update();
 
                 // Telemetry for debugging
                 telemetry.addData("Mode", "Normal Mode");
-                telemetry.addData("Current State", robot.currentState);
-                telemetry.addData("Hanging Step", robot.hangingState.getCurrentStep());
-                telemetry.addData("Scoring Step", robot.scoringBasketState.getCurrentStep());
-                telemetry.addData("Home Variation", robot.homeState.getCurrentVariation());
+                telemetry.addData("Robot Mode", robot.currentMode);
+                telemetry.addData("Speed Multiplier", driveTrain.getSpeedMultiplier());
 
-
-                telemetry.addData("ViperLift Position", robot.viperLift.getCurrentPosition());
-                telemetry.addData("ViperLift Target", robot.viperLift.getTargetPosition());
-                telemetry.addData("Arm Angle", robot.arm.getCurrentAngle());
-                telemetry.addData("Arm Target", robot.arm.getTargetAngle());
-                telemetry.addData("Wrist Position", robot.wrist.getPosition());
-                telemetry.addData("Claw Position", robot.claw.getPosition());
             } else {
                 // Dev mode
                 // Provide manual control over the subsystems
@@ -108,34 +106,37 @@ public class TeleOpMode extends LinearOpMode {
                 double armIncrementScale = 1.0;      // Degrees per input unit
                 int liftIncrementScale = 50;         // Encoder counts per input unit
 
-                // Manual control of ViperLift using gamepad2 left stick y
+                // Manual control of ViperLift
                 double liftInput = -gamepad2.left_stick_y; // Up is negative
                 if (Math.abs(liftInput) > threshold) {
                     int liftIncrement = (int) (liftInput * liftIncrementScale);
                     robot.viperLift.adjustTargetPosition(liftIncrement);
                 }
 
-                // Manual control of Arm using gamepad2 right stick y
+                // Manual control of Arm
                 double armInput = -gamepad2.right_stick_y; // Up is negative
                 if (Math.abs(armInput) > threshold) {
                     double armIncrement = armInput * armIncrementScale;
                     robot.arm.adjustTargetAngle(armIncrement);
                 }
 
-                // Manual control of Wrist using gamepad2 dpad up/down
+                // Manual control of Wrist
                 if (gamepad2.dpad_up) {
                     robot.wrist.setManualPosition(robot.wrist.getPosition() + 0.01);
                 } else if (gamepad2.dpad_down) {
                     robot.wrist.setManualPosition(robot.wrist.getPosition() - 0.01);
                 }
 
-                // Manual control of Claw using gamepad2.a and gamepad2.b
+                // Manual control of Claw
                 if (gamepad2.a && !previousClawButtonPressed) {
                     robot.claw.open();
                 } else if (gamepad2.b && !previousClawButtonPressed) {
                     robot.claw.close();
                 }
                 previousClawButtonPressed = gamepad2.a || gamepad2.b;
+
+                // Update subsystems
+                robot.update();
 
                 // Telemetry for dev mode
                 telemetry.addData("Mode", "Dev Mode");
@@ -147,7 +148,7 @@ public class TeleOpMode extends LinearOpMode {
                 telemetry.addData("Claw Position", robot.claw.getPosition());
             }
 
-            // Telemetry common to both modes
+            // Common telemetry updates
             telemetry.update();
         }
     }

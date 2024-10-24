@@ -12,26 +12,36 @@ import org.firstinspires.ftc.teamcode.robot.states.HangingState;
 import org.firstinspires.ftc.teamcode.robot.states.ScoringBasketState;
 import org.firstinspires.ftc.teamcode.robot.states.IdleState;
 
+/**
+ * The Robot class encapsulates all the subsystems and manages state transitions.
+ */
 public class Robot {
 
-    // Hardware components
-    public ViperLift viperLift;
-    public Arm arm;
-    public Claw claw;
-    public Wrist wrist;
-
-    // State variables
-    public RobotState currentState;
+    // Subsystems
+    public final ViperLift viperLift;
+    public final Arm arm;
+    public final Claw claw;
+    public final Wrist wrist;
 
     // State instances
-    public HomeState homeState;
-    public HangingState hangingState;
-    public ScoringBasketState scoringBasketState;
-    public IdleState idleState;
+    public final HomeState homeState;
+    public final HangingState hangingState;
+    public final ScoringBasketState scoringBasketState;
+    public final IdleState idleState;
+
+    // Current state
+    public enum State {
+        IDLE,
+        HOME,
+        HANGING,
+        SCORING
+    }
+
+    public State currentState = State.IDLE;
 
     // Constructor
     public Robot(HardwareMap hardwareMap) {
-        // Initialize hardware components
+        // Initialize subsystems
         viperLift = new ViperLift(hardwareMap);
         arm = new Arm(hardwareMap);
         claw = new Claw(hardwareMap);
@@ -43,8 +53,7 @@ public class Robot {
         scoringBasketState = new ScoringBasketState(viperLift, arm, wrist, claw);
         idleState = new IdleState(viperLift, arm);
 
-        // Set initial state
-        currentState = RobotState.IDLE;
+        // Activate initial state
         idleState.activate();
     }
 
@@ -59,12 +68,10 @@ public class Robot {
                 hangingState.update();
                 break;
 
-            case SCORING_BASKET:
+            case SCORING:
                 scoringBasketState.update();
                 if (scoringBasketState.getCurrentStep() == ScoringBasketState.Step.COMPLETED) {
-                    // Transition to idle state after scoring process is completed
-                    currentState = RobotState.IDLE;
-                    idleState.activate();
+                    setState(State.IDLE);
                 }
                 break;
 
@@ -73,63 +80,61 @@ public class Robot {
                 break;
 
             default:
-                // Handle other states or idle behavior
                 break;
         }
     }
 
+    // Method to set the current state
+    public void setState(State newState) {
+        if (currentState != newState) {
+            currentState = newState;
+            switch (newState) {
+                case HOME:
+                    homeState.activate();
+                    break;
+
+                case HANGING:
+                    hangingState.start();
+                    break;
+
+                case SCORING:
+                    scoringBasketState.start();
+                    break;
+
+                case IDLE:
+                    idleState.activate();
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
     // Methods to handle button presses
-
-    // Hanging State
-    public void onHangingButtonPressed() {
-        if (currentState != RobotState.HANGING) {
-            currentState = RobotState.HANGING;
-            hangingState.start();
-        } else {
-            // Progress through steps
-            hangingState.progress();
-        }
-    }
-
-    // Claw Toggle
-    public void onClawToggleButtonPressed() {
-        if (currentState == RobotState.HOME) {
-            toggleClaw();
-        }
-        // Else, do nothing
-    }
-
-    // Scoring Basket State
-    public void onScoringBasketButtonPressed() {
-        if (currentState != RobotState.SCORING_BASKET) {
-            currentState = RobotState.SCORING_BASKET;
-            scoringBasketState.start();
-        } else {
-            // Progress to next step
-            scoringBasketState.progress();
-        }
-    }
-
-    // Home State
     public void onHomeButtonPressed() {
-        if (currentState != RobotState.HOME) {
-            currentState = RobotState.HOME;
-            homeState.activate();
-        }
+        setState(State.HOME);
     }
 
-    public void onSwitchVariationButtonPressed() {
-        if (currentState == RobotState.HOME) {
-            homeState.switchVariation();
-        }
+    public void onHangingButtonPressed() {
+        setState(State.HANGING);
     }
 
-    // Claw control
-    private void toggleClaw() {
+    public void onScoringButtonPressed() {
+        setState(State.SCORING);
+    }
+
+    public void onClawToggleButtonPressed() {
         if (claw.isClosed()) {
             claw.open();
         } else {
             claw.close();
+        }
+    }
+
+    public void onSwitchVariationButtonPressed() {
+        if (currentState == State.HOME) {
+            homeState.switchVariation();
         }
     }
 }

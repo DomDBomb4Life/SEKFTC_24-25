@@ -14,12 +14,10 @@ public class Arm {
     private static final double ANGLE_MAX = 180.0;
 
     // Encoder counts per revolution (CPR) for the motor
-    private static final int ENCODER_CPR = 538; // Adjust based on your motor
-    private static final double GEAR_RATIO = 1.0; // Adjust if gears are used
-    private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
+    private static final int ENCODER_CPR = 538; // Your motor's CPR value
 
-    // Target angle
-    private double targetAngle = 0.0;
+    // Target encoder position
+    private int targetPosition = 0;
 
     // Constructor
     public Arm(HardwareMap hardwareMap) {
@@ -27,94 +25,46 @@ public class Arm {
         armMotor = hardwareMap.get(DcMotor.class, "Arm");
 
         // Motor configuration
-        configureMotor(armMotor);
-
-        // Set initial position
+        armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         resetEncoder();
-    }
-
-    private void configureMotor(DcMotor motor) {
-        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Reset encoder
     public void resetEncoder() {
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
-    // Move to a specific angle
+    // Move to a specific angle (in degrees)
     public void moveToAngle(double angle) {
         // Clamp angle within bounds
-        targetAngle = Math.max(ANGLE_MIN, Math.min(angle, ANGLE_MAX));
+        double clampedAngle = Math.max(ANGLE_MIN, Math.min(angle, ANGLE_MAX));
 
-        // Calculate target encoder counts
-        int targetPosition = angleToCounts(targetAngle);
+        // Convert angle to encoder counts (assuming 1 revolution = 360 degrees)
+        targetPosition = (int) ((clampedAngle / 360.0) * ENCODER_CPR);
 
-        // Set target position
+        // Set target position and power
         armMotor.setTargetPosition(targetPosition);
-
-        // Set mode to run to position
-        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        // Apply power (adjust as necessary)
-        armMotor.setPower(0.5); // Use a moderate power for smooth movement
+        armMotor.setPower(0.5);
     }
 
     // Adjust target angle incrementally
     public void adjustTargetAngle(double increment) {
-        moveToAngle(targetAngle + increment);
+        moveToAngle(getCurrentAngle() + increment);
     }
 
-    // Convert angle to encoder counts
-    private int angleToCounts(double angle) {
-        return (int) (angle * COUNTS_PER_DEGREE);
-    }
-
-    // Convert encoder counts to angle
-    private double countsToAngle(int counts) {
-        return counts / COUNTS_PER_DEGREE;
-    }
-
-    // Stop the arm
-    public void stop() {
-        armMotor.setPower(0);
-        armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-
-    // Get current angle
+    // Get current angle (in degrees) from encoder counts
     public double getCurrentAngle() {
-        int currentPosition = armMotor.getCurrentPosition();
-        return countsToAngle(currentPosition);
+        return (armMotor.getCurrentPosition() * 360.0) / ENCODER_CPR;
     }
 
-    // Get target angle
-    public double getTargetAngle() {
-        return targetAngle;
-    }
-
-    // Check if arm is at target angle
+    // Check if arm is at target position
     public boolean isAtTarget() {
         return !armMotor.isBusy();
     }
 
-    // Preset positions for different states
-    public void moveToHomePosition() {
-        moveToAngle(0.0); // Home position angle
-    }
-
-    public void moveToScoringBasketPosition() {
-        moveToAngle(180.0); // Scoring basket position angle
-    }
-
-    public void moveToHangingPosition() {
-        moveToAngle(90.0); // Hanging position angle
-    }
-
-    // Update method to be called periodically (if needed)
+    // Update method if needed
     public void update() {
-        // Implement PID control or additional logic if necessary
+        // Implement any necessary logic
     }
 }

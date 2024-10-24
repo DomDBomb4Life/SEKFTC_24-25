@@ -5,19 +5,23 @@ import org.firstinspires.ftc.teamcode.subsystems.ViperLift;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.Wrist;
 
+/**
+ * Represents the home position state of the robot.
+ */
 public class HomeState {
-    // Subsystems
-    private ViperLift viperLift;
-    private Arm arm;
-    private Wrist wrist;
 
-    // Variations
+    // Subsystems
+    private final ViperLift viperLift;
+    private final Arm arm;
+    private final Wrist wrist;
+
+    // Variations for different home positions
     public enum Variation {
-        VARIATION_1,
-        VARIATION_2
+        DEFAULT,
+        ALTERNATE
     }
 
-    private Variation currentVariation = Variation.VARIATION_1;
+    private Variation currentVariation = Variation.DEFAULT;
 
     // Constructor
     public HomeState(ViperLift viperLift, Arm arm, Wrist wrist) {
@@ -33,11 +37,11 @@ public class HomeState {
 
         // Set positions based on current variation
         switch (currentVariation) {
-            case VARIATION_1:
+            case DEFAULT:
                 arm.moveToAngle(0);
                 wrist.setAngle(90);
                 break;
-            case VARIATION_2:
+            case ALTERNATE:
                 arm.moveToAngle(15);
                 wrist.setAngle(0);
                 break;
@@ -46,10 +50,10 @@ public class HomeState {
 
     // Switch between variations
     public void switchVariation() {
-        if (currentVariation == Variation.VARIATION_1) {
-            currentVariation = Variation.VARIATION_2;
+        if (currentVariation == Variation.DEFAULT) {
+            currentVariation = Variation.ALTERNATE;
         } else {
-            currentVariation = Variation.VARIATION_1;
+            currentVariation = Variation.DEFAULT;
         }
 
         // Re-activate to apply the new variation
@@ -64,7 +68,6 @@ public class HomeState {
     // Update method if needed
     public void update() {
         // Monitor if subsystems have reached target positions
-        // Implement any necessary logic
+        // Could add logic here if necessary
     }
 }
-

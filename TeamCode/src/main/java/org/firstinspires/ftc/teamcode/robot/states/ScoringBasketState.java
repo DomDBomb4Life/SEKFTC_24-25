@@ -6,20 +6,24 @@ import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.Wrist;
 import org.firstinspires.ftc.teamcode.subsystems.Claw;
 
+/**
+ * Represents the state of the robot when scoring into the basket.
+ */
 public class ScoringBasketState {
+
     // Subsystems
-    private ViperLift viperLift;
-    private Arm arm;
-    private Wrist wrist;
-    private Claw claw;
+    private final ViperLift viperLift;
+    private final Arm arm;
+    private final Wrist wrist;
+    private final Claw claw;
 
     // Steps in the scoring basket process
     public enum Step {
-        STEP_1,
-        STEP_2,
-        STEP_3,
-        STEP_4,
-        STEP_5,
+        LIFT_UP,
+        ARM_POSITION,
+        OPEN_CLAW,
+        ARM_RETURN,
+        LIFT_DOWN,
         COMPLETED
     }
 
@@ -27,7 +31,7 @@ public class ScoringBasketState {
 
     // Timer for step 3
     private long stepStartTime;
-    private static final long STEP_3_DURATION_MS = 1000; // Adjust the duration as needed
+    private static final long STEP_3_DURATION_MS = 1000; // Adjust as needed
 
     // Constructor
     public ScoringBasketState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw) {
@@ -35,131 +39,120 @@ public class ScoringBasketState {
         this.arm = arm;
         this.wrist = wrist;
         this.claw = claw;
-        this.currentStep = Step.STEP_1; // Initial step
+        this.currentStep = Step.LIFT_UP;
     }
 
     // Start the scoring basket process
     public void start() {
-        currentStep = Step.STEP_1;
+        currentStep = Step.LIFT_UP;
         executeCurrentStep();
     }
 
-    // Progress to the next step based on button presses
-    public void progress() {
+    // Progress to the next step if conditions are met
+    private void progress() {
         switch (currentStep) {
-            case STEP_1:
-                // No progression needed; wait for automatic step 2
+            case LIFT_UP:
+                currentStep = Step.ARM_POSITION;
                 break;
-            case STEP_2:
-                // User needs to press button to open claw (step 3)
-                currentStep = Step.STEP_3;
-                executeCurrentStep();
+            case ARM_POSITION:
+                currentStep = Step.OPEN_CLAW;
                 break;
-            case STEP_3:
-                // No progression needed; wait for automatic step 4
+            case OPEN_CLAW:
+                currentStep = Step.ARM_RETURN;
+                break;
+            case ARM_RETURN:
+                currentStep = Step.LIFT_DOWN;
+                break;
+            case LIFT_DOWN:
+                currentStep = Step.COMPLETED;
                 break;
             default:
-                // Already completed or invalid step
                 break;
         }
+        executeCurrentStep();
     }
 
     // Execute actions for the current step
     private void executeCurrentStep() {
         switch (currentStep) {
-            case STEP_1:
+            case LIFT_UP:
                 // Move Viper Lift all the way up
                 viperLift.moveToMax();
                 break;
 
-            case STEP_2:
-                // Automatically move arm and wrist after ViperLift is up
+            case ARM_POSITION:
+                // Move arm and wrist into scoring position
                 arm.moveToAngle(180);
                 wrist.setAngle(180);
                 break;
 
-            case STEP_3:
-                // Open the claw to drop the object
+            case OPEN_CLAW:
+                // Open the claw to release the object
                 claw.open();
                 // Start timer
                 stepStartTime = System.currentTimeMillis();
                 break;
 
-            case STEP_4:
-                // Automatically move arm and wrist back to idle position
+            case ARM_RETURN:
+                // Move arm and wrist back to neutral position
                 arm.moveToAngle(90);
                 wrist.setAngle(90);
                 break;
 
-            case STEP_5:
-                // Automatically move ViperLift back to idle position
+            case LIFT_DOWN:
+                // Lower Viper Lift back to initial position
                 viperLift.moveToPosition(0);
                 break;
 
             case COMPLETED:
                 // Scoring process completed
-                // Optionally transition to idle state
                 break;
 
             default:
-                // Handle unexpected cases
                 break;
         }
     }
 
     // Update method to be called periodically
     public void update() {
-        boolean actionCompleted = false;
-
         switch (currentStep) {
-            case STEP_1:
+            case LIFT_UP:
                 if (viperLift.isAtTarget()) {
-                    // Proceed to automatic step 2
-                    currentStep = Step.STEP_2;
-                    executeCurrentStep();
+                    progress();
                 }
                 break;
 
-            case STEP_2:
+            case ARM_POSITION:
                 if (arm.isAtTarget() && wrist.isAtTarget()) {
-                    // Wait for user input to proceed to step 3
-                    // User should press the button to progress()
+                    progress();
                 }
                 break;
 
-            case STEP_3:
+            case OPEN_CLAW:
                 // Wait for timer to complete
                 long elapsedTime = System.currentTimeMillis() - stepStartTime;
                 if (elapsedTime >= STEP_3_DURATION_MS) {
-                    // Proceed to automatic step 4
-                    currentStep = Step.STEP_4;
-                    executeCurrentStep();
+                    progress();
                 }
                 break;
 
-            case STEP_4:
+            case ARM_RETURN:
                 if (arm.isAtTarget() && wrist.isAtTarget()) {
-                    // Proceed to automatic step 5
-                    currentStep = Step.STEP_5;
-                    executeCurrentStep();
+                    progress();
                 }
                 break;
 
-            case STEP_5:
+            case LIFT_DOWN:
                 if (viperLift.isAtTarget()) {
-                    // Process completed
-                    currentStep = Step.COMPLETED;
-                    // Optionally transition to idle state
+                    progress();
                 }
                 break;
 
             case COMPLETED:
-                // No action needed
-                actionCompleted = true;
+                // Process completed; optionally reset or stay in this state
                 break;
 
             default:
-                // Handle unexpected cases
                 break;
         }
     }

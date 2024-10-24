@@ -4,17 +4,21 @@ package org.firstinspires.ftc.teamcode.robot.states;
 import org.firstinspires.ftc.teamcode.subsystems.ViperLift;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
 
+/**
+ * Represents the state of the robot when performing the hanging sequence.
+ */
 public class HangingState {
+
     // Subsystems
-    private ViperLift viperLift;
-    private Arm arm;
+    private final ViperLift viperLift;
+    private final Arm arm;
 
     // Steps in the hanging process
     public enum Step {
-        STEP_1,
-        STEP_2,
-        STEP_3,
-        STEP_4,
+        INITIAL_POSITION,
+        ARM_EXTEND,
+        LIFT_RAISE,
+        ARM_ADJUST,
         COMPLETED
     }
 
@@ -24,28 +28,28 @@ public class HangingState {
     public HangingState(ViperLift viperLift, Arm arm) {
         this.viperLift = viperLift;
         this.arm = arm;
-        this.currentStep = Step.STEP_1; // Initial step
+        this.currentStep = Step.INITIAL_POSITION;
     }
 
     // Start the hanging process
     public void start() {
-        currentStep = Step.STEP_1;
+        currentStep = Step.INITIAL_POSITION;
         executeCurrentStep();
     }
 
     // Progress to the next step based on button presses
     public void progress() {
         switch (currentStep) {
-            case STEP_1:
-                currentStep = Step.STEP_2;
+            case INITIAL_POSITION:
+                currentStep = Step.ARM_EXTEND;
                 break;
-            case STEP_2:
-                currentStep = Step.STEP_3;
+            case ARM_EXTEND:
+                currentStep = Step.LIFT_RAISE;
                 break;
-            case STEP_3:
-                currentStep = Step.STEP_4;
+            case LIFT_RAISE:
+                currentStep = Step.ARM_ADJUST;
                 break;
-            case STEP_4:
+            case ARM_ADJUST:
                 currentStep = Step.COMPLETED;
                 break;
             default:
@@ -58,29 +62,29 @@ public class HangingState {
     // Execute actions for the current step
     private void executeCurrentStep() {
         switch (currentStep) {
-            case STEP_1:
+            case INITIAL_POSITION:
                 // Move Viper Lift up slightly
                 viperLift.moveToPosition(500); // Adjust the position value as needed
                 break;
 
-            case STEP_2:
+            case ARM_EXTEND:
                 // Extend arm to 0 degrees
                 arm.moveToAngle(0);
                 break;
 
-            case STEP_3:
+            case LIFT_RAISE:
                 // Raise Viper Lift to maximum height
                 viperLift.moveToMax();
                 break;
 
-            case STEP_4:
+            case ARM_ADJUST:
                 // Adjust arm to approximately 80 degrees
                 arm.moveToAngle(80);
                 break;
 
             case COMPLETED:
                 // Hanging process completed
-                // Optionally transition to idle state
+                // Optionally, you can reset to initial position or stay in completed state
                 break;
 
             default:
@@ -91,38 +95,37 @@ public class HangingState {
 
     // Update method to be called periodically
     public void update() {
+        // Check if the action for the current step is completed
         boolean actionCompleted = false;
 
         switch (currentStep) {
-            case STEP_1:
+            case INITIAL_POSITION:
                 actionCompleted = viperLift.isAtTarget();
                 break;
 
-            case STEP_2:
+            case ARM_EXTEND:
                 actionCompleted = arm.isAtTarget();
                 break;
 
-            case STEP_3:
+            case LIFT_RAISE:
                 actionCompleted = viperLift.isAtTarget();
                 break;
 
-            case STEP_4:
+            case ARM_ADJUST:
                 actionCompleted = arm.isAtTarget();
                 break;
 
             case COMPLETED:
-                // No action needed
                 actionCompleted = true;
                 break;
 
             default:
-                // Handle unexpected cases
                 break;
         }
 
-        if (actionCompleted) {
-            // Optionally proceed to the next automatic step
-            // For this implementation, we wait for user input to progress
+        // Automatically progress to the next step if the current action is completed
+        if (actionCompleted && currentStep != Step.COMPLETED) {
+            progress();
         }
     }
 

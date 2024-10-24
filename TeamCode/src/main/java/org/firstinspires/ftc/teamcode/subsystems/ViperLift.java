@@ -11,8 +11,8 @@ public class ViperLift {
     private DcMotor rightLiftMotor;
 
     // Encoder positions
-    private static final int POSITION_MIN = 0;         // Fully retracted position
-    private static final int POSITION_MAX = 11600;     // Fully extended position
+    private static final int POSITION_MIN = 0;        // Fully retracted position
+    private static final int POSITION_MAX = 11600;    // Fully extended position
 
     // Target position
     private int targetPosition = POSITION_MIN;
@@ -24,28 +24,21 @@ public class ViperLift {
         rightLiftMotor = hardwareMap.get(DcMotor.class, "LiftR");
 
         // Motor configurations
-        configureMotor(leftLiftMotor);
-        configureMotor(rightLiftMotor);
+        leftLiftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightLiftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // Change the direction of one of the motors if necessary
+        // Reverse one motor if necessary
         leftLiftMotor.setDirection(DcMotor.Direction.REVERSE);
 
-        // Set initial positions
         resetEncoders();
-    }
-
-    private void configureMotor(DcMotor motor) {
-        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Reset encoders
     public void resetEncoders() {
         leftLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     // Move to a specific position
@@ -53,15 +46,9 @@ public class ViperLift {
         // Clamp position within bounds
         targetPosition = Math.max(POSITION_MIN, Math.min(position, POSITION_MAX));
 
-        // Set target position for both motors
+        // Set target position and power
         leftLiftMotor.setTargetPosition(targetPosition);
         rightLiftMotor.setTargetPosition(targetPosition);
-
-        // Set mode to run to position
-        leftLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        // Apply power (adjust as necessary)
         leftLiftMotor.setPower(1.0);
         rightLiftMotor.setPower(1.0);
     }
@@ -71,23 +58,14 @@ public class ViperLift {
         moveToPosition(targetPosition + increment);
     }
 
+    // Get current position
+    public int getCurrentPosition() {
+        return (leftLiftMotor.getCurrentPosition() + rightLiftMotor.getCurrentPosition()) / 2;
+    }
+
     // Get target position
     public int getTargetPosition() {
         return targetPosition;
-    }
-
-    // Stop the lift
-    public void stop() {
-        leftLiftMotor.setPower(0);
-        rightLiftMotor.setPower(0);
-        leftLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-
-    // Get current position
-    public int getCurrentPosition() {
-        // Average the positions of both motors
-        return (leftLiftMotor.getCurrentPosition() + rightLiftMotor.getCurrentPosition()) / 2;
     }
 
     // Check if lift is at target position
@@ -95,22 +73,17 @@ public class ViperLift {
         return !leftLiftMotor.isBusy() && !rightLiftMotor.isBusy();
     }
 
-    // Update method to be called in the main loop (if needed)
+    // Update method if needed
     public void update() {
-        // Implement PID control or other control logic here if necessary
+        // Implement any necessary logic
     }
 
-    // Additional methods for preset positions
+    // Move to min and max positions
     public void moveToMin() {
         moveToPosition(POSITION_MIN);
     }
 
     public void moveToMax() {
         moveToPosition(POSITION_MAX);
-    }
-
-    // Implement safety checks (if necessary)
-    public void safetyCheck() {
-        // Add code to monitor sensors and stop motors if necessary
     }
 }

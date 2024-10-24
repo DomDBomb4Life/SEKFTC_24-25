@@ -9,72 +9,49 @@ public class Wrist {
     // Servo
     private Servo wristServo;
 
-    // Servo positions (normalized from 0.0 to 1.0)
-    private static final double WRIST_MIN_POSITION = 0.0;     // Adjust based on your hardware
-    private static final double WRIST_MAX_POSITION = 1.0;     // Adjust based on your hardware
-
-    private static final double POSITION_THRESHOLD = 0.02; // Threshold for position checking
+    // Servo positions
+    private static final double POSITION_MIN = 0.0;
+    private static final double POSITION_MAX = 1.0;
 
     // Target position
-    private double targetPosition = WRIST_MIN_POSITION;
+    private double targetPosition = POSITION_MIN;
 
     // Constructor
     public Wrist(HardwareMap hardwareMap) {
         // Initialize the servo
         wristServo = hardwareMap.get(Servo.class, "WristServo");
-
-        // Set initial position
-        setPosition(WRIST_MIN_POSITION); // Start at the minimum position
+        setPosition(POSITION_MIN);
     }
 
-    // Set wrist position (normalized from 0.0 to 1.0)
+    // Set wrist position
     public void setPosition(double position) {
-        // Clamp the position within limits
-        targetPosition = Math.max(WRIST_MIN_POSITION, Math.min(position, WRIST_MAX_POSITION));
+        targetPosition = Math.max(POSITION_MIN, Math.min(position, POSITION_MAX));
         wristServo.setPosition(targetPosition);
     }
 
-    // Manual control method
+    // Manual control
     public void setManualPosition(double position) {
         setPosition(position);
     }
 
-    // Set wrist angle (in degrees)
+    // Set wrist angle (assuming 0 to 180 degrees)
     public void setAngle(double angleDegrees) {
-        // Convert degrees to servo position
-        double position = angleToServoPosition(angleDegrees);
+        double position = angleDegrees / 180.0;
         setPosition(position);
     }
 
-    // Convert angle in degrees to servo position (normalized)
-    private double angleToServoPosition(double angleDegrees) {
-        // Assuming the servo rotates from 0 to 180 degrees
-        double servoRangeDegrees = 180.0; // Adjust if your servo has a different range
-        double normalizedPosition = angleDegrees / servoRangeDegrees;
-
-        // Clamp normalized position between 0.0 and 1.0
-        return Math.max(WRIST_MIN_POSITION, Math.min(normalizedPosition, WRIST_MAX_POSITION));
-    }
-
-    // Get current servo position
+    // Get current position
     public double getPosition() {
         return wristServo.getPosition();
     }
 
-    // Get current angle (in degrees)
-    public double getAngle() {
-        // Assuming linear relationship between servo position and angle
-        double servoRangeDegrees = 180.0; // Adjust if your servo has a different range
-        return wristServo.getPosition() * servoRangeDegrees;
-    }
-
-    // Check if wrist is at target position
+    // Check if at target
     public boolean isAtTarget() {
-        return Math.abs(wristServo.getPosition() - targetPosition) < POSITION_THRESHOLD;
+        return Math.abs(wristServo.getPosition() - targetPosition) < 0.01;
     }
 
-    // Update method (if needed)
+    // Update method if needed
     public void update() {
-        // Implement any periodic updates or checks if necessary
+        // Implement any necessary logic
     }
 }
