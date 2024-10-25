@@ -3,10 +3,15 @@ package org.firstinspires.ftc.teamcode.vision;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.openftc.easyopencv.*;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.openftc.apriltag.*;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 
+import java.util.ArrayList;
+
+/**
+ * Handles vision processing using the camera and AprilTag detection.
+ */
 public class VisionSystem {
     private OpenCvCamera camera;
     private AprilTagDetectionPipeline aprilTagDetectionPipeline;
@@ -28,6 +33,7 @@ public class VisionSystem {
     public VisionSystem(HardwareMap hardwareMap) {
         int cameraMonitorViewId = hardwareMap.appContext.getResources()
             .getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+
         // Initialize the camera
         camera = OpenCvCameraFactory.getInstance().createWebcam(
             hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);

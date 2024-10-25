@@ -6,9 +6,14 @@ import org.firstinspires.ftc.teamcode.vision.VisionSystem;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import java.util.ArrayList;
+
+/**
+ * Handles localization by fusing odometry and vision data.
+ */
 public class Localization {
     private DcMotor leftEncoder, rightEncoder, frontEncoder;
-    private VisionSystem visionSystem;
+    private final VisionSystem visionSystem;
     private Pose2d currentPose;
 
     // Variables for odometry calculations
@@ -20,6 +25,7 @@ public class Localization {
     private static final double TICKS_PER_REV = 8192; // Adjust based on your encoders
     private static final double WHEEL_RADIUS = 1; // in inches, adjust based on your wheels
     private static final double GEAR_RATIO = 1; // Adjust if you have gear reduction
+    private static final double TRACK_WIDTH = 14; // Distance between left and right wheels
 
     public Localization(HardwareMap hardwareMap, VisionSystem visionSystem) {
         // Initialize encoders (assuming separate encoders for odometry wheels)
@@ -78,7 +84,7 @@ public class Localization {
         // Implement odometry calculations here (e.g., standard mecanum wheel odometry)
         double deltaX = (deltaLeftInches + deltaRightInches) / 2;
         double deltaY = deltaFrontInches;
-        double deltaHeading = (deltaRightInches - deltaLeftInches) / TRACK_WIDTH; // TRACK_WIDTH to be defined
+        double deltaHeading = (deltaRightInches - deltaLeftInches) / TRACK_WIDTH;
 
         return new Pose2d(deltaX, deltaY, deltaHeading);
     }

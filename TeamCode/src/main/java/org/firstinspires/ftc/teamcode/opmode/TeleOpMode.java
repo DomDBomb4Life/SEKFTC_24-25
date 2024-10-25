@@ -3,9 +3,10 @@ package org.firstinspires.ftc.teamcode.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
 import org.firstinspires.ftc.teamcode.drive.DriveTrain;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import com.acmerobotics.roadrunner.geometry.Pose2d; // Add import for Pose2d
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 @TeleOp(name = "TeleOp Mode")
 public class TeleOpMode extends LinearOpMode {
@@ -33,6 +34,7 @@ public class TeleOpMode extends LinearOpMode {
         boolean previousHangingButtonPressed = false;
         boolean previousScoringButtonPressed = false;
         boolean previousSelectButtonPressed = false;
+        boolean previousClawButtonPressed = false;
 
         waitForStart();
 
@@ -52,18 +54,20 @@ public class TeleOpMode extends LinearOpMode {
 
             // If aimbot is active, skip manual driving
             if (!robot.aimbotController.isActive()) {
+                // Read gamepad inputs
+                double leftStickY = -gamepad1.left_stick_y;
+                double leftStickX = gamepad1.left_stick_x;
+                double rightStickX = -gamepad1.right_stick_x;
+
+                // Update speed based on triggers
+                driveTrain.updateSpeed(gamepad1.left_trigger, gamepad1.right_trigger);
+
                 // Handle drivetrain control
-                driveTrain.drive(
-                    gamepad1.left_stick_y,
-                    gamepad1.left_stick_x,
-                    gamepad1.right_stick_x,
-                    gamepad1.left_trigger,
-                    gamepad1.right_trigger
-                );
+                driveTrain.drive(leftStickY, leftStickX, rightStickX);
             }
 
             // Handle select button press to toggle dev mode
-            boolean selectButtonPressed = gamepad2.back; // Assuming back button is the select button
+            boolean selectButtonPressed = gamepad2.back;
             if (selectButtonPressed && !previousSelectButtonPressed) {
                 devMode = !devMode; // Toggle dev mode
             }
@@ -74,7 +78,7 @@ public class TeleOpMode extends LinearOpMode {
 
                 // Handle button presses
 
-                // Home State Button (e.g., gamepad2.y)
+                // Home State Button (gamepad2.y)
                 if (gamepad2.y && !previousHomeButtonPressed) {
                     robot.onHomeButtonPressed();
                 }
@@ -87,20 +91,21 @@ public class TeleOpMode extends LinearOpMode {
                 }
                 previousRightTriggerPressed = rightTriggerPressed;
 
-                // Claw Toggle Button (e.g., gamepad2.b)
-                if (gamepad2.b) {
+                // Claw Toggle Button (gamepad2.b)
+                if (gamepad2.b && !previousClawButtonPressed) {
                     robot.onClawToggleButtonPressed();
                 }
+                previousClawButtonPressed = gamepad2.b;
 
-                // Hanging Button (e.g., gamepad2.a)
+                // Hanging Button (gamepad2.a)
                 if (gamepad2.a && !previousHangingButtonPressed) {
                     robot.onHangingButtonPressed();
                 }
                 previousHangingButtonPressed = gamepad2.a;
 
-                // Scoring Basket Button (e.g., gamepad2.x)
+                // Scoring Basket Button (gamepad2.x)
                 if (gamepad2.x && !previousScoringButtonPressed) {
-                    robot.onScoringBasketButtonPressed();
+                    robot.onScoringButtonPressed();
                 }
                 previousScoringButtonPressed = gamepad2.x;
 
@@ -110,22 +115,34 @@ public class TeleOpMode extends LinearOpMode {
                 // Telemetry for debugging
                 telemetry.addData("Mode", "Normal Mode");
                 telemetry.addData("Current State", robot.currentState);
-                telemetry.addData("Hanging Step", robot.hangingState.getCurrentStep());
-                telemetry.addData("Scoring Step", robot.scoringBasketState.getCurrentStep());
-                telemetry.addData("Home Variation", robot.homeState.getCurrentVariation());
+                telemetry.addData("Speed Multiplier", driveTrain.getSpeedMultiplier());
+                telemetry.addData("Aimbot Active", robot.aimbotController.isActive());
             } else {
                 // Dev mode
                 // Provide manual control over the subsystems
 
-                // Manual control of ViperLift using gamepad2 left stick y
-                double viperLiftPower = -gamepad2.left_stick_y; // Up is negative
-                robot.viperLift.setManualPower(viperLiftPower);
+                // Threshold to prevent unintentional adjustments
+                double threshold = 0.05;
 
-                // Manual control of Arm using gamepad2 right stick y
-                double armPower = -gamepad2.right_stick_y; // Up is negative
-                robot.arm.setManualPower(armPower);
+                // Scale factors for adjustments
+                double armIncrementScale = 1.0;      // Degrees per input unit
+                int liftIncrementScale = 50;         // Encoder counts per input unit
 
-                // Manual control of Wrist using gamepad2 dpad up/down
+                // Manual control of ViperLift
+                double liftInput = -gamepad2.left_stick_y; // Up is negative
+                if (Math.abs(liftInput) > threshold) {
+                    int liftIncrement = (int) (liftInput * liftIncrementScale);
+                    robot.viperLift.adjustTargetPosition(liftIncrement);
+                }
+
+                // Manual control of Arm
+                double armInput = -gamepad2.right_stick_y; // Up is negative
+                if (Math.abs(armInput) > threshold) {
+                    double armIncrement = armInput * armIncrementScale;
+                    robot.arm.adjustTargetAngle(armIncrement);
+                }
+
+                // Manual control of Wrist
                 if (gamepad2.dpad_up) {
                     robot.wrist.setManualPosition(robot.wrist.getPosition() + 0.01);
                 } else if (gamepad2.dpad_down) {
@@ -138,20 +155,20 @@ public class TeleOpMode extends LinearOpMode {
                 } else if (gamepad2.dpad_left) {
                     robot.claw.setManualPosition(robot.claw.getPosition() - 0.01);
                 }
+                // Update subsystems
+                robot.update();
 
                 // Telemetry for dev mode
                 telemetry.addData("Mode", "Dev Mode");
                 telemetry.addData("ViperLift Position", robot.viperLift.getCurrentPosition());
-                telemetry.addData("ViperLift Power", viperLiftPower);
-                telemetry.addData("Arm Position", robot.arm.getCurrentAngle());
-                telemetry.addData("Arm Power", armPower);
+                telemetry.addData("ViperLift Target", robot.viperLift.getTargetPosition());
+                telemetry.addData("Arm Angle", robot.arm.getCurrentAngle());
+                telemetry.addData("Arm Target", robot.arm.getTargetAngle());
                 telemetry.addData("Wrist Position", robot.wrist.getPosition());
                 telemetry.addData("Claw Position", robot.claw.getPosition());
             }
 
-            // Telemetry common to both modes
-            telemetry.addData("Drive Speed", driveTrain.getSpeed());
-            telemetry.addData("Aimbot Active", robot.aimbotController.isActive());
+            // Common telemetry updates
             telemetry.update();
         }
     }
