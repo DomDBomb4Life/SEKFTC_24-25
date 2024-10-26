@@ -11,8 +11,13 @@ public class ViperLift {
     private DcMotor rightLiftMotor;
 
     // Encoder positions
+<<<<<<< HEAD
     private static final int POSITION_MIN = 0;        // Fully retracted position
     private static final int POSITION_MAX = 11600;    // Fully extended position
+=======
+    private static final int POSITION_MIN = 0;         // Fully retracted position
+    private static final int POSITION_MAX = 11700;     // Fully extended position (example value)
+>>>>>>> Test
 
     // Target position
     private int targetPosition = POSITION_MIN;
@@ -27,12 +32,25 @@ public class ViperLift {
         leftLiftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightLiftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+<<<<<<< HEAD
         // Reverse one motor if necessary
+=======
+        // Change the direction of one of the motors if necessary
+>>>>>>> Test
         leftLiftMotor.setDirection(DcMotor.Direction.REVERSE);
 
         resetEncoders();
     }
 
+<<<<<<< HEAD
+=======
+    private void configureMotor(DcMotor motor) {
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+>>>>>>> Test
     // Reset encoders
     public void resetEncoders() {
         leftLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -49,13 +67,30 @@ public class ViperLift {
         // Set target position and power
         leftLiftMotor.setTargetPosition(targetPosition);
         rightLiftMotor.setTargetPosition(targetPosition);
+<<<<<<< HEAD
+=======
+
+        // Apply power
+>>>>>>> Test
         leftLiftMotor.setPower(1.0);
         rightLiftMotor.setPower(1.0);
     }
 
     // Adjust target position incrementally
     public void adjustTargetPosition(int increment) {
+<<<<<<< HEAD
         moveToPosition(targetPosition + increment);
+=======
+        if (!isBusy()) {
+            moveToPosition(targetPosition + increment);
+        }
+    }
+
+    // Stop the lift
+    public void stop() {
+        leftLiftMotor.setPower(0);
+        rightLiftMotor.setPower(0);
+>>>>>>> Test
     }
 
     // Get current position
@@ -73,7 +108,16 @@ public class ViperLift {
         return !leftLiftMotor.isBusy() && !rightLiftMotor.isBusy();
     }
 
+<<<<<<< HEAD
     // Update method if needed
+=======
+    // Check if lift is busy moving
+    public boolean isBusy() {
+        return leftLiftMotor.isBusy() || rightLiftMotor.isBusy();
+    }
+
+    // Update method to be called in the main loop (if needed)
+>>>>>>> Test
     public void update() {
         // Implement any necessary logic
     }

@@ -11,7 +11,16 @@ import org.firstinspires.ftc.teamcode.robot.states.HomeState;
 import org.firstinspires.ftc.teamcode.robot.states.HangingState;
 import org.firstinspires.ftc.teamcode.robot.states.ScoringBasketState;
 import org.firstinspires.ftc.teamcode.robot.states.IdleState;
+import org.firstinspires.ftc.teamcode.vision.VisionSystem;
+import org.firstinspires.ftc.teamcode.localization.Localization;
+import org.firstinspires.ftc.teamcode.aimbot.AimbotController;
+import org.firstinspires.ftc.teamcode.drive.DriveTrain;
 
+<<<<<<< HEAD
+=======
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+
+>>>>>>> Test
 /**
  * The Robot class encapsulates all the subsystems and manages state transitions.
  */
@@ -29,6 +38,17 @@ public class Robot {
     public final ScoringBasketState scoringBasketState;
     public final IdleState idleState;
 
+<<<<<<< HEAD
+=======
+    // Autonomous components
+    public final VisionSystem visionSystem;
+    public final Localization localization;
+    public final AimbotController aimbotController;
+
+    // Drivetrain
+    private final DriveTrain driveTrain;
+
+>>>>>>> Test
     // Current state
     public enum State {
         IDLE,
@@ -40,7 +60,11 @@ public class Robot {
     public State currentState = State.IDLE;
 
     // Constructor
+<<<<<<< HEAD
     public Robot(HardwareMap hardwareMap) {
+=======
+    public Robot(HardwareMap hardwareMap, DriveTrain driveTrain) {
+>>>>>>> Test
         // Initialize subsystems
         viperLift = new ViperLift(hardwareMap);
         arm = new Arm(hardwareMap);
@@ -55,10 +79,32 @@ public class Robot {
 
         // Activate initial state
         idleState.activate();
+
+        // Initialize drivetrain
+        this.driveTrain = driveTrain;
+
+        // Initialize vision system
+        visionSystem = new VisionSystem(hardwareMap);
+
+        // Initialize localization
+        localization = new Localization(hardwareMap, visionSystem);
+
+        // Initialize aimbot controller
+        aimbotController = new AimbotController(localization, driveTrain);
     }
 
     // Update method called periodically
     public void update() {
+        // Update vision system
+        visionSystem.update();
+
+        // Update localization
+        localization.update();
+
+        // Update aimbot controller
+        aimbotController.update();
+
+        // Update states
         switch (currentState) {
             case HOME:
                 homeState.update();
@@ -137,4 +183,16 @@ public class Robot {
             homeState.switchVariation();
         }
     }
+<<<<<<< HEAD
+=======
+
+    // Methods to handle aimbot
+    public void activateAimbot(Pose2d targetPose) {
+        aimbotController.activate(targetPose);
+    }
+
+    public void deactivateAimbot() {
+        aimbotController.deactivate();
+    }
+>>>>>>> Test
 }

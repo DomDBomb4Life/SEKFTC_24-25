@@ -29,6 +29,15 @@ public class Arm {
         resetEncoder();
     }
 
+<<<<<<< HEAD
+=======
+    private void configureMotor(DcMotor motor) {
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+>>>>>>> Test
     // Reset encoder
     public void resetEncoder() {
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -45,25 +54,73 @@ public class Arm {
 
         // Set target position and power
         armMotor.setTargetPosition(targetPosition);
+<<<<<<< HEAD
         armMotor.setPower(0.5);
+=======
+
+        // Apply power
+        armMotor.setPower(0.5); // Use a moderate power for smooth movement
+>>>>>>> Test
     }
 
     // Adjust target angle incrementally
     public void adjustTargetAngle(double increment) {
+<<<<<<< HEAD
         moveToAngle(getCurrentAngle() + increment);
     }
 
     // Get current angle (in degrees) from encoder counts
+=======
+        if (!isBusy()) {
+            moveToAngle(getCurrentAngle() + increment);
+        }
+    }
+
+    // Convert angle to encoder counts
+    private int angleToCounts(double angle) {
+        return (int) (angle * COUNTS_PER_DEGREE);
+    }
+
+    // Convert encoder counts to angle
+    private double countsToAngle(int counts) {
+        return counts / COUNTS_PER_DEGREE;
+    }
+
+    // Stop the arm
+    public void stop() {
+        armMotor.setPower(0);
+    }
+
+    // Get current angle
+>>>>>>> Test
     public double getCurrentAngle() {
         return (armMotor.getCurrentPosition() * 360.0) / ENCODER_CPR;
     }
 
+<<<<<<< HEAD
     // Check if arm is at target position
+=======
+    // Get target angle
+    public double getTargetAngle() {
+        return targetAngle;
+    }
+
+    // Check if arm is at target angle
+>>>>>>> Test
     public boolean isAtTarget() {
         return !armMotor.isBusy();
     }
 
+<<<<<<< HEAD
     // Update method if needed
+=======
+    // Check if arm is busy moving
+    public boolean isBusy() {
+        return armMotor.isBusy();
+    }
+
+    // Update method to be called periodically (if needed)
+>>>>>>> Test
     public void update() {
         // Implement any necessary logic
     }
