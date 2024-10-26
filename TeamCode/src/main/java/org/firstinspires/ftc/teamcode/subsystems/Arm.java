@@ -36,13 +36,13 @@ public class Arm {
     private void configureMotor(DcMotor motor) {
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     // Reset encoder
     public void resetEncoder() {
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     // Move to a specific angle
@@ -56,17 +56,15 @@ public class Arm {
         // Set target position
         armMotor.setTargetPosition(targetPosition);
 
-        // Set mode to run to position
-        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        // Apply power (adjust as necessary)
+        // Apply power
         armMotor.setPower(0.5); // Use a moderate power for smooth movement
     }
 
-    // Manual control method
-    public void setManualPower(double power) {
-        armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        armMotor.setPower(power);
+    // Adjust target angle incrementally
+    public void adjustTargetAngle(double increment) {
+        if (!isBusy()) {
+            moveToAngle(getCurrentAngle() + increment);
+        }
     }
 
     // Convert angle to encoder counts
@@ -82,7 +80,6 @@ public class Arm {
     // Stop the arm
     public void stop() {
         armMotor.setPower(0);
-        armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Get current angle
@@ -91,22 +88,19 @@ public class Arm {
         return countsToAngle(currentPosition);
     }
 
+    // Get target angle
+    public double getTargetAngle() {
+        return targetAngle;
+    }
+
     // Check if arm is at target angle
     public boolean isAtTarget() {
         return !armMotor.isBusy();
     }
 
-    // Preset positions for different states
-    public void moveToHomePosition() {
-        moveToAngle(0.0); // Home position angle
-    }
-
-    public void moveToScoringBasketPosition() {
-        moveToAngle(180.0); // Scoring basket position angle
-    }
-
-    public void moveToHangingPosition() {
-        moveToAngle(90.0); // Hanging position angle
+    // Check if arm is busy moving
+    public boolean isBusy() {
+        return armMotor.isBusy();
     }
 
     // Update method to be called periodically (if needed)

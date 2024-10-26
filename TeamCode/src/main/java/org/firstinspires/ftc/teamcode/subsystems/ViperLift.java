@@ -12,7 +12,7 @@ public class ViperLift {
 
     // Encoder positions
     private static final int POSITION_MIN = 0;         // Fully retracted position
-    private static final int POSITION_MAX = 11700;      // Fully extended position (example value)
+    private static final int POSITION_MAX = 11700;     // Fully extended position (example value)
 
     // Target position
     private int targetPosition = POSITION_MIN;
@@ -37,15 +37,15 @@ public class ViperLift {
     private void configureMotor(DcMotor motor) {
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     // Reset encoders
     public void resetEncoders() {
         leftLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     // Move to a specific position
@@ -57,29 +57,22 @@ public class ViperLift {
         leftLiftMotor.setTargetPosition(targetPosition);
         rightLiftMotor.setTargetPosition(targetPosition);
 
-        // Set mode to run to position
-        leftLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        // Apply power (adjust as necessary)
+        // Apply power
         leftLiftMotor.setPower(1.0);
         rightLiftMotor.setPower(1.0);
     }
 
-    // Manual control method
-    public void setManualPower(double power) {
-        leftLiftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightLiftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        leftLiftMotor.setPower(power);
-        rightLiftMotor.setPower(power);
+    // Adjust target position incrementally
+    public void adjustTargetPosition(int increment) {
+        if (!isBusy()) {
+            moveToPosition(targetPosition + increment);
+        }
     }
 
     // Stop the lift
     public void stop() {
         leftLiftMotor.setPower(0);
         rightLiftMotor.setPower(0);
-        leftLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Get current position
@@ -88,9 +81,19 @@ public class ViperLift {
         return (leftLiftMotor.getCurrentPosition() + rightLiftMotor.getCurrentPosition()) / 2;
     }
 
+    // Get target position
+    public int getTargetPosition() {
+        return targetPosition;
+    }
+
     // Check if lift is at target position
     public boolean isAtTarget() {
         return !leftLiftMotor.isBusy() && !rightLiftMotor.isBusy();
+    }
+
+    // Check if lift is busy moving
+    public boolean isBusy() {
+        return leftLiftMotor.isBusy() || rightLiftMotor.isBusy();
     }
 
     // Update method to be called in the main loop (if needed)
@@ -105,10 +108,5 @@ public class ViperLift {
 
     public void moveToMax() {
         moveToPosition(POSITION_MAX);
-    }
-
-    // Implement safety checks (if necessary)
-    public void safetyCheck() {
-        // Add code to monitor sensors and stop motors if necessary
     }
 }
