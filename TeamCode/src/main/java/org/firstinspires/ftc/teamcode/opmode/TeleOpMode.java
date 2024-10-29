@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.drive.DriveTrain;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import com.acmerobotics.roadrunner.geometry.Pose2d;
+//import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 @TeleOp(name = "TeleOp Mode")
 public class TeleOpMode extends LinearOpMode {
@@ -73,6 +73,7 @@ public class TeleOpMode extends LinearOpMode {
     // Method to handle aimbot activation
     private void handleAimbot() {
         boolean aimbotButtonPressed = gamepad1.a;
+        /*
         if (aimbotButtonPressed && !previousAimbotButtonPressed) {
             if (robot.aimbotController.isActive()) {
                 robot.deactivateAimbot();
@@ -82,10 +83,11 @@ public class TeleOpMode extends LinearOpMode {
                 robot.activateAimbot(targetPose);
             }
         }
+        */
         previousAimbotButtonPressed = aimbotButtonPressed;
 
         // If aimbot is active, skip manual driving
-        if (!robot.aimbotController.isActive()) {
+       // if (!robot.aimbotController.isActive()) {
             // Read gamepad inputs
             double leftStickY = -gamepad1.left_stick_y;
             double leftStickX = gamepad1.left_stick_x;
@@ -96,7 +98,7 @@ public class TeleOpMode extends LinearOpMode {
 
             // Handle drivetrain control
             driveTrain.drive(leftStickY, leftStickX, rightStickX);
-        }
+      //  }
     }
 
     // Method to handle normal mode controls
@@ -126,7 +128,7 @@ public class TeleOpMode extends LinearOpMode {
         telemetry.addData("Mode", "Normal Mode");
         telemetry.addData("Current State", robot.currentState);
         telemetry.addData("Speed Multiplier", driveTrain.getSpeedMultiplier());
-        telemetry.addData("Aimbot Active", robot.aimbotController.isActive());
+//        telemetry.addData("Aimbot Active", robot.aimbotController.isActive());
     }
 
     // Method to handle dev mode controls

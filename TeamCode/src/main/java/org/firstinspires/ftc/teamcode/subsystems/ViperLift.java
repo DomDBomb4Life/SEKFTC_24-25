@@ -37,15 +37,15 @@ public class ViperLift {
     private void configureMotor(DcMotor motor) {
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Reset encoders
     public void resetEncoders() {
         leftLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Move to a specific position
@@ -60,6 +60,10 @@ public class ViperLift {
         // Apply power
         leftLiftMotor.setPower(1.0);
         rightLiftMotor.setPower(1.0);
+        
+        // Set motors to run to position
+        leftLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     // Adjust target position incrementally

@@ -36,13 +36,13 @@ public class Arm {
     private void configureMotor(DcMotor motor) {
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Reset encoder
     public void resetEncoder() {
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Move to a specific angle
@@ -55,9 +55,13 @@ public class Arm {
 
         // Set target position
         armMotor.setTargetPosition(targetPosition);
+        
 
         // Apply power
         armMotor.setPower(0.5); // Use a moderate power for smooth movement
+
+        // Run to position
+        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     // Adjust target angle incrementally

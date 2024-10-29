@@ -11,12 +11,7 @@ import org.firstinspires.ftc.teamcode.robot.states.HomeState;
 import org.firstinspires.ftc.teamcode.robot.states.HangingState;
 import org.firstinspires.ftc.teamcode.robot.states.ScoringBasketState;
 import org.firstinspires.ftc.teamcode.robot.states.IdleState;
-import org.firstinspires.ftc.teamcode.vision.VisionSystem;
-import org.firstinspires.ftc.teamcode.localization.Localization;
-import org.firstinspires.ftc.teamcode.aimbot.AimbotController;
-import org.firstinspires.ftc.teamcode.drive.DriveTrain;
-
-import com.acmerobotics.roadrunner.geometry.Pose2d;
+import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 
 /**
  * The Robot class encapsulates all the subsystems and manages state transitions.
@@ -35,13 +30,8 @@ public class Robot {
     public final ScoringBasketState scoringBasketState;
     public final IdleState idleState;
 
-    // Autonomous components
-    public final VisionSystem visionSystem;
-    public final Localization localization;
-    public final AimbotController aimbotController;
-
     // Drivetrain
-    private final DriveTrain driveTrain;
+    private final DriveTrainRR driveTrain;
 
     // Current state
     public enum State {
@@ -54,7 +44,7 @@ public class Robot {
     public State currentState = State.IDLE;
 
     // Constructor
-    public Robot(HardwareMap hardwareMap, DriveTrain driveTrain) {
+    public Robot(HardwareMap hardwareMap, DriveTrainRR driveTrain) {
         // Initialize subsystems
         viperLift = new ViperLift(hardwareMap);
         arm = new Arm(hardwareMap);
@@ -72,29 +62,11 @@ public class Robot {
 
         // Initialize drivetrain
         this.driveTrain = driveTrain;
-
-        // Initialize vision system
-        visionSystem = new VisionSystem(hardwareMap);
-
-        // Initialize localization
-        localization = new Localization(hardwareMap, visionSystem);
-
-        // Initialize aimbot controller
-        aimbotController = new AimbotController(localization, driveTrain);
     }
 
     // Update method called periodically
     public void update() {
-        // Update vision system
-        visionSystem.update();
-
-        // Update localization
-        localization.update();
-
-        // Update aimbot controller
-        aimbotController.update();
-
-        // Update states
+        // Update subsystems and states
         switch (currentState) {
             case HOME:
                 homeState.update();
@@ -146,6 +118,11 @@ public class Robot {
             }
         }
     }
+    // Autonomous actions
+    public void performAutonomousActions() {
+        // Placeholder for autonomous actions
+        // This method must be expanded to include the sequence of actions during autonomous mode
+    }
 
     // Methods to handle button presses
     public void onHomeButtonPressed() {
@@ -175,11 +152,14 @@ public class Robot {
     }
 
     // Methods to handle aimbot
+    /*
     public void activateAimbot(Pose2d targetPose) {
         aimbotController.activate(targetPose);
     }
 
     public void deactivateAimbot() {
-        aimbotController.deactivate();
+//        aimbotController.deactivate();
     }
+
+     */
 }
