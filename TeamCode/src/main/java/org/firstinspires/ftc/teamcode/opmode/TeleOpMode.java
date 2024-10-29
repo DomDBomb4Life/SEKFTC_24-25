@@ -5,13 +5,16 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.drive.DriveTrain;
+import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-//import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 @TeleOp(name = "TeleOp Mode")
 public class TeleOpMode extends LinearOpMode {
 
     private DriveTrain driveTrain;
+    private DriveTrainRR driveTrainRR;
+
     private Robot robot;
 
     // Variable to track dev mode
@@ -26,10 +29,13 @@ public class TeleOpMode extends LinearOpMode {
     @Override
     public void runOpMode() {
         // Initialize the drivetrain
+        driveTrainRR = new DriveTrainRR(hardwareMap);
+        // Initialize the drivetrain
         driveTrain = new DriveTrain(hardwareMap);
 
+
         // Initialize the robot with the drivetrain
-        robot = new Robot(hardwareMap, driveTrain);
+        robot = new Robot(hardwareMap, driveTrainRR);
 
         waitForStart();
 

@@ -64,6 +64,11 @@ public class Robot {
         this.driveTrain = driveTrain;
     }
 
+    // Getter for drivetrain
+    public DriveTrainRR getDriveTrain() {
+        return driveTrain;
+    }
+
     // Update method called periodically
     public void update() {
         // Update subsystems and states
@@ -118,10 +123,23 @@ public class Robot {
             }
         }
     }
+
     // Autonomous actions
-    public void performAutonomousActions() {
-        // Placeholder for autonomous actions
-        // This method must be expanded to include the sequence of actions during autonomous mode
+    public void performAction(String action) {
+        switch (action) {
+            case "pickUp":
+                claw.close();
+                break;
+            case "dropOff":
+                claw.open();
+                break;
+            case "liftToLevelOne":
+                viperLift.moveToPosition(ViperLift.LEVEL_ONE_POSITION);
+                break;
+            // Add more actions as needed
+            default:
+                break;
+        }
     }
 
     // Methods to handle button presses
@@ -150,16 +168,4 @@ public class Robot {
             homeState.switchVariation();
         }
     }
-
-    // Methods to handle aimbot
-    /*
-    public void activateAimbot(Pose2d targetPose) {
-        aimbotController.activate(targetPose);
-    }
-
-    public void deactivateAimbot() {
-//        aimbotController.deactivate();
-    }
-
-     */
 }
