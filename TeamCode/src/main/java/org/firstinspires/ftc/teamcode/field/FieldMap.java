@@ -1,7 +1,7 @@
 // File: FieldMap.java
 package org.firstinspires.ftc.teamcode.field;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.Pose2d;
 
 /**
  * Represents the field and static objects for autonomous navigation.

@@ -141,4 +141,7 @@ public class DriveTrainRR {
     private static double rpmToVelocity(double rpm) {
         return rpm * GEAR_RATIO * 2 * Math.PI * WHEEL_RADIUS / 60.0;
     }
+    public ThreeWheelOdometryLocalizer getLocalizer() {
+        return localizer;
+    }
 }

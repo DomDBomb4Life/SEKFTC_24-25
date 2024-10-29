@@ -1,14 +1,21 @@
 // File: AutonomousTrajectoryPlanner.java
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.trajectory.*;
-import com.acmerobotics.roadrunner.trajectory.sequence.*;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.InstantAction;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TrajectoryActionFactory;
+import com.acmerobotics.roadrunner.TurnActionFactory;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Rotation2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 import org.firstinspires.ftc.teamcode.field.FieldMap;
-import org.firstinspires.ftc.teamcode.vision.VisionSystem;
 import org.firstinspires.ftc.teamcode.localization.ThreeWheelOdometryLocalizer;
+import org.firstinspires.ftc.teamcode.vision.VisionSystem;
 
 public class AutonomousTrajectoryPlanner {
 
@@ -19,17 +26,18 @@ public class AutonomousTrajectoryPlanner {
     public AutonomousTrajectoryPlanner(HardwareMap hardwareMap) {
         driveTrain = new DriveTrainRR(hardwareMap);
         visionSystem = new VisionSystem(hardwareMap);
-        localizer = (ThreeWheelOdometryLocalizer) driveTrain.getLocalizer();
+        localizer = driveTrain.getLocalizer();
     }
 
     public void initialize() {
         // Set the initial pose estimate
         driveTrain.setPoseEstimate(FieldMap.STARTING_POSITION);
+        visionSystem.initialize();
     }
 
     public void updateLocalization() {
         // Update odometry
-        driveTrain.update();
+        driveTrain.updatePoseEstimate();
 
         // Periodically update the pose estimate with vision data
         visionSystem.update();
@@ -55,85 +63,72 @@ public class AutonomousTrajectoryPlanner {
         return new Pose2d(fusedX, fusedY, fusedHeading);
     }
 
-    public void executeTrajectorySequence(TrajectorySequence trajectorySequence) {
-        driveTrain.followTrajectorySequence(trajectorySequence);
-    }
+    public Action buildAutonomousSequence() {
+        // Initialize the TrajectoryActionBuilder
+        TrajectoryActionBuilder actionBuilder = new TrajectoryActionBuilder(
+                new TurnActionFactoryImpl(driveTrain),
+                new TrajectoryActionFactoryImpl(driveTrain),
+                driveTrain.getPoseEstimate(),
+                0.0 // Begin end velocity
+        );
 
-    // Build trajectory to pick up alliance samples and place them in the observation area
-    public TrajectorySequence buildAllianceSampleTrajectory() {
-        TrajectorySequenceBuilder builder = driveTrain.trajectorySequenceBuilder(FieldMap.STARTING_POSITION);
-
-        // Move to each alliance sample and pick it up
-        builder.lineToLinearHeading(FieldMap.ALLIANCE_SAMPLE_1)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+        // Build the action sequence using advanced trajectory features
+        actionBuilder
+                .splineTo(FieldMap.ALLIANCE_SAMPLE_1.vec(), FieldMap.ALLIANCE_SAMPLE_1.getHeading())
+                .afterTime(0.0, new InstantAction(() -> {
                     // Code to pick up sample 1
                     // Example: robot.claw.close();
-                })
+                }))
                 .waitSeconds(0.5)
-                .lineToLinearHeading(FieldMap.ALLIANCE_SAMPLE_2)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+                .splineTo(FieldMap.ALLIANCE_SAMPLE_2.vec(), FieldMap.ALLIANCE_SAMPLE_2.getHeading())
+                .afterTime(0.0, new InstantAction(() -> {
                     // Code to pick up sample 2
-                })
+                }))
                 .waitSeconds(0.5)
-                .lineToLinearHeading(FieldMap.ALLIANCE_SAMPLE_3)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+                .splineTo(FieldMap.ALLIANCE_SAMPLE_3.vec(), FieldMap.ALLIANCE_SAMPLE_3.getHeading())
+                .afterTime(0.0, new InstantAction(() -> {
                     // Code to pick up sample 3
-                })
+                }))
                 .waitSeconds(0.5)
-                // Move to the observation area to drop off samples
-                .lineToLinearHeading(FieldMap.OBSERVATION_AREA)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+                .splineTo(FieldMap.OBSERVATION_AREA.vec(), FieldMap.OBSERVATION_AREA.getHeading())
+                .afterTime(0.0, new InstantAction(() -> {
                     // Code to drop off samples
                     // Example: robot.claw.open();
-                })
-                .waitSeconds(0.5);
-
-        return builder.build();
-    }
-
-    // Build trajectory to collect yellow samples and score them in the basket
-    public TrajectorySequence buildYellowSampleScoringTrajectory() {
-        TrajectorySequenceBuilder builder = driveTrain.trajectorySequenceBuilder(FieldMap.OBSERVATION_AREA);
-
-        // Move to yellow sample 1
-        builder.lineToLinearHeading(FieldMap.YELLOW_SAMPLE_1)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+                }))
+                .waitSeconds(0.5)
+                .splineTo(FieldMap.YELLOW_SAMPLE_1.vec(), FieldMap.YELLOW_SAMPLE_1.getHeading())
+                .afterTime(0.0, new InstantAction(() -> {
                     // Code to pick up yellow sample 1
-                })
+                }))
                 .waitSeconds(0.5)
-                // Move to basket to score
-                .lineToLinearHeading(FieldMap.BASKET_POSITION)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+                .splineTo(FieldMap.BASKET_POSITION.vec(), FieldMap.BASKET_POSITION.getHeading())
+                .afterTime(0.0, new InstantAction(() -> {
                     // Code to score yellow sample 1
-                })
+                }))
                 .waitSeconds(0.5)
-                // Repeat for yellow sample 2
-                .lineToLinearHeading(FieldMap.YELLOW_SAMPLE_2)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+                .splineTo(FieldMap.YELLOW_SAMPLE_2.vec(), FieldMap.YELLOW_SAMPLE_2.getHeading())
+                .afterTime(0.0, new InstantAction(() -> {
                     // Code to pick up yellow sample 2
-                })
+                }))
                 .waitSeconds(0.5)
-                .lineToLinearHeading(FieldMap.BASKET_POSITION)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
+                .splineTo(FieldMap.BASKET_POSITION.vec(), FieldMap.BASKET_POSITION.getHeading())
+                .afterTime(0.0, new InstantAction(() -> {
                     // Code to score yellow sample 2
-                })
+                }))
+                .waitSeconds(0.5)
+                .splineTo(FieldMap.LOW_RUNG_POSITION.vec(), FieldMap.LOW_RUNG_POSITION.getHeading())
+                .afterTime(0.0, new InstantAction(() -> {
+                    // Code to initiate level 1 ascent
+                }))
                 .waitSeconds(0.5);
 
-        return builder.build();
+        // Build and return the action sequence
+        return actionBuilder.build();
     }
 
-    // Build trajectory to move to low rung position for level 1 ascent
-    public TrajectorySequence buildLevelOneAscentTrajectory() {
-        TrajectorySequenceBuilder builder = driveTrain.trajectorySequenceBuilder(FieldMap.BASKET_POSITION);
-
-        builder.lineToLinearHeading(FieldMap.LOW_RUNG_POSITION)
-                .UNSTABLE_addTemporalMarkerOffset(0, () -> {
-                    // Code to initiate level 1 ascent
-                    // Example: robot.viperLift.liftToPosition(levelOneHeight);
-                })
-                .waitSeconds(0.5);
-
-        return builder.build();
+    public void executeAutonomousSequence(Action actionSequence) {
+        // Execute the action sequence
+        driveTrain.runAction(actionSequence);
     }
 
     public void shutdown() {

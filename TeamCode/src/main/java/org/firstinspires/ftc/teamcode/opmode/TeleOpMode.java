@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.drive.DriveTrain;
 import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.Pose2d;
 
 @TeleOp(name = "TeleOp Mode")
 public class TeleOpMode extends LinearOpMode {
