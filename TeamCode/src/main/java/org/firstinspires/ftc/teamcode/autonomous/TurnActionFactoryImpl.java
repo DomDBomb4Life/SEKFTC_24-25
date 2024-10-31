@@ -2,8 +2,9 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.TurnActionFactory;
 import com.acmerobotics.roadrunner.TimeTurn;
+import com.acmerobotics.roadrunner.TurnActionFactory;
+
 import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 
 public class TurnActionFactoryImpl implements TurnActionFactory {
@@ -22,7 +23,7 @@ public class TurnActionFactoryImpl implements TurnActionFactory {
             @Override
             public boolean run(com.acmerobotics.dashboard.telemetry.TelemetryPacket packet) {
                 if (!isRunning) {
-                    driveTrain.turnAsync(turn.getAngle());
+                    driveTrain.turnAsync(turn.angle);
                     isRunning = true;
                 }
                 driveTrain.update();

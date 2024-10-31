@@ -1,18 +1,23 @@
 // File: DriveTrainRR.java
 package org.firstinspires.ftc.teamcode.drive;
 
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.MecanumKinematics;
 import com.acmerobotics.roadrunner.MotorFeedforward;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.PoseVelocity2dDual;
+import com.acmerobotics.roadrunner.Rotation2d;
 import com.acmerobotics.roadrunner.Time;
+import com.acmerobotics.roadrunner.TimeTrajectory;
 import com.acmerobotics.roadrunner.Twist2dDual;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.teamcode.localization.ThreeWheelOdometryLocalizer;
@@ -50,7 +55,17 @@ public class DriveTrainRR {
     public Pose2d poseEstimate;
 
     // IMU
-    private final IMU imu;
+    private final BNO055IMU imu;
+
+    // Flags for asynchronous operations
+    private boolean isBusy = false;
+
+    // Target heading for turnAsync
+    private double targetHeading;
+
+    // Trajectory following variables
+    private TimeTrajectory currentTrajectory;
+    private double trajectoryStartTime;
 
     public DriveTrainRR(HardwareMap hardwareMap) {
         // Initialize motors
@@ -82,13 +97,16 @@ public class DriveTrainRR {
         kinematics = new MecanumKinematics(TRACK_WIDTH, LATERAL_MULTIPLIER);
 
         // Initialize IMU
-        imu = hardwareMap.get(IMU.class, "imu");
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        BNO055IMU.Parameters imuParameters = new BNO055IMU.Parameters();
+        imuParameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
+        imu.initialize(imuParameters);
 
         // Initialize localizer
         localizer = new ThreeWheelOdometryLocalizer(hardwareMap);
 
         // Initialize pose estimate
-        poseEstimate = new Pose2d(0, 0, 0);
+        poseEstimate = new Pose2d(new Vector2d(0, 0), Rotation2d.exp(0));
     }
 
     public void setDrivePower(PoseVelocity2d drivePower) {
@@ -141,7 +159,80 @@ public class DriveTrainRR {
     private static double rpmToVelocity(double rpm) {
         return rpm * GEAR_RATIO * 2 * Math.PI * WHEEL_RADIUS / 60.0;
     }
+
     public ThreeWheelOdometryLocalizer getLocalizer() {
         return localizer;
+    }
+
+    // Added method to run actions
+    public void runAction(Action action) {
+        TelemetryPacket packet = new TelemetryPacket();
+        while (action.run(packet)) {
+            update();
+            // Additional updates or telemetry can be added here
+        }
+    }
+
+    // Implemented turnAsync method
+    public void turnAsync(double angle) {
+        targetHeading = poseEstimate.heading.log() + angle;
+        isBusy = true;
+    }
+
+    // Implemented followTrajectoryAsync method
+    public void followTrajectoryAsync(TimeTrajectory trajectory) {
+        currentTrajectory = trajectory;
+        trajectoryStartTime = System.currentTimeMillis() / 1000.0;
+        isBusy = true;
+    }
+
+    // Implemented update method
+    public void update() {
+        updatePoseEstimate();
+
+        if (isBusy) {
+            if (currentTrajectory != null) {
+                double currentTime = System.currentTimeMillis() / 1000.0 - trajectoryStartTime;
+                if (currentTime > currentTrajectory.duration) {
+                    setDrivePower(new PoseVelocity2d(new Vector2d(0, 0), 0));
+                    isBusy = false;
+                    currentTrajectory = null;
+                } else {
+                    Pose2d targetPose = currentTrajectory.get(currentTime).value();
+                    Pose2d currentPose = getPoseEstimate();
+
+                    // Compute the error between current pose and target pose
+                    Vector2d positionError = targetPose.position.minus(currentPose.position);
+//                    double headingError = targetPose.heading.minus(currentPose.heading).log();
+
+                    // Simple proportional controller
+                    double kP = 1.0;
+                    Vector2d velocity = positionError.times(kP);
+//                    double angularVelocity = headingError * kP;
+
+//                    setDrivePower(new PoseVelocity2d(velocity, angularVelocity));
+                }
+            } else {
+                // Turning logic
+                double currentHeading = imu.getAngularOrientation().firstAngle;
+                double error = targetHeading - currentHeading;
+
+                // Simple proportional control for turning
+                double kP = 0.5;
+                double turnPower = kP * error;
+
+                if (Math.abs(error) < 0.01) { // Threshold for completion
+                    setDrivePower(new PoseVelocity2d(new Vector2d(0, 0), 0));
+                    isBusy = false;
+                } else {
+                    setDrivePower(new PoseVelocity2d(new Vector2d(0, 0), turnPower));
+                }
+            }
+        }
+    }
+
+    // Implemented isBusy method
+    public boolean isBusy() {
+        return isBusy;
     }
 }

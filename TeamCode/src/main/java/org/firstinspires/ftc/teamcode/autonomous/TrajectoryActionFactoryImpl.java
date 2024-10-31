@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.TimeTrajectory;
+import com.acmerobotics.roadrunner.TrajectoryActionFactory;
+
 import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 
 public class TrajectoryActionFactoryImpl implements TrajectoryActionFactory {

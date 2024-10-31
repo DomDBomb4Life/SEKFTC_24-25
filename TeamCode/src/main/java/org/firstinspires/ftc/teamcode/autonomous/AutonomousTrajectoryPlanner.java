@@ -2,37 +2,41 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.AccelConstraint;
+import com.acmerobotics.roadrunner.IdentityPoseMap;
 import com.acmerobotics.roadrunner.InstantAction;
-import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.MinMax;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.PoseMap;
+import com.acmerobotics.roadrunner.ProfileParams;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.TrajectoryActionFactory;
+import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
 import com.acmerobotics.roadrunner.TurnActionFactory;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.Rotation2d;
-import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.TurnConstraints;
+import com.acmerobotics.roadrunner.VelConstraint;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 import org.firstinspires.ftc.teamcode.field.FieldMap;
 import org.firstinspires.ftc.teamcode.localization.ThreeWheelOdometryLocalizer;
-import org.firstinspires.ftc.teamcode.vision.VisionSystem;
+// import org.firstinspires.ftc.teamcode.vision.VisionSystem; // Commented out
 
 public class AutonomousTrajectoryPlanner {
 
     private final DriveTrainRR driveTrain;
-    private final VisionSystem visionSystem;
+    // private final VisionSystem visionSystem; // Commented out
     private final ThreeWheelOdometryLocalizer localizer;
 
     public AutonomousTrajectoryPlanner(HardwareMap hardwareMap) {
         driveTrain = new DriveTrainRR(hardwareMap);
-        visionSystem = new VisionSystem(hardwareMap);
+        // visionSystem = new VisionSystem(hardwareMap); // Commented out
         localizer = driveTrain.getLocalizer();
     }
 
     public void initialize() {
         // Set the initial pose estimate
         driveTrain.setPoseEstimate(FieldMap.STARTING_POSITION);
-        visionSystem.initialize();
+        // visionSystem.initialize(); // Commented out
     }
 
     public void updateLocalization() {
@@ -40,83 +44,104 @@ public class AutonomousTrajectoryPlanner {
         driveTrain.updatePoseEstimate();
 
         // Periodically update the pose estimate with vision data
-        visionSystem.update();
-        Pose2d visionPose = visionSystem.getAprilTagPose();
+        // visionSystem.update(); // Commented out
+        // Pose2d visionPose = visionSystem.getAprilTagPose(); // Commented out
 
-        if (visionPose != null) {
-            // Fuse the vision pose with the current pose estimate
-            Pose2d currentPose = driveTrain.getPoseEstimate();
-            Pose2d fusedPose = fusePoses(currentPose, visionPose);
-            driveTrain.setPoseEstimate(fusedPose);
-        }
+        // if (visionPose != null) {
+        //     // Fuse the vision pose with the current pose estimate
+        //     Pose2d currentPose = driveTrain.getPoseEstimate();
+        //     Pose2d fusedPose = fusePoses(currentPose, visionPose);
+        //     driveTrain.setPoseEstimate(fusedPose);
+        // }
     }
 
-    private Pose2d fusePoses(Pose2d odometryPose, Pose2d visionPose) {
-        // Simple fusion: weighted average
-        double alpha = 0.8; // Weight for vision
-        double beta = 1 - alpha; // Weight for odometry
-
-        double fusedX = alpha * visionPose.getX() + beta * odometryPose.getX();
-        double fusedY = alpha * visionPose.getY() + beta * odometryPose.getY();
-        double fusedHeading = alpha * visionPose.getHeading() + beta * odometryPose.getHeading();
-
-        return new Pose2d(fusedX, fusedY, fusedHeading);
-    }
+    // Commented out because vision system is not implemented
+    // private Pose2d fusePoses(Pose2d odometryPose, Pose2d visionPose) {
+    //     // Simple fusion: weighted average
+    //     double alpha = 0.8; // Weight for vision
+    //     double beta = 1 - alpha; // Weight for odometry
+    //
+    //     double fusedX = alpha * visionPose.position.x + beta * odometryPose.position.x;
+    //     double fusedY = alpha * visionPose.position.y + beta * odometryPose.position.y;
+    //     double fusedHeading = alpha * visionPose.heading.getRadians() + beta * odometryPose.heading.getRadians();
+    //
+    //     return new Pose2d(new Vector2d(fusedX, fusedY), fusedHeading);
+    // }
 
     public Action buildAutonomousSequence() {
         // Initialize the TrajectoryActionBuilder
+
+        // Create the necessary parameters for TrajectoryActionBuilder
+        double arcLengthSamplingEps = 0.1; // Tuning parameter for path sampling
+        ProfileParams profileParams = new ProfileParams(0.5, 0.5, 0.1); // Corrected constructor
+        TrajectoryBuilderParams trajectoryBuilderParams = new TrajectoryBuilderParams(arcLengthSamplingEps, profileParams);
+
+        double beginEndVel = 0.0; // Starting and ending velocity
+        TurnConstraints baseTurnConstraints = new TurnConstraints(5.0, -10.0, 10.0); // Corrected constructor
+
+        // Implement VelConstraint as a lambda expression
+        VelConstraint baseVelConstraint = (robotPose, path, s) -> 50.0; // Max linear velocity
+
+        // Implement AccelConstraint as a lambda expression
+        AccelConstraint baseAccelConstraint = (robotPose, path, s) -> new MinMax(-30.0, 30.0); // Min and Max acceleration
+
+        PoseMap poseMap = new IdentityPoseMap(); // Default pose mapping
+
         TrajectoryActionBuilder actionBuilder = new TrajectoryActionBuilder(
-                new TurnActionFactoryImpl(driveTrain),
-                new TrajectoryActionFactoryImpl(driveTrain),
+                (TurnActionFactory) new TurnActionFactoryImpl(driveTrain),
+                (TrajectoryActionFactory) new TrajectoryActionFactoryImpl(driveTrain),
+                trajectoryBuilderParams,
                 driveTrain.getPoseEstimate(),
-                0.0 // Begin end velocity
+                beginEndVel,
+                baseTurnConstraints,
+                baseVelConstraint,
+                baseAccelConstraint,
+                poseMap
         );
 
         // Build the action sequence using advanced trajectory features
         actionBuilder
-                .splineTo(FieldMap.ALLIANCE_SAMPLE_1.vec(), FieldMap.ALLIANCE_SAMPLE_1.getHeading())
+                .splineTo(FieldMap.ALLIANCE_SAMPLE_1.position, FieldMap.ALLIANCE_SAMPLE_1.heading)
                 .afterTime(0.0, new InstantAction(() -> {
                     // Code to pick up sample 1
-                    // Example: robot.claw.close();
                 }))
                 .waitSeconds(0.5)
-                .splineTo(FieldMap.ALLIANCE_SAMPLE_2.vec(), FieldMap.ALLIANCE_SAMPLE_2.getHeading())
+                .splineTo(FieldMap.ALLIANCE_SAMPLE_2.position, FieldMap.ALLIANCE_SAMPLE_2.heading)
                 .afterTime(0.0, new InstantAction(() -> {
                     // Code to pick up sample 2
                 }))
                 .waitSeconds(0.5)
-                .splineTo(FieldMap.ALLIANCE_SAMPLE_3.vec(), FieldMap.ALLIANCE_SAMPLE_3.getHeading())
+                .splineTo(FieldMap.ALLIANCE_SAMPLE_3.position, FieldMap.ALLIANCE_SAMPLE_3.heading)
                 .afterTime(0.0, new InstantAction(() -> {
                     // Code to pick up sample 3
                 }))
                 .waitSeconds(0.5)
-                .splineTo(FieldMap.OBSERVATION_AREA.vec(), FieldMap.OBSERVATION_AREA.getHeading())
+                .splineTo(FieldMap.OBSERVATION_AREA.position, FieldMap.OBSERVATION_AREA.heading)
                 .afterTime(0.0, new InstantAction(() -> {
                     // Code to drop off samples
-                    // Example: robot.claw.open();
                 }))
                 .waitSeconds(0.5)
-                .splineTo(FieldMap.YELLOW_SAMPLE_1.vec(), FieldMap.YELLOW_SAMPLE_1.getHeading())
+                .splineTo(FieldMap.YELLOW_SAMPLE_1.position, FieldMap.YELLOW_SAMPLE_1.heading)
                 .afterTime(0.0, new InstantAction(() -> {
                     // Code to pick up yellow sample 1
                 }))
                 .waitSeconds(0.5)
-                .splineTo(FieldMap.BASKET_POSITION.vec(), FieldMap.BASKET_POSITION.getHeading())
+                .splineTo(FieldMap.BASKET_POSITION.position, FieldMap.BASKET_POSITION.heading)
                 .afterTime(0.0, new InstantAction(() -> {
                     // Code to score yellow sample 1
                 }))
                 .waitSeconds(0.5)
-                .splineTo(FieldMap.YELLOW_SAMPLE_2.vec(), FieldMap.YELLOW_SAMPLE_2.getHeading())
+                .splineTo(FieldMap.YELLOW_SAMPLE_2.position, FieldMap.YELLOW_SAMPLE_2.heading)
                 .afterTime(0.0, new InstantAction(() -> {
                     // Code to pick up yellow sample 2
                 }))
                 .waitSeconds(0.5)
-                .splineTo(FieldMap.BASKET_POSITION.vec(), FieldMap.BASKET_POSITION.getHeading())
+                .splineTo(FieldMap.BASKET_POSITION.position, FieldMap.BASKET_POSITION.heading)
                 .afterTime(0.0, new InstantAction(() -> {
                     // Code to score yellow sample 2
                 }))
                 .waitSeconds(0.5)
-                .splineTo(FieldMap.LOW_RUNG_POSITION.vec(), FieldMap.LOW_RUNG_POSITION.getHeading())
+                .splineTo(FieldMap.LOW_RUNG_POSITION.position, FieldMap.LOW_RUNG_POSITION.heading)
                 .afterTime(0.0, new InstantAction(() -> {
                     // Code to initiate level 1 ascent
                 }))
@@ -132,6 +157,6 @@ public class AutonomousTrajectoryPlanner {
     }
 
     public void shutdown() {
-        visionSystem.close();
+        // visionSystem.close(); // Commented out
     }
 }

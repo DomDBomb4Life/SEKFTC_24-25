@@ -134,7 +134,7 @@ public class Robot {
                 claw.open();
                 break;
             case "liftToLevelOne":
-                viperLift.moveToPosition(ViperLift.LEVEL_ONE_POSITION);
+               // viperLift.moveToPosition(ViperLift.LEVEL_ONE_POSITION);
                 break;
             // Add more actions as needed
             default:
