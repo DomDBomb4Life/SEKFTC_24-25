@@ -13,6 +13,7 @@ public class ViperLift {
     // Encoder positions
     private static final int POSITION_MIN = 0;         // Fully retracted position
     private static final int POSITION_MAX = 11700;     // Fully extended position (example value)
+    private static final int POSITION_MARGIN = 50;     // Margin for position tolerance
 
     // Target position
     private int targetPosition = POSITION_MIN;
@@ -60,7 +61,7 @@ public class ViperLift {
         // Apply power
         leftLiftMotor.setPower(1.0);
         rightLiftMotor.setPower(1.0);
-        
+
         // Set motors to run to position
         leftLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -68,7 +69,7 @@ public class ViperLift {
 
     // Adjust target position incrementally
     public void adjustTargetPosition(int increment) {
-        if (!isBusy()) {
+        if (isCloseToTarget()) {
             moveToPosition(targetPosition + increment);
         }
     }
@@ -90,14 +91,10 @@ public class ViperLift {
         return targetPosition;
     }
 
-    // Check if lift is at target position
-    public boolean isAtTarget() {
-        return !leftLiftMotor.isBusy() && !rightLiftMotor.isBusy();
-    }
-
-    // Check if lift is busy moving
-    public boolean isBusy() {
-        return leftLiftMotor.isBusy() || rightLiftMotor.isBusy();
+    // Check if lift is close to the target position
+    public boolean isCloseToTarget() {
+        int currentPosition = getCurrentPosition();
+        return Math.abs(currentPosition - targetPosition) <= POSITION_MARGIN;
     }
 
     // Update method to be called in the main loop (if needed)

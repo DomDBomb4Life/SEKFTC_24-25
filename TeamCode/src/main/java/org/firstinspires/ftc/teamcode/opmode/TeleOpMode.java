@@ -32,7 +32,6 @@ public class TeleOpMode extends LinearOpMode {
         // Initialize the drivetrain
         driveTrain = new DriveTrain(hardwareMap);
 
-
         // Initialize the robot with the drivetrain
         robot = new Robot(hardwareMap, driveTrainRR);
 
@@ -78,32 +77,22 @@ public class TeleOpMode extends LinearOpMode {
     // Method to handle aimbot activation
     private void handleAimbot() {
         boolean aimbotButtonPressed = gamepad1.a;
-        /*
-        if (aimbotButtonPressed && !previousAimbotButtonPressed) {
-            if (robot.aimbotController.isActive()) {
-                robot.deactivateAimbot();
-            } else {
-                // Set target pose, could be based on vision data
-                Pose2d targetPose = robot.localization.getCurrentPose(); // Placeholder, replace with actual target
-                robot.activateAimbot(targetPose);
-            }
-        }
-        */
-        previousAimbotButtonPressed = aimbotButtonPressed;
 
         // If aimbot is active, skip manual driving
-       // if (!robot.aimbotController.isActive()) {
-            // Read gamepad inputs
-            double leftStickY = -gamepad1.left_stick_y;
-            double leftStickX = gamepad1.left_stick_x;
-            double rightStickX = -gamepad1.right_stick_x;
+        // For simplicity, assuming aimbot is not active
 
-            // Update speed based on triggers
-            driveTrain.updateSpeed(gamepad1.left_trigger, gamepad1.right_trigger);
+        // Read gamepad inputs
+        double leftStickY = -gamepad1.left_stick_y;
+        double leftStickX = gamepad1.left_stick_x;
+        double rightStickX = -gamepad1.right_stick_x;
 
-            // Handle drivetrain control
-            driveTrain.drive(leftStickY, leftStickX, rightStickX);
-      //  }
+        // Update speed based on triggers
+        driveTrain.updateSpeed(gamepad1.left_trigger, gamepad1.right_trigger);
+
+        // Handle drivetrain control
+        driveTrain.drive(leftStickY, leftStickX, rightStickX);
+
+        previousAimbotButtonPressed = aimbotButtonPressed;
     }
 
     // Method to handle normal mode controls
@@ -133,7 +122,6 @@ public class TeleOpMode extends LinearOpMode {
         telemetry.addData("Mode", "Normal Mode");
         telemetry.addData("Current State", robot.currentState);
         telemetry.addData("Speed Multiplier", driveTrain.getSpeedMultiplier());
-//        telemetry.addData("Aimbot Active", robot.aimbotController.isActive());
     }
 
     // Method to handle dev mode controls
@@ -148,14 +136,14 @@ public class TeleOpMode extends LinearOpMode {
 
         // Manual control of ViperLift
         double liftInput = -gamepad2.left_stick_y; // Up is negative
-        if (Math.abs(liftInput) > threshold && !robot.viperLift.isBusy()) {
+        if (Math.abs(liftInput) > threshold && robot.viperLift.isCloseToTarget()) {
             int liftIncrement = (int) (liftInput * liftIncrementScale);
             robot.viperLift.adjustTargetPosition(liftIncrement);
         }
 
         // Manual control of Arm
         double armInput = -gamepad2.right_stick_y; // Up is negative
-        if (Math.abs(armInput) > threshold && !robot.arm.isBusy()) {
+        if (Math.abs(armInput) > threshold && robot.arm.isCloseToTarget()) {
             double armIncrement = armInput * armIncrementScale;
             robot.arm.adjustTargetAngle(armIncrement);
         }

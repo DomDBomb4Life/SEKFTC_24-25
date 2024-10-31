@@ -12,6 +12,7 @@ public class Arm {
     // Angle limits (in degrees)
     private static final double ANGLE_MIN = 0.0;
     private static final double ANGLE_MAX = 180.0;
+    private static final double ANGLE_MARGIN = 1.0; // Margin for angle tolerance in degrees
 
     // Encoder counts per revolution (CPR) for the motor
     private static final int ENCODER_CPR = 1120; // Adjust based on your motor (e.g., Neverest 40)
@@ -55,7 +56,6 @@ public class Arm {
 
         // Set target position
         armMotor.setTargetPosition(targetPosition);
-        
 
         // Apply power
         armMotor.setPower(0.5); // Use a moderate power for smooth movement
@@ -66,8 +66,8 @@ public class Arm {
 
     // Adjust target angle incrementally
     public void adjustTargetAngle(double increment) {
-        if (!isBusy()) {
-            moveToAngle(getCurrentAngle() + increment);
+        if (isCloseToTarget()) {
+            moveToAngle(targetAngle + increment);
         }
     }
 
@@ -97,14 +97,10 @@ public class Arm {
         return targetAngle;
     }
 
-    // Check if arm is at target angle
-    public boolean isAtTarget() {
-        return !armMotor.isBusy();
-    }
-
-    // Check if arm is busy moving
-    public boolean isBusy() {
-        return armMotor.isBusy();
+    // Check if arm is close to the target angle
+    public boolean isCloseToTarget() {
+        double currentAngle = getCurrentAngle();
+        return Math.abs(currentAngle - targetAngle) <= ANGLE_MARGIN;
     }
 
     // Update method to be called periodically (if needed)
