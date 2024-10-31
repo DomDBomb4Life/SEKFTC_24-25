@@ -25,10 +25,10 @@ public class Robot {
     public final Wrist wrist;
 
     // State instances
-    public final HomeState homeState;
-    public final HangingState hangingState;
-    public final ScoringBasketState scoringBasketState;
-    public final IdleState idleState;
+    private HomeState homeState;
+    private HangingState hangingState;
+    private ScoringBasketState scoringBasketState;
+    private IdleState idleState;
 
     // Drivetrain
     private final DriveTrainRR driveTrain;
@@ -52,10 +52,10 @@ public class Robot {
         wrist = new Wrist(hardwareMap);
 
         // Initialize states
-        homeState = new HomeState(viperLift, arm, wrist);
+        homeState = new HomeState(viperLift, arm, wrist, claw);
         hangingState = new HangingState(viperLift, arm);
         scoringBasketState = new ScoringBasketState(viperLift, arm, wrist, claw);
-        idleState = new IdleState(viperLift, arm);
+        idleState = new IdleState(viperLift, arm, wrist, claw);
 
         // Activate initial state
         idleState.activate();
@@ -83,7 +83,7 @@ public class Robot {
 
             case SCORING:
                 scoringBasketState.update();
-                if (scoringBasketState.getCurrentStep() == ScoringBasketState.Step.COMPLETED) {
+                if (scoringBasketState.isCompleted()) {
                     setState(State.IDLE);
                 }
                 break;
@@ -121,24 +121,24 @@ public class Robot {
                 default:
                     break;
             }
+        } else {
+            // If the same state button is pressed again, toggle back to IDLE
+            setState(State.IDLE);
         }
     }
 
-    // Autonomous actions
-    public void performAction(String action) {
-        switch (action) {
-            case "pickUp":
-                claw.close();
-                break;
-            case "dropOff":
-                claw.open();
-                break;
-            case "liftToLevelOne":
-               // viperLift.moveToPosition(ViperLift.LEVEL_ONE_POSITION);
-                break;
-            // Add more actions as needed
+    // Method to get current substate
+    public String getCurrentSubstate() {
+        switch (currentState) {
+            case HOME:
+                return homeState.getCurrentVariation().toString();
+            case HANGING:
+                return hangingState.getCurrentStep().toString();
+            case SCORING:
+                return scoringBasketState.getCurrentStep().toString();
+            case IDLE:
             default:
-                break;
+                return "NONE";
         }
     }
 

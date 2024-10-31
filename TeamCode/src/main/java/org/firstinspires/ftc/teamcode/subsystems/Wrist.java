@@ -61,6 +61,10 @@ public class Wrist {
         return wristServo.getPosition();
     }
 
+    public double getTargetPosition() {
+        return targetPosition;
+    }
+
     // Get current angle (in degrees)
     public double getAngle() {
         // Assuming linear relationship between servo position and angle

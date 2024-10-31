@@ -33,28 +33,6 @@ public class HangingState {
         executeCurrentStep();
     }
 
-    // Progress to the next step based on button presses
-    public void progress() {
-        switch (currentStep) {
-            case STEP_1:
-                currentStep = Step.STEP_2;
-                break;
-            case STEP_2:
-                currentStep = Step.STEP_3;
-                break;
-            case STEP_3:
-                currentStep = Step.STEP_4;
-                break;
-            case STEP_4:
-                currentStep = Step.COMPLETED;
-                break;
-            default:
-                // Already completed or invalid step
-                break;
-        }
-        executeCurrentStep();
-    }
-
     // Execute actions for the current step
     private void executeCurrentStep() {
         switch (currentStep) {
@@ -80,7 +58,6 @@ public class HangingState {
 
             case COMPLETED:
                 // Hanging process completed
-                // Optionally transition to idle state
                 break;
 
             default:
@@ -91,38 +68,41 @@ public class HangingState {
 
     // Update method to be called periodically
     public void update() {
-        boolean actionCompleted = false;
-
         switch (currentStep) {
             case STEP_1:
-                actionCompleted = viperLift.isAtTarget();
+                if (viperLift.isCloseToTarget()) {
+                    currentStep = Step.STEP_2;
+                    executeCurrentStep();
+                }
                 break;
 
             case STEP_2:
-                actionCompleted = arm.isAtTarget();
+                if (arm.isCloseToTarget()) {
+                    currentStep = Step.STEP_3;
+                    executeCurrentStep();
+                }
                 break;
 
             case STEP_3:
-                actionCompleted = viperLift.isAtTarget();
+                if (viperLift.isCloseToTarget()) {
+                    currentStep = Step.STEP_4;
+                    executeCurrentStep();
+                }
                 break;
 
             case STEP_4:
-                actionCompleted = arm.isAtTarget();
+                if (arm.isCloseToTarget()) {
+                    currentStep = Step.COMPLETED;
+                }
                 break;
 
             case COMPLETED:
-                // No action needed
-                actionCompleted = true;
+                // Process completed
                 break;
 
             default:
                 // Handle unexpected cases
                 break;
-        }
-
-        if (actionCompleted) {
-            // Optionally proceed to the next automatic step
-            // For this implementation, we wait for user input to progress
         }
     }
 

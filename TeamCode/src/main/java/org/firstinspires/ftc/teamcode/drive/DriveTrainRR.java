@@ -14,7 +14,6 @@ import com.acmerobotics.roadrunner.TimeTrajectory;
 import com.acmerobotics.roadrunner.Twist2dDual;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -25,7 +24,7 @@ import org.firstinspires.ftc.teamcode.localization.ThreeWheelOdometryLocalizer;
 public class DriveTrainRR {
 
     // Motors
-    private final DcMotorEx frontLeft, frontRight, backLeft, backRight;
+    private final DcMotor frontLeft, frontRight, backLeft, backRight;
 
     // Mecanum Kinematics
     private final MecanumKinematics kinematics;
@@ -55,7 +54,7 @@ public class DriveTrainRR {
     public Pose2d poseEstimate;
 
     // IMU
-    private final BNO055IMU imu;
+    //private final BNO055IMU imu;
 
     // Flags for asynchronous operations
     private boolean isBusy = false;
@@ -69,10 +68,10 @@ public class DriveTrainRR {
 
     public DriveTrainRR(HardwareMap hardwareMap) {
         // Initialize motors
-        frontLeft = hardwareMap.get(DcMotorEx.class, "FrontL");
-        backLeft = hardwareMap.get(DcMotorEx.class, "BackL");
-        frontRight = hardwareMap.get(DcMotorEx.class, "FrontR");
-        backRight = hardwareMap.get(DcMotorEx.class, "BackR");
+        frontLeft = hardwareMap.get(DcMotor.class, "FrontL");
+        backLeft = hardwareMap.get(DcMotor.class, "BackL");
+        frontRight = hardwareMap.get(DcMotor.class, "FrontR");
+        backRight = hardwareMap.get(DcMotor.class, "BackR");
 
         // Set motor directions
         frontLeft.setDirection(DcMotor.Direction.REVERSE);
@@ -97,10 +96,10 @@ public class DriveTrainRR {
         kinematics = new MecanumKinematics(TRACK_WIDTH, LATERAL_MULTIPLIER);
 
         // Initialize IMU
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        BNO055IMU.Parameters imuParameters = new BNO055IMU.Parameters();
-        imuParameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
-        imu.initialize(imuParameters);
+        //imu = hardwareMap.get(BNO055IMU.class, "imu");
+        //BNO055IMU.Parameters imuParameters = new BNO055IMU.Parameters();
+        //imuParameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
+        //imu.initialize(imuParameters);
 
         // Initialize localizer
         localizer = new ThreeWheelOdometryLocalizer(hardwareMap);
@@ -214,19 +213,21 @@ public class DriveTrainRR {
                 }
             } else {
                 // Turning logic
-                double currentHeading = imu.getAngularOrientation().firstAngle;
-                double error = targetHeading - currentHeading;
+                //double currentHeading = imu.getAngularOrientation().firstAngle;
+                //double error = targetHeading - currentHeading;
 
                 // Simple proportional control for turning
                 double kP = 0.5;
-                double turnPower = kP * error;
-
+                //double turnPower = kP * error;
+/*
                 if (Math.abs(error) < 0.01) { // Threshold for completion
                     setDrivePower(new PoseVelocity2d(new Vector2d(0, 0), 0));
                     isBusy = false;
                 } else {
                     setDrivePower(new PoseVelocity2d(new Vector2d(0, 0), turnPower));
                 }
+
+ */
             }
         }
     }

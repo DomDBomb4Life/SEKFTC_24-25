@@ -19,17 +19,18 @@ public class TeleOpMode extends LinearOpMode {
     // Variable to track dev mode
     private boolean devMode = false;
 
-    // Variable to track aimbot activation button state
-    private boolean previousAimbotButtonPressed = false;
-
     // Button toggle states
     private boolean previousSelectButtonPressed = false;
+    private boolean previousYButtonPressed = false;
+    private boolean previousAButtonPressed = false;
+    private boolean previousBButtonPressed = false;
+    private boolean previousXButtonPressed = false;
+    private boolean previousRightTriggerPressed = false;
 
     @Override
     public void runOpMode() {
         // Initialize the drivetrain
         driveTrainRR = new DriveTrainRR(hardwareMap);
-        // Initialize the drivetrain
         driveTrain = new DriveTrain(hardwareMap);
 
         // Initialize the robot with the drivetrain
@@ -43,9 +44,6 @@ public class TeleOpMode extends LinearOpMode {
 
             // Handle dev mode toggle
             handleDevModeToggle();
-
-            // Handle aimbot activation
-            handleAimbot();
 
             if (devMode) {
                 handleDevModeControls();
@@ -74,17 +72,38 @@ public class TeleOpMode extends LinearOpMode {
         previousSelectButtonPressed = selectButtonPressed;
     }
 
-    // Method to handle aimbot activation
-    private void handleAimbot() {
-        boolean aimbotButtonPressed = gamepad1.a;
+    // Method to handle normal mode controls
+    private void handleNormalModeControls() {
+        // Handle button presses with helper methods
+        if (isButtonJustPressed(gamepad2.y, previousYButtonPressed)) {
+            robot.onHomeButtonPressed();
+        }
+        previousYButtonPressed = gamepad2.y;
 
-        // If aimbot is active, skip manual driving
-        // For simplicity, assuming aimbot is not active
+        if (isTriggerJustPressed(gamepad2.right_trigger, previousRightTriggerPressed)) {
+            robot.onSwitchVariationButtonPressed();
+        }
+        previousRightTriggerPressed = gamepad2.right_trigger > 0.5;
 
-        // Read gamepad inputs
+        if (isButtonJustPressed(gamepad2.b, previousBButtonPressed)) {
+            robot.onClawToggleButtonPressed();
+        }
+        previousBButtonPressed = gamepad2.b;
+
+        if (isButtonJustPressed(gamepad2.a, previousAButtonPressed)) {
+            robot.onHangingButtonPressed();
+        }
+        previousAButtonPressed = gamepad2.a;
+
+        if (isButtonJustPressed(gamepad2.x, previousXButtonPressed)) {
+            robot.onScoringButtonPressed();
+        }
+        previousXButtonPressed = gamepad2.x;
+
+        // Read gamepad inputs for driving
         double leftStickY = -gamepad1.left_stick_y;
-        double leftStickX = gamepad1.left_stick_x;
-        double rightStickX = -gamepad1.right_stick_x;
+        double leftStickX = -gamepad1.left_stick_x;
+        double rightStickX = gamepad1.right_stick_x;
 
         // Update speed based on triggers
         driveTrain.updateSpeed(gamepad1.left_trigger, gamepad1.right_trigger);
@@ -92,36 +111,18 @@ public class TeleOpMode extends LinearOpMode {
         // Handle drivetrain control
         driveTrain.drive(leftStickY, leftStickX, rightStickX);
 
-        previousAimbotButtonPressed = aimbotButtonPressed;
-    }
-
-    // Method to handle normal mode controls
-    private void handleNormalModeControls() {
-        // Handle button presses with helper methods
-        if (isButtonJustPressed(gamepad2.y)) {
-            robot.onHomeButtonPressed();
-        }
-
-        if (isTriggerJustPressed(gamepad2.right_trigger)) {
-            robot.onSwitchVariationButtonPressed();
-        }
-
-        if (isButtonJustPressed(gamepad2.b)) {
-            robot.onClawToggleButtonPressed();
-        }
-
-        if (isButtonJustPressed(gamepad2.a)) {
-            robot.onHangingButtonPressed();
-        }
-
-        if (isButtonJustPressed(gamepad2.x)) {
-            robot.onScoringButtonPressed();
-        }
-
-        // Telemetry for debugging
-        telemetry.addData("Mode", "Normal Mode");
+        // Telemetry for normal mode
+        telemetry.addData("Mode", devMode ? "Dev Mode" : "Normal Mode");
         telemetry.addData("Current State", robot.currentState);
-        telemetry.addData("Speed Multiplier", driveTrain.getSpeedMultiplier());
+        telemetry.addData("Substate", robot.getCurrentSubstate());
+        telemetry.addData("ViperLift Position", robot.viperLift.getCurrentPosition());
+        telemetry.addData("ViperLift Target", robot.viperLift.getTargetPosition());
+        telemetry.addData("Arm Angle", robot.arm.getCurrentAngle());
+        telemetry.addData("Arm Target", robot.arm.getTargetAngle());
+        telemetry.addData("Wrist Position", robot.wrist.getPosition());
+        telemetry.addData("Wrist Target", robot.wrist.getTargetPosition());
+        telemetry.addData("Claw Position", robot.claw.getPosition());
+        telemetry.addData("Claw Target", robot.claw.getTargetPosition());
     }
 
     // Method to handle dev mode controls
@@ -177,16 +178,19 @@ public class TeleOpMode extends LinearOpMode {
         telemetry.addData("Arm Angle", robot.arm.getCurrentAngle());
         telemetry.addData("Arm Target", robot.arm.getTargetAngle());
         telemetry.addData("Wrist Position", robot.wrist.getPosition());
+        telemetry.addData("Wrist Target", robot.wrist.getTargetPosition());
         telemetry.addData("Claw Position", robot.claw.getPosition());
+        telemetry.addData("Claw Target", robot.claw.getTargetPosition());
     }
 
     // Helper method for detecting button press edges
-    private boolean isButtonJustPressed(boolean currentState) {
-        return currentState && !gamepad2.start;
+    private boolean isButtonJustPressed(boolean currentState, boolean previousState) {
+        return currentState && !previousState;
     }
 
     // Helper method for detecting trigger press edges
-    private boolean isTriggerJustPressed(double triggerValue) {
-        return triggerValue > 0.5 && !gamepad2.start;
+    private boolean isTriggerJustPressed(double triggerValue, boolean previousState) {
+        boolean currentState = triggerValue > 0.5;
+        return currentState && !previousState;
     }
 }

@@ -44,32 +44,12 @@ public class ScoringBasketState {
         executeCurrentStep();
     }
 
-    // Progress to the next step based on button presses
-    public void progress() {
-        switch (currentStep) {
-            case STEP_1:
-                // No progression needed; wait for automatic step 2
-                break;
-            case STEP_2:
-                // User needs to press button to open claw (step 3)
-                currentStep = Step.STEP_3;
-                executeCurrentStep();
-                break;
-            case STEP_3:
-                // No progression needed; wait for automatic step 4
-                break;
-            default:
-                // Already completed or invalid step
-                break;
-        }
-    }
-
     // Execute actions for the current step
     private void executeCurrentStep() {
         switch (currentStep) {
             case STEP_1:
                 // Move Viper Lift all the way up
-                viperLift.moveToMax();
+                viperLift.moveToPosition(9286);
                 break;
 
             case STEP_2:
@@ -87,18 +67,18 @@ public class ScoringBasketState {
 
             case STEP_4:
                 // Automatically move arm and wrist back to idle position
-                arm.moveToAngle(90);
-                wrist.setAngle(90);
+                arm.moveToAngle(120);
+                wrist.setAngle(150);
                 break;
 
             case STEP_5:
                 // Automatically move ViperLift back to idle position
                 viperLift.moveToPosition(0);
+                claw.close();
                 break;
 
             case COMPLETED:
                 // Scoring process completed
-                // Optionally transition to idle state
                 break;
 
             default:
@@ -109,21 +89,18 @@ public class ScoringBasketState {
 
     // Update method to be called periodically
     public void update() {
-        boolean actionCompleted = false;
-
         switch (currentStep) {
             case STEP_1:
-                if (viperLift.isAtTarget()) {
-                    // Proceed to automatic step 2
+                if (viperLift.isCloseToTarget()) {
                     currentStep = Step.STEP_2;
                     executeCurrentStep();
                 }
                 break;
 
             case STEP_2:
-                if (arm.isAtTarget() && wrist.isAtTarget()) {
-                    // Wait for user input to proceed to step 3
-                    // User should press the button to progress()
+                if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                    currentStep = Step.STEP_3;
+                    executeCurrentStep();
                 }
                 break;
 
@@ -131,31 +108,26 @@ public class ScoringBasketState {
                 // Wait for timer to complete
                 long elapsedTime = System.currentTimeMillis() - stepStartTime;
                 if (elapsedTime >= STEP_3_DURATION_MS) {
-                    // Proceed to automatic step 4
                     currentStep = Step.STEP_4;
                     executeCurrentStep();
                 }
                 break;
 
             case STEP_4:
-                if (arm.isAtTarget() && wrist.isAtTarget()) {
-                    // Proceed to automatic step 5
+                if (arm.isCloseToTarget() ) {
                     currentStep = Step.STEP_5;
                     executeCurrentStep();
                 }
                 break;
 
             case STEP_5:
-                if (viperLift.isAtTarget()) {
-                    // Process completed
+                if (viperLift.isCloseToTarget()) {
                     currentStep = Step.COMPLETED;
-                    // Optionally transition to idle state
                 }
                 break;
 
             case COMPLETED:
-                // No action needed
-                actionCompleted = true;
+                // Process completed
                 break;
 
             default:
@@ -167,5 +139,10 @@ public class ScoringBasketState {
     // Get the current step
     public Step getCurrentStep() {
         return currentStep;
+    }
+
+    // Check if the scoring process is completed
+    public boolean isCompleted() {
+        return currentStep == Step.COMPLETED;
     }
 }

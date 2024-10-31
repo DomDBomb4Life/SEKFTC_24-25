@@ -3,34 +3,51 @@ package org.firstinspires.ftc.teamcode.robot.states;
 
 import org.firstinspires.ftc.teamcode.subsystems.ViperLift;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
+import org.firstinspires.ftc.teamcode.subsystems.Wrist;
+import org.firstinspires.ftc.teamcode.subsystems.Claw;
 
 public class IdleState {
     // Subsystems
     private ViperLift viperLift;
     private Arm arm;
+    private Wrist wrist;
+    private Claw claw;
+
+    // State active flag
+    private boolean isActive = false;
 
     // Constructor
-    public IdleState(ViperLift viperLift, Arm arm) {
+    public IdleState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw) {
         this.viperLift = viperLift;
         this.arm = arm;
+        this.wrist = wrist;
+        this.claw = claw;
     }
 
     // Activate the idle state
     public void activate() {
-        // Viper Lift at position zero
+        isActive = true;
+        // Position subsystems to idle positions
         viperLift.moveToPosition(0);
-        // Arm at 90 degrees
         arm.moveToAngle(90);
+        wrist.setAngle(90); // Adjust to default idle angle for wrist
+        claw.close(); // Adjust to default position for claw
     }
 
-    // Update method if needed
+    // Deactivate the idle state
+    public void deactivate() {
+        isActive = false;
+    }
+
+    // Update method for monitoring subsystem positions if needed
     public void update() {
-        // Monitor if subsystems have reached target positions
-        // Implement any necessary logic
+        if (isActive) {
+            // Could add additional monitoring logic here if necessary
+        }
     }
 
-    // Method to check if the robot is in idle position
+    // Method to check if the robot is fully at the idle position
     public boolean isAtIdle() {
-        return viperLift.isAtTarget() && arm.isAtTarget();
+        return viperLift.isCloseToTarget() && arm.isCloseToTarget() && wrist.isAtTarget() && claw.isClosed();
     }
 }

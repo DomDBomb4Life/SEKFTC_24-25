@@ -12,7 +12,7 @@ public class Arm {
     // Angle limits (in degrees)
     private static final double ANGLE_MIN = 0.0;
     private static final double ANGLE_MAX = 180.0;
-    private static final double ANGLE_MARGIN = 1.0; // Margin for angle tolerance in degrees
+    private static final double ANGLE_MARGIN = 3.0; // Margin for angle tolerance in degrees
 
     // Encoder counts per revolution (CPR) for the motor
     private static final int ENCODER_CPR = 1120; // Adjust based on your motor (e.g., Neverest 40)

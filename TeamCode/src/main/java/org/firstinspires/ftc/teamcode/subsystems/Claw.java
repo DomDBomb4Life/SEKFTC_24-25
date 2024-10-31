@@ -53,6 +53,10 @@ public class Claw {
     public double getPosition() {
         return clawServo.getPosition();
     }
+    
+    public double getTargetPosition() {
+        return targetPosition;
+    }
 
     // Check if the claw is open
     public boolean isOpen() {

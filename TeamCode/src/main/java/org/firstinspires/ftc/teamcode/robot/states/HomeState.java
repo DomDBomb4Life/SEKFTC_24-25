@@ -4,12 +4,14 @@ package org.firstinspires.ftc.teamcode.robot.states;
 import org.firstinspires.ftc.teamcode.subsystems.ViperLift;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.Wrist;
+import org.firstinspires.ftc.teamcode.subsystems.Claw;
 
 public class HomeState {
     // Subsystems
     private ViperLift viperLift;
     private Arm arm;
     private Wrist wrist;
+    private Claw claw;
 
     // Variations
     public enum Variation {
@@ -19,15 +21,20 @@ public class HomeState {
 
     private Variation currentVariation = Variation.VARIATION_1;
 
+    // State active flag
+    private boolean isActive = false;
+
     // Constructor
-    public HomeState(ViperLift viperLift, Arm arm, Wrist wrist) {
+    public HomeState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw) {
         this.viperLift = viperLift;
         this.arm = arm;
         this.wrist = wrist;
+        this.claw = claw;
     }
 
     // Activate the home state
     public void activate() {
+        isActive = true;
         // Viper Lift down
         viperLift.moveToPosition(0);
 
@@ -42,6 +49,11 @@ public class HomeState {
                 wrist.setAngle(0);
                 break;
         }
+    }
+
+    // Deactivate the home state
+    public void deactivate() {
+        isActive = false;
     }
 
     // Switch between variations
@@ -61,10 +73,11 @@ public class HomeState {
         return currentVariation;
     }
 
-    // Update method if needed
+    // Update method
     public void update() {
-        // Monitor if subsystems have reached target positions
-        // Implement any necessary logic
+        if (isActive) {
+            // Monitor if subsystems have reached target positions
+            // Implement any necessary logic
+        }
     }
 }
-
