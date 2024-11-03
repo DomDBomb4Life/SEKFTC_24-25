@@ -15,12 +15,12 @@ public class Arm {
     private static final double ANGLE_MARGIN = 3.0; // Margin for angle tolerance in degrees
 
     // Encoder counts per revolution (CPR) for the motor
-    private static final int ENCODER_CPR = 1120; // Adjust based on your motor (e.g., Neverest 40)
+    private static final double ENCODER_CPR = 1425.1; // Adjust based on your motor (e.g., Neverest 40)
     private static final double GEAR_RATIO = 1.0; // Adjust if gears are used
     private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
 
     // Target angle
-    private double targetAngle = 0.0;
+    private double targetAngle = 90.0; // Start at 90 degrees as default
 
     // Constructor
     public Arm(HardwareMap hardwareMap) {
@@ -30,19 +30,22 @@ public class Arm {
         // Motor configuration
         configureMotor(armMotor);
 
-        // Set initial position
-        resetEncoder();
+        // Set initial position to interpret the current position as 90 degrees
+        calibrateStartingPosition();
     }
 
     private void configureMotor(DcMotor motor) {
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setDirection(DcMotor.Direction.REVERSE);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    // Reset encoder
-    public void resetEncoder() {
+    // Calibrate the encoder to treat the current position as 90 degrees
+    private void calibrateStartingPosition() {
+        // Set the encoder’s current position as equivalent to 90 degrees
+        int initialCounts = angleToCounts(90.0);
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor.setTargetPosition(initialCounts);
         armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
@@ -51,7 +54,7 @@ public class Arm {
         // Clamp angle within bounds
         targetAngle = Math.max(ANGLE_MIN, Math.min(angle, ANGLE_MAX));
 
-        // Calculate target encoder counts
+        // Calculate target encoder counts based on the calibrated zero position
         int targetPosition = angleToCounts(targetAngle);
 
         // Set target position
@@ -73,12 +76,12 @@ public class Arm {
 
     // Convert angle to encoder counts
     private int angleToCounts(double angle) {
-        return (int) (angle * COUNTS_PER_DEGREE);
+        return (int) ((angle - 90) * COUNTS_PER_DEGREE);
     }
 
     // Convert encoder counts to angle
     private double countsToAngle(int counts) {
-        return counts / COUNTS_PER_DEGREE;
+        return (counts / COUNTS_PER_DEGREE) + 90;
     }
 
     // Stop the arm
