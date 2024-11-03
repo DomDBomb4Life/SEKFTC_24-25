@@ -34,9 +34,9 @@ public class ThreeWheelOdometryLocalizer {
 
     public ThreeWheelOdometryLocalizer(HardwareMap hardwareMap) {
         // Initialize encoders using OverflowEncoder to handle potential overflow
-        leftEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "leftEncoder")));
-        rightEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "leftEncoder")));
-        frontEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "leftEncoder")));
+        leftEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "FrontL")));
+        rightEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "FrontR")));
+        frontEncoder = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "BackL")));
 
         // Set inPerTick based on your encoders
         double TICKS_PER_REV = 8192; // For REV Through Bore Encoders

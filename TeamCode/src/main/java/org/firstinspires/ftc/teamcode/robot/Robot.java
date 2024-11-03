@@ -10,6 +10,8 @@ import org.firstinspires.ftc.teamcode.subsystems.Wrist;
 import org.firstinspires.ftc.teamcode.robot.states.HomeState;
 import org.firstinspires.ftc.teamcode.robot.states.HangingState;
 import org.firstinspires.ftc.teamcode.robot.states.ScoringBasketState;
+import org.firstinspires.ftc.teamcode.robot.states.ScoringSpecimenState;
+import org.firstinspires.ftc.teamcode.robot.states.ObservationState;
 import org.firstinspires.ftc.teamcode.robot.states.IdleState;
 import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 
@@ -25,10 +27,12 @@ public class Robot {
     public final Wrist wrist;
 
     // State instances
-    private HomeState homeState;
-    private HangingState hangingState;
-    private ScoringBasketState scoringBasketState;
-    private IdleState idleState;
+    public HomeState homeState;
+    public HangingState hangingState;
+    public ScoringBasketState scoringBasketState;
+    public ScoringSpecimenState scoringSpecimenState;
+    public ObservationState observationState;
+    public IdleState idleState;
 
     // Drivetrain
     private final DriveTrainRR driveTrain;
@@ -38,7 +42,9 @@ public class Robot {
         IDLE,
         HOME,
         HANGING,
-        SCORING
+        SCORING,
+        SCORING_SPECIMEN,
+        OBSERVATION
     }
 
     public State currentState = State.IDLE;
@@ -55,6 +61,8 @@ public class Robot {
         homeState = new HomeState(viperLift, arm, wrist, claw);
         hangingState = new HangingState(viperLift, arm);
         scoringBasketState = new ScoringBasketState(viperLift, arm, wrist, claw);
+        scoringSpecimenState = new ScoringSpecimenState(viperLift, arm, wrist, claw);
+        observationState = new ObservationState(viperLift, arm, wrist, claw);
         idleState = new IdleState(viperLift, arm, wrist, claw);
 
         // Activate initial state
@@ -88,6 +96,17 @@ public class Robot {
                 }
                 break;
 
+            case SCORING_SPECIMEN:
+                // Update is handled in TeleOpMode to pass button states
+                if (scoringSpecimenState.isCompleted()) {
+                    setState(State.IDLE);
+                }
+                break;
+
+            case OBSERVATION:
+                observationState.update();
+                break;
+
             case IDLE:
                 idleState.update();
                 break;
@@ -114,6 +133,14 @@ public class Robot {
                     scoringBasketState.start();
                     break;
 
+                case SCORING_SPECIMEN:
+                    scoringSpecimenState.start();
+                    break;
+
+                case OBSERVATION:
+                    observationState.activate();
+                    break;
+
                 case IDLE:
                     idleState.activate();
                     break;
@@ -136,6 +163,10 @@ public class Robot {
                 return hangingState.getCurrentStep().toString();
             case SCORING:
                 return scoringBasketState.getCurrentStep().toString();
+            case SCORING_SPECIMEN:
+                return scoringSpecimenState.getCurrentStep().toString();
+            case OBSERVATION:
+                return observationState.isActive() ? "ACTIVE" : "INACTIVE";
             case IDLE:
             default:
                 return "NONE";
@@ -153,6 +184,14 @@ public class Robot {
 
     public void onScoringButtonPressed() {
         setState(State.SCORING);
+    }
+
+    public void onScoringSpecimenButtonPressed() {
+        setState(State.SCORING_SPECIMEN);
+    }
+
+    public void onObservationButtonPressed() {
+        setState(State.OBSERVATION);
     }
 
     public void onClawToggleButtonPressed() {

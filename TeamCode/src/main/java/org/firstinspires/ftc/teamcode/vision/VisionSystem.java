@@ -9,7 +9,7 @@
 //import org.firstinspires.ftc.robotcore.external.navigation.*;
 //import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 //import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.*;
-//import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.VisionPortal;
 //import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 //import org.openftc.apriltag.AprilTagDetection;
 //

@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.drive.DriveTrain;
 import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 import org.firstinspires.ftc.teamcode.robot.Robot;
+import org.firstinspires.ftc.teamcode.robot.states.ScoringSpecimenState;
 
 @TeleOp(name = "TeleOp Mode")
 public class TeleOpMode extends LinearOpMode {
@@ -26,6 +27,9 @@ public class TeleOpMode extends LinearOpMode {
     private boolean previousBButtonPressed = false;
     private boolean previousXButtonPressed = false;
     private boolean previousRightTriggerPressed = false;
+    private boolean previousDpadUpPressed = false;
+    private boolean previousDpadDownPressed = false;
+    private boolean previousDpadRightPressed = false;
 
     @Override
     public void runOpMode() {
@@ -100,6 +104,17 @@ public class TeleOpMode extends LinearOpMode {
         }
         previousXButtonPressed = gamepad2.x;
 
+        // Handle new states
+        if (isButtonJustPressed(gamepad2.dpad_up, previousDpadUpPressed)) {
+            robot.onObservationButtonPressed();
+        }
+        previousDpadUpPressed = gamepad2.dpad_up;
+
+        if (isButtonJustPressed(gamepad2.dpad_down, previousDpadDownPressed)) {
+            robot.onScoringSpecimenButtonPressed();
+        }
+        previousDpadDownPressed = gamepad2.dpad_down;
+
         // Read gamepad inputs for driving
         double leftStickY = -gamepad1.left_stick_y;
         double leftStickX = -gamepad1.left_stick_x;
@@ -110,6 +125,18 @@ public class TeleOpMode extends LinearOpMode {
 
         // Handle drivetrain control
         driveTrain.drive(leftStickY, leftStickX, rightStickX);
+
+        // Handle updates for ScoringSpecimenState
+        if (robot.currentState == Robot.State.SCORING_SPECIMEN) {
+            robot.scoringSpecimenState.update(
+                gamepad2.dpad_down, // Primary button
+                gamepad2.dpad_right, // Secondary button
+                previousDpadDownPressed,
+                previousDpadRightPressed
+            );
+            previousDpadDownPressed = gamepad2.dpad_down;
+            previousDpadRightPressed = gamepad2.dpad_right;
+        }
 
         // Telemetry for normal mode
         telemetry.addData("Mode", devMode ? "Dev Mode" : "Normal Mode");

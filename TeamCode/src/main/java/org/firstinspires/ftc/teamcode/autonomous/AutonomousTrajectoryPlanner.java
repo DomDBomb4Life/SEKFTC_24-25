@@ -44,15 +44,7 @@ public class AutonomousTrajectoryPlanner {
         driveTrain.updatePoseEstimate();
 
         // Periodically update the pose estimate with vision data
-        // visionSystem.update(); // Commented out
-        // Pose2d visionPose = visionSystem.getAprilTagPose(); // Commented out
-
-        // if (visionPose != null) {
-        //     // Fuse the vision pose with the current pose estimate
-        //     Pose2d currentPose = driveTrain.getPoseEstimate();
-        //     Pose2d fusedPose = fusePoses(currentPose, visionPose);
-        //     driveTrain.setPoseEstimate(fusedPose);
-        // }
+    
     }
 
     // Commented out because vision system is not implemented
