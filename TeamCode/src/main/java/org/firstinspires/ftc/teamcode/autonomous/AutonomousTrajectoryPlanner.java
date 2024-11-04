@@ -217,4 +217,14 @@ public class AutonomousTrajectoryPlanner {
         // Properly close the vision system to release camera resources
         visionSystem.close();
     }
+
+    // Getter method to access VisionSystem
+    public VisionSystem getVisionSystem() {
+        return visionSystem;
+    }
+
+    // Getter method to access DriveTrainRR
+    public DriveTrainRR getDriveTrain() {
+        return driveTrain;
+    }
 }
