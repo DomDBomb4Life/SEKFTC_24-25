@@ -14,6 +14,7 @@ import com.acmerobotics.roadrunner.TrajectoryActionFactory;
 import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
 import com.acmerobotics.roadrunner.TurnActionFactory;
 import com.acmerobotics.roadrunner.TurnConstraints;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.VelConstraint;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
@@ -47,7 +48,6 @@ public class AutonomousTrajectoryPlanner {
 
     /**
      * Initializes the autonomous trajectory planner by setting the initial pose.
-     * No additional initialization for VisionSystem is required as it's handled in the constructor.
      */
     public void initialize() {
         // Set the initial pose estimate using Roadrunner
@@ -63,7 +63,7 @@ public class AutonomousTrajectoryPlanner {
         driveTrain.updatePoseEstimate();
 
         // Retrieve vision-based pose estimate
-        Pose2d visionPose = visionLocalization.getRobotPose();
+        Pose2d visionPose = visionLocalization.getVisionPose();
 
         if (visionPose != null) {
             // Retrieve odometry-based pose estimate
@@ -86,14 +86,33 @@ public class AutonomousTrajectoryPlanner {
      */
     private Pose2d fusePoses(Pose2d odometryPose, Pose2d visionPose) {
         // Weighted average coefficients
-        double alpha = 0.5; // Weight for vision
+        double alpha = 0.1; // Weight for vision (small value to correct drift gradually)
         double beta = 1 - alpha; // Weight for odometry
 
-        double fusedX = alpha * visionPose.getX() + beta * odometryPose.getX();
-        double fusedY = alpha * visionPose.getY() + beta * odometryPose.getY();
-        double fusedHeading = alpha * visionPose.getHeading() + beta * odometryPose.getHeading();
+        // Fuse positions
+        double fusedX = alpha * visionPose.position.x + beta * odometryPose.position.x;
+        double fusedY = alpha * visionPose.position.y + beta * odometryPose.position.y;
 
-        return new Pose2d(fusedX, fusedY, fusedHeading);
+        // Fuse headings using slerp (spherical linear interpolation) for rotations
+        double fusedHeadingAngle = slerp(odometryPose.heading.log(), visionPose.heading.log(), alpha);
+
+        // Create new Pose2d with fused values
+        return new Pose2d(new Vector2d(fusedX, fusedY), fusedHeadingAngle);
+    }
+
+    /**
+     * Spherical linear interpolation between two angles.
+     *
+     * @param startAngle The starting angle (in radians).
+     * @param endAngle   The ending angle (in radians).
+     * @param t          The interpolation factor (0.0 to 1.0).
+     * @return The interpolated angle.
+     */
+    private double slerp(double startAngle, double endAngle, double t) {
+        double difference = endAngle - startAngle;
+        while (difference > Math.PI) difference -= 2 * Math.PI;
+        while (difference < -Math.PI) difference += 2 * Math.PI;
+        return startAngle + t * difference;
     }
 
     /**
