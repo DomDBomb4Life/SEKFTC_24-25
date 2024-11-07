@@ -52,10 +52,10 @@ public class Robot {
     // Constructor
     public Robot(HardwareMap hardwareMap, DriveTrainRR driveTrain) {
         // Initialize subsystems
-        viperLift = new ViperLift(hardwareMap);
+        claw = new Claw(hardwareMap); // Initialize Claw first
+        wrist = new Wrist(hardwareMap, claw); // Pass Claw to Wrist
         arm = new Arm(hardwareMap);
-        claw = new Claw(hardwareMap);
-        wrist = new Wrist(hardwareMap);
+        viperLift = new ViperLift(hardwareMap);
 
         // Initialize states
         homeState = new HomeState(viperLift, arm, wrist, claw);

@@ -12,7 +12,7 @@ public class ViperLift {
 
     // Encoder positions
     private static final int POSITION_MIN = 0;         // Fully retracted position
-    private static final int POSITION_MAX = 11700;     // Fully extended position (example value)
+    private static final int POSITION_MAX = 11000;     // Fully extended position (example value)
     private static final int POSITION_MARGIN = 50;     // Margin for position tolerance
 
     // Target position

@@ -54,8 +54,8 @@ public class ScoringBasketState {
 
             case STEP_2:
                 // Automatically move arm and wrist after ViperLift is up
-                arm.moveToAngle(180);
-                wrist.setAngle(180);
+                arm.moveToAngle(120);
+                wrist.setAngle(150);
                 break;
 
             case STEP_3:
@@ -67,8 +67,8 @@ public class ScoringBasketState {
 
             case STEP_4:
                 // Automatically move arm and wrist back to idle position
-                arm.moveToAngle(120);
-                wrist.setAngle(150);
+                arm.moveToAngle(90);
+                wrist.setAngle(90);
                 break;
 
             case STEP_5:

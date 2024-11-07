@@ -9,14 +9,17 @@ public class Claw {
     // Servo
     private Servo clawServo;
 
-    // Servo positions
-    private static final double CLAW_OPEN_POSITION = 0.0;   // Adjust based on your hardware
-    private static final double CLAW_CLOSED_POSITION = 1.0; // Adjust based on your hardware
+    // Servo positions (normalized from 0.0 to 1.0)
+    private static final double CLAW_MIN_POSITION = 0.0;     // Adjust based on your hardware
+    private static final double CLAW_MAX_POSITION = 1.0;     // Adjust based on your hardware
 
     private static final double POSITION_THRESHOLD = 0.02; // Threshold for position checking
 
-    // Target position
-    private double targetPosition = CLAW_CLOSED_POSITION;
+    // Target angle for the claw (in degrees)
+    private double targetAngle = 0.0; // Closed position
+
+    // Wrist angle offset
+    private double wristAngleOffset = 0.0;
 
     // Constructor
     public Claw(HardwareMap hardwareMap) {
@@ -29,42 +32,66 @@ public class Claw {
 
     // Open the claw
     public void open() {
-        setPosition(CLAW_OPEN_POSITION);
+        setAngle(30.0); // Adjust angle as needed for open position
     }
 
     // Close the claw
     public void close() {
-        setPosition(CLAW_CLOSED_POSITION);
+        setAngle(0.0); // Closed position
     }
 
-    // Set claw position
-    public void setPosition(double position) {
-        // Clamp the position within limits
-        targetPosition = Math.max(0.0, Math.min(position, 1.0));
-        clawServo.setPosition(targetPosition);
+    // Set claw angle (in degrees)
+    public void setAngle(double angleDegrees) {
+        this.targetAngle = angleDegrees;
+        updateServoPosition();
     }
 
-    // Manual control method
-    public void setManualPosition(double position) {
-        setPosition(position);
+    // Set wrist angle offset (called from Wrist class)
+    public void setWristAngleOffset(double offsetDegrees) {
+        this.wristAngleOffset = offsetDegrees;
+        updateServoPosition();
     }
 
-    // Get current position
-    public double getPosition() {
-        return clawServo.getPosition();
+    // Update servo position based on target angle and wrist offset
+    private void updateServoPosition() {
+        double totalAngle = targetAngle + wristAngleOffset;
+        double position = angleToServoPosition(totalAngle);
+        // Clamp position between min and max
+        position = Math.max(CLAW_MIN_POSITION, Math.min(position, CLAW_MAX_POSITION));
+        clawServo.setPosition(position);
     }
-    
-    public double getTargetPosition() {
-        return targetPosition;
+
+    // Convert angle in degrees to servo position (normalized)
+    private double angleToServoPosition(double angleDegrees) {
+        // Assuming the servo rotates from 0 to 180 degrees
+        double servoRangeDegrees = 180.0; // Adjust if your servo has a different range
+        return angleDegrees / servoRangeDegrees;
+    }
+
+    // Get current angle (in degrees)
+    public double getAngle() {
+        double position = clawServo.getPosition();
+        double servoRangeDegrees = 180.0; // Adjust if your servo has a different range
+        return position * servoRangeDegrees - wristAngleOffset;
+    }
+
+    // Get target angle (in degrees)
+    public double getTargetAngle() {
+        return targetAngle;
+    }
+
+    // Manual control method (in degrees)
+    public void adjustAngle(double deltaDegrees) {
+        setAngle(targetAngle + deltaDegrees);
     }
 
     // Check if the claw is open
     public boolean isOpen() {
-        return Math.abs(clawServo.getPosition() - CLAW_OPEN_POSITION) < POSITION_THRESHOLD;
+        return Math.abs(targetAngle - 30.0) < POSITION_THRESHOLD * 180.0;
     }
 
     // Check if the claw is closed
     public boolean isClosed() {
-        return Math.abs(clawServo.getPosition() - CLAW_CLOSED_POSITION) < POSITION_THRESHOLD;
+        return Math.abs(targetAngle - 0.0) < POSITION_THRESHOLD * 180.0;
     }
 }
