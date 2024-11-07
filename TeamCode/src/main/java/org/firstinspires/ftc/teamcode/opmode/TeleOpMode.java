@@ -22,6 +22,7 @@ public class TeleOpMode extends LinearOpMode {
     private boolean previousAButtonPressed = false;
     private boolean previousBButtonPressed = false;
     private boolean previousXButtonPressed = false;
+    private boolean previousLeftBumperPressed = false; // New button tracker
     private boolean previousRightTriggerPressed = false;
     private boolean previousDpadUpPressed = false;
     private boolean previousDpadDownPressed = false;
@@ -31,8 +32,6 @@ public class TeleOpMode extends LinearOpMode {
     public void runOpMode() {
         // Initialize the drivetrain
         driveTrain = new DriveTrain(hardwareMap);
-
-
 
         // Initialize the robot with the drivetrain
         robot = new Robot(hardwareMap);
@@ -114,6 +113,12 @@ public class TeleOpMode extends LinearOpMode {
         }
         previousDpadDownPressed = gamepad2.dpad_down;
 
+        // Handle Pickup State activation with left bumper
+        if (isButtonJustPressed(gamepad2.left_bumper, previousLeftBumperPressed)) {
+            robot.onPickupButtonPressed();
+        }
+        previousLeftBumperPressed = gamepad2.left_bumper;
+
         // Read gamepad inputs for driving
         double leftStickY = -gamepad1.left_stick_y;
         double leftStickX = -gamepad1.left_stick_x;
@@ -137,9 +142,6 @@ public class TeleOpMode extends LinearOpMode {
         telemetry.addData("Wrist Target", robot.wrist.getTargetAngle());
         telemetry.addData("Claw Angle", robot.claw.getAngle());
         telemetry.addData("Claw Target", robot.claw.getTargetAngle());
-
-        telemetry.addData("Claw Position", robot.claw.getPosition());
-        telemetry.addData("Wrist Position", robot.wrist.getPosition());
     }
 
     // In handleDevModeControls()
@@ -198,15 +200,13 @@ public class TeleOpMode extends LinearOpMode {
         telemetry.addData("Wrist Target", robot.wrist.getTargetAngle());
         telemetry.addData("Claw Angle", robot.claw.getAngle());
         telemetry.addData("Claw Target", robot.claw.getTargetAngle());
-
-        telemetry.addData("Claw Position", robot.claw.getPosition());
-        telemetry.addData("Wrist Position", robot.wrist.getPosition());
     }
 
     // Helper method for detecting button press edges
     private boolean isButtonJustPressed(boolean currentState, boolean previousState) {
         return currentState && !previousState;
     }
+
     private void onInit(){
         robot.wrist.setAngle(20);
         robot.arm.moveToAngle(137.0);

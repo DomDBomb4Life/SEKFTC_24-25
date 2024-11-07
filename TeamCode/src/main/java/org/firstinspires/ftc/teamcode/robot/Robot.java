@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.robot.states.ScoringSpecimenState;
 import org.firstinspires.ftc.teamcode.robot.states.ObservationState;
 import org.firstinspires.ftc.teamcode.robot.states.IdleState;
 import org.firstinspires.ftc.teamcode.robot.states.LevelOneAscentState;
+import org.firstinspires.ftc.teamcode.robot.states.PickupState; // Import the new state
 
 /**
  * The Robot class encapsulates all the subsystems and manages state transitions.
@@ -31,7 +32,8 @@ public class Robot {
     public ScoringSpecimenState scoringSpecimenState;
     public ObservationState observationState;
     public IdleState idleState;
-    public LevelOneAscentState levelOneAscentState; // LevelOneAscentState instance
+    public LevelOneAscentState levelOneAscentState;
+    public PickupState pickupState; // New PickupState instance
 
     // Current state
     public enum State {
@@ -40,7 +42,8 @@ public class Robot {
         SCORING,
         SCORING_SPECIMEN,
         OBSERVATION,
-        LEVEL_ONE_ASCENT
+        LEVEL_ONE_ASCENT,
+        PICKUP // New state added
     }
 
     public State currentState = State.IDLE;
@@ -59,7 +62,8 @@ public class Robot {
         scoringSpecimenState = new ScoringSpecimenState(viperLift, arm, wrist, claw);
         observationState = new ObservationState(viperLift, arm, wrist, claw);
         idleState = new IdleState(viperLift, arm, wrist, claw);
-        levelOneAscentState = new LevelOneAscentState(viperLift, arm); // Initialize new state
+        levelOneAscentState = new LevelOneAscentState(viperLift, arm);
+        pickupState = new PickupState(viperLift, arm, wrist, claw); // Initialize new state
 
         // Activate initial state
         idleState.activate();
@@ -96,6 +100,11 @@ public class Robot {
                 // Do not set to IDLE when completed, as per your request
                 break;
 
+            case PICKUP:
+                pickupState.update();
+                // Decide when to transition out of PICKUP state if needed
+                break;
+
             case IDLE:
                 idleState.update();
                 break;
@@ -112,6 +121,9 @@ public class Robot {
             switch (currentState) {
                 case HOME:
                     homeState.deactivate();
+                    break;
+                case PICKUP:
+                    pickupState.deactivate();
                     break;
                 // Add deactivation for other states if needed
                 default:
@@ -140,6 +152,10 @@ public class Robot {
                     levelOneAscentState.start();
                     break;
 
+                case PICKUP:
+                    pickupState.activate();
+                    break;
+
                 case IDLE:
                     idleState.activate();
                     break;
@@ -166,6 +182,8 @@ public class Robot {
                 return observationState.isActive() ? "ACTIVE" : "INACTIVE";
             case LEVEL_ONE_ASCENT:
                 return levelOneAscentState.getCurrentStep().toString();
+            case PICKUP:
+                return pickupState.isReadyToPickUp() ? "READY" : "MOVING";
             case IDLE:
             default:
                 return "NONE";
@@ -219,5 +237,14 @@ public class Robot {
     // Method to handle Level One Ascent button press
     public void onLevelOneAscentButtonPressed() {
         setState(State.LEVEL_ONE_ASCENT);
+    }
+
+    // Method to handle Pickup button press
+    public void onPickupButtonPressed() {
+        if (currentState != State.PICKUP) {
+            setState(State.PICKUP);
+        } else {
+            setState(State.IDLE);
+        }
     }
 }
