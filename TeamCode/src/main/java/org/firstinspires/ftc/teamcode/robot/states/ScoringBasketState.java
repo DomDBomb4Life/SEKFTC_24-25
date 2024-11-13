@@ -49,13 +49,13 @@ public class ScoringBasketState {
         switch (currentStep) {
             case STEP_1:
                 // Move Viper Lift all the way up
-                viperLift.moveToPosition(9286);
+                viperLift.moveToPosition(6780);
                 break;
 
             case STEP_2:
                 // Automatically move arm and wrist after ViperLift is up
-                arm.moveToAngle(120);
-                wrist.setAngle(150);
+                arm.moveToAngle(148);
+                wrist.setAngle(90);
                 break;
 
             case STEP_3:

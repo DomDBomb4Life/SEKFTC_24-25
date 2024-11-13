@@ -21,6 +21,23 @@ public class HomeState {
 
     private Variation currentVariation = Variation.VARIATION_1;
 
+    // Steps for the two-step movement
+    private enum Step {
+        MOVE_TO_SAFE_POSITION,
+        MOVE_TO_FINAL_POSITION,
+        COMPLETED
+    }
+
+    private Step currentStep = Step.MOVE_TO_SAFE_POSITION;
+
+    // Safe positions to prevent hitting the floor
+    private static final double SAFE_ARM_ANGLE = 0.0; // Adjust as needed
+    private static final double SAFE_WRIST_ANGLE = 120.0; // Adjust as needed
+
+    // Final positions based on variation
+    private double targetArmAngle;
+    private double targetWristAngle;
+
     // State active flag
     private boolean isActive = false;
 
@@ -35,25 +52,32 @@ public class HomeState {
     // Activate the home state
     public void activate() {
         isActive = true;
+        currentStep = Step.MOVE_TO_SAFE_POSITION;
+
         // Viper Lift down
         viperLift.moveToPosition(0);
 
-        // Set positions based on current variation
+        // Set final positions based on current variation
         switch (currentVariation) {
             case VARIATION_1:
-                arm.moveToAngle(0);
-                wrist.setAngle(90);
+                targetArmAngle = -17;
+                targetWristAngle = 96;
                 break;
             case VARIATION_2:
-                arm.moveToAngle(15);
-                wrist.setAngle(0);
+                targetArmAngle = -5;
+                targetWristAngle = 156;
                 break;
         }
+
+        // Move to safe positions first
+        arm.moveToAngle(SAFE_ARM_ANGLE);
+        wrist.setAngle(SAFE_WRIST_ANGLE);
     }
 
     // Deactivate the home state
     public void deactivate() {
         isActive = false;
+        currentStep = Step.COMPLETED;
     }
 
     // Switch between variations
@@ -76,8 +100,33 @@ public class HomeState {
     // Update method
     public void update() {
         if (isActive) {
-            // Monitor if subsystems have reached target positions
-            // Implement any necessary logic
+            switch (currentStep) {
+                case MOVE_TO_SAFE_POSITION:
+                    // Check if arm and wrist have reached safe positions
+                    if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                        // Proceed to final positions
+                        arm.moveToAngle(targetArmAngle);
+                        wrist.setAngle(targetWristAngle);
+                        currentStep = Step.MOVE_TO_FINAL_POSITION;
+                    }
+                    break;
+
+                case MOVE_TO_FINAL_POSITION:
+                    // Check if arm and wrist have reached final positions
+                    if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                        currentStep = Step.COMPLETED;
+                    }
+                    break;
+
+                case COMPLETED:
+                    // Do nothing; home state is complete
+                    break;
+            }
         }
+    }
+
+    // Check if home state is completed
+    public boolean isCompleted() {
+        return currentStep == Step.COMPLETED;
     }
 }

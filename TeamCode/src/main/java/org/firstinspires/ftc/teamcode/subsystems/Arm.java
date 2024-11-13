@@ -1,53 +1,65 @@
 // File: Arm.java
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 public class Arm {
 
     // Motor
-    private DcMotor armMotor;
+    private DcMotorEx armMotor;
 
     // Angle limits (in degrees)
-    private static final double ANGLE_MIN = 0.0;
+    private static final double ANGLE_MIN = -20.0;
     private static final double ANGLE_MAX = 180.0;
-    private static final double ANGLE_MARGIN = 3.0; // Margin for angle tolerance in degrees
+    private static final double ANGLE_MARGIN = 1.0; // Margin for angle tolerance in degrees
 
     // Encoder counts per revolution (CPR) for the motor
     private static final double ENCODER_CPR = 1425.1; // Adjust based on your motor (e.g., Neverest 40)
     private static final double GEAR_RATIO = 1.0; // Adjust if gears are used
     private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
 
+    // Zero position angle (where encoder count is zero)
+    private static final double ZERO_POSITION_ANGLE = -18.0;
+
     // Target angle
-    private double targetAngle = 90.0; // Start at 90 degrees as default
+    private double targetAngle = ZERO_POSITION_ANGLE; // Start at -14 degrees as default
 
     // Constructor
     public Arm(HardwareMap hardwareMap) {
         // Initialize motor
-        armMotor = hardwareMap.get(DcMotor.class, "Arm");
+        armMotor = hardwareMap.get(DcMotorEx.class, "Arm");
 
         // Motor configuration
         configureMotor(armMotor);
 
-        // Set initial position to interpret the current position as 90 degrees
-        calibrateStartingPosition();
+        // Optionally move to a different angle after initialization
+        // moveToAngle(90.0); // Uncomment to move to 90 degrees after initialization
     }
 
-    private void configureMotor(DcMotor motor) {
-        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor.setDirection(DcMotor.Direction.REVERSE);
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    private void configureMotor(DcMotorEx motor) {
+        motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        motor.setDirection(DcMotorEx.Direction.REVERSE);
+        motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+
+        // Set PIDF coefficients for RUN_TO_POSITION
+        PIDFCoefficients pidfCoefficients = motor.getPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+        // Adjust the PIDF coefficients as needed
+        pidfCoefficients.p = 10.0; // Increase P for tighter control
+        pidfCoefficients.i = 0.0;
+        pidfCoefficients.d = 0.0;
+        pidfCoefficients.f = 0.0;
+
+        motor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, pidfCoefficients);
+
+        // Set mode to RUN_USING_ENCODER
+        motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
     }
 
-    // Calibrate the encoder to treat the current position as 90 degrees
-    private void calibrateStartingPosition() {
-        // Set the encoder’s current position as equivalent to 90 degrees
-        int initialCounts = angleToCounts(90.0);
-        armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        armMotor.setTargetPosition(initialCounts);
-        armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
+    // Calibrate the encoder to treat the current position as ZERO_POSITION_ANGLE
+
 
     // Move to a specific angle
     public void moveToAngle(double angle) {
@@ -60,33 +72,30 @@ public class Arm {
         // Set target position
         armMotor.setTargetPosition(targetPosition);
 
-        // Apply power
+        // Apply power and set mode
+        armMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         armMotor.setPower(0.5); // Use a moderate power for smooth movement
-
-        // Run to position
-        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     // Adjust target angle incrementally
     public void adjustTargetAngle(double increment) {
-        if (isCloseToTarget()) {
-            moveToAngle(targetAngle + increment);
-        }
+        moveToAngle(targetAngle + increment);
     }
 
     // Convert angle to encoder counts
     private int angleToCounts(double angle) {
-        return (int) ((angle - 90) * COUNTS_PER_DEGREE);
+        return (int) ((angle - ZERO_POSITION_ANGLE) * COUNTS_PER_DEGREE);
     }
 
     // Convert encoder counts to angle
     private double countsToAngle(int counts) {
-        return (counts / COUNTS_PER_DEGREE) + 90;
+        return (counts / COUNTS_PER_DEGREE) + ZERO_POSITION_ANGLE;
     }
 
     // Stop the arm
     public void stop() {
         armMotor.setPower(0);
+        armMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
     }
 
     // Get current angle
@@ -106,8 +115,11 @@ public class Arm {
         return Math.abs(currentAngle - targetAngle) <= ANGLE_MARGIN;
     }
 
-    // Update method to be called periodically (if needed)
+    // Update method to be called periodically
     public void update() {
-        // Implement PID control or additional logic if necessary
+        // Ensure the motor is in RUN_TO_POSITION mode
+        armMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        // Apply power to hold position
+        armMotor.setPower(0.5);
     }
 }

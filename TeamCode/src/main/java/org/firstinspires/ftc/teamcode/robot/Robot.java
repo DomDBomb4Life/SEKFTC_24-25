@@ -13,7 +13,6 @@ import org.firstinspires.ftc.teamcode.robot.states.ScoringBasketState;
 import org.firstinspires.ftc.teamcode.robot.states.ScoringSpecimenState;
 import org.firstinspires.ftc.teamcode.robot.states.ObservationState;
 import org.firstinspires.ftc.teamcode.robot.states.IdleState;
-import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 
 /**
  * The Robot class encapsulates all the subsystems and manages state transitions.
@@ -35,7 +34,6 @@ public class Robot {
     public IdleState idleState;
 
     // Drivetrain
-    private final DriveTrainRR driveTrain;
 
     // Current state
     public enum State {
@@ -50,7 +48,7 @@ public class Robot {
     public State currentState = State.IDLE;
 
     // Constructor
-    public Robot(HardwareMap hardwareMap, DriveTrainRR driveTrain) {
+    public Robot(HardwareMap hardwareMap) {
         // Initialize subsystems
         claw = new Claw(hardwareMap); // Initialize Claw first
         wrist = new Wrist(hardwareMap, claw); // Pass Claw to Wrist
@@ -69,13 +67,10 @@ public class Robot {
         idleState.activate();
 
         // Initialize drivetrain
-        this.driveTrain = driveTrain;
     }
 
     // Getter for drivetrain
-    public DriveTrainRR getDriveTrain() {
-        return driveTrain;
-    }
+
 
     // Update method called periodically
     public void update() {

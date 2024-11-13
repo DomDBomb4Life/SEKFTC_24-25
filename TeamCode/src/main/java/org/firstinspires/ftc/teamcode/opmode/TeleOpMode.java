@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.drive.DriveTrain;
-import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.states.ScoringSpecimenState;
 
@@ -13,7 +12,6 @@ import org.firstinspires.ftc.teamcode.robot.states.ScoringSpecimenState;
 public class TeleOpMode extends LinearOpMode {
 
     private DriveTrain driveTrain;
-    private DriveTrainRR driveTrainRR;
 
     private Robot robot;
 
@@ -34,11 +32,10 @@ public class TeleOpMode extends LinearOpMode {
     @Override
     public void runOpMode() {
         // Initialize the drivetrain
-        driveTrainRR = new DriveTrainRR(hardwareMap);
         driveTrain = new DriveTrain(hardwareMap);
 
         // Initialize the robot with the drivetrain
-        robot = new Robot(hardwareMap, driveTrainRR);
+        robot = new Robot(hardwareMap);
 
         waitForStart();
 
@@ -146,10 +143,16 @@ public class TeleOpMode extends LinearOpMode {
         telemetry.addData("ViperLift Target", robot.viperLift.getTargetPosition());
         telemetry.addData("Arm Angle", robot.arm.getCurrentAngle());
         telemetry.addData("Arm Target", robot.arm.getTargetAngle());
-        telemetry.addData("Wrist Position", robot.wrist.getPosition());
-        telemetry.addData("Wrist Target", robot.wrist.getTargetPosition());
-        telemetry.addData("Claw Position", robot.claw.getPosition());
-        telemetry.addData("Claw Target", robot.claw.getTargetPosition());
+        telemetry.addData("Wrist Angle", robot.wrist.getAngle());
+        telemetry.addData("Wrist Target", robot.wrist.getTargetAngle());
+        telemetry.addData("Claw Angle", robot.claw.getAngle());
+        telemetry.addData("Claw Target", robot.claw.getTargetAngle());
+
+        telemetry.addData("Claw Position", robot.claw.getClawPosition());
+
+        telemetry.addData("Wrist Position", robot.wrist.getWristPosition());
+
+
     }
 
 // In handleDevModeControls()
@@ -208,6 +211,8 @@ private void handleDevModeControls() {
     telemetry.addData("Wrist Target", robot.wrist.getTargetAngle());
     telemetry.addData("Claw Angle", robot.claw.getAngle());
     telemetry.addData("Claw Target", robot.claw.getTargetAngle());
+
+    
 }
 
     // Helper method for detecting button press edges

@@ -26,19 +26,23 @@ public class Wrist {
         // Initialize the servo
         wristServo = hardwareMap.get(Servo.class, "WristServo");
 
-        // Set initial position
-        setAngle(0.0); // Start at the initial position
-
         // Initialize Claw reference
         this.claw = claw;
+
+        // Set initial angle directly without invoking setAngle()
+        targetAngle = 0.0;
+        updateServoPosition();
     }
 
     // Set wrist angle (in degrees)
     public void setAngle(double angleDegrees) {
         this.targetAngle = angleDegrees;
         updateServoPosition();
-        // Update claw with new wrist offset
-        claw.setWristAngleOffset(targetAngle);
+
+        // Only call setWristAngleOffset if claw is not null
+        if (claw != null) {
+            claw.setWristAngleOffset(targetAngle);
+        }
     }
 
     // Update servo position based on target angle
@@ -76,5 +80,9 @@ public class Wrist {
     // Check if wrist is at target angle
     public boolean isAtTarget() {
         return Math.abs(getAngle() - targetAngle) < POSITION_THRESHOLD * 180.0;
+    }
+
+    public double getWristPosition() {
+        return wristServo.getPosition();
     }
 }
