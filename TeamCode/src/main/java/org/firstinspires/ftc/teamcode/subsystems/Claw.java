@@ -13,9 +13,9 @@ public class Claw {
     private static final double CLAW_MIN_POSITION = 0.0;     // Adjust based on your hardware
     private static final double CLAW_MAX_POSITION = 1.0;     // Adjust based on your hardware
 
-    private static final double closed = -31.0;
+    private static final double closed = -40.0;
 
-    private static final double open = 16.0;
+    private static final double open = 4.0;
 
 
 
@@ -101,7 +101,7 @@ public class Claw {
     public boolean isClosed() {
         return Math.abs(targetAngle - closed) < POSITION_THRESHOLD * 180.0;
     }
-    public double getClawPosition() {
+    public double getPosition() {
         return clawServo.getPosition();
     }
 }

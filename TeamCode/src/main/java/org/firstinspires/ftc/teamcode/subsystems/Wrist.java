@@ -82,7 +82,7 @@ public class Wrist {
         return Math.abs(getAngle() - targetAngle) < POSITION_THRESHOLD * 180.0;
     }
 
-    public double getWristPosition() {
+    public double getPosition() {
         return wristServo.getPosition();
     }
 }

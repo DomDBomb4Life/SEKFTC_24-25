@@ -33,8 +33,6 @@ public class Robot {
     public ObservationState observationState;
     public IdleState idleState;
 
-    // Drivetrain
-
     // Current state
     public enum State {
         IDLE,
@@ -65,12 +63,7 @@ public class Robot {
 
         // Activate initial state
         idleState.activate();
-
-        // Initialize drivetrain
     }
-
-    // Getter for drivetrain
-
 
     // Update method called periodically
     public void update() {
@@ -114,10 +107,15 @@ public class Robot {
     // Method to set the current state
     public void setState(State newState) {
         if (currentState != newState) {
+            // Deactivate current state if necessary
+            if (currentState == State.HOME) {
+                homeState.deactivate();
+            }
+
             currentState = newState;
             switch (newState) {
                 case HOME:
-                    homeState.activate();
+                    homeState.start();
                     break;
 
                 case HANGING:
@@ -153,7 +151,7 @@ public class Robot {
     public String getCurrentSubstate() {
         switch (currentState) {
             case HOME:
-                return homeState.getCurrentVariation().toString();
+                return homeState.getCurrentStep().toString();
             case HANGING:
                 return hangingState.getCurrentStep().toString();
             case SCORING:
@@ -170,7 +168,11 @@ public class Robot {
 
     // Methods to handle button presses
     public void onHomeButtonPressed() {
-        setState(State.HOME);
+        if (currentState != State.HOME) {
+            setState(State.HOME);
+        } else {
+            setState(State.IDLE);
+        }
     }
 
     public void onHangingButtonPressed() {
@@ -197,9 +199,10 @@ public class Robot {
         }
     }
 
-    public void onSwitchVariationButtonPressed() {
+    // Method to handle right trigger press
+    public void onRightTriggerPressed() {
         if (currentState == State.HOME) {
-            homeState.switchVariation();
+            homeState.onRightTriggerPressed();
         }
     }
 }

@@ -13,30 +13,22 @@ public class HomeState {
     private Wrist wrist;
     private Claw claw;
 
-    // Variations
-    public enum Variation {
-        VARIATION_1,
-        VARIATION_2
+    // Steps in the state machine
+    public enum Step {
+        MOVE_TO_SAFETY_POSITION,
+        WAIT_FOR_INPUT,
+        MOVE_TO_PICKUP_POSITION,
+        CLOSE_CLAW,
+        MOVE_BACK_TO_SAFETY
     }
 
-    private Variation currentVariation = Variation.VARIATION_1;
+    private Step currentStep;
 
-    // Steps for the two-step movement
-    private enum Step {
-        MOVE_TO_SAFE_POSITION,
-        MOVE_TO_FINAL_POSITION,
-        COMPLETED
-    }
-
-    private Step currentStep = Step.MOVE_TO_SAFE_POSITION;
-
-    // Safe positions to prevent hitting the floor
-    private static final double SAFE_ARM_ANGLE = 0.0; // Adjust as needed
-    private static final double SAFE_WRIST_ANGLE = 120.0; // Adjust as needed
-
-    // Final positions based on variation
-    private double targetArmAngle;
-    private double targetWristAngle;
+    // Safety and pickup positions
+    private static final double SAFETY_ARM_ANGLE = 0.0;     // Adjust as needed
+    private static final double SAFETY_WRIST_ANGLE = 180.0;  // Adjust as needed
+    private static final double PICKUP_ARM_ANGLE = -10.0;   // Adjust as needed
+    private static final double PICKUP_WRIST_ANGLE = 160.0;  // Adjust as needed
 
     // State active flag
     private boolean isActive = false;
@@ -50,83 +42,107 @@ public class HomeState {
     }
 
     // Activate the home state
-    public void activate() {
+    public void start() {
         isActive = true;
-        currentStep = Step.MOVE_TO_SAFE_POSITION;
-
-        // Viper Lift down
-        viperLift.moveToPosition(0);
-
-        // Set final positions based on current variation
-        switch (currentVariation) {
-            case VARIATION_1:
-                targetArmAngle = -17;
-                targetWristAngle = 96;
-                break;
-            case VARIATION_2:
-                targetArmAngle = -5;
-                targetWristAngle = 156;
-                break;
-        }
-
-        // Move to safe positions first
-        arm.moveToAngle(SAFE_ARM_ANGLE);
-        wrist.setAngle(SAFE_WRIST_ANGLE);
+        currentStep = Step.MOVE_TO_SAFETY_POSITION;
+        executeCurrentStep();
     }
 
     // Deactivate the home state
     public void deactivate() {
         isActive = false;
-        currentStep = Step.COMPLETED;
     }
 
-    // Switch between variations
-    public void switchVariation() {
-        if (currentVariation == Variation.VARIATION_1) {
-            currentVariation = Variation.VARIATION_2;
-        } else {
-            currentVariation = Variation.VARIATION_1;
+    // Execute actions for the current step
+    private void executeCurrentStep() {
+        switch (currentStep) {
+            case MOVE_TO_SAFETY_POSITION:
+                // Move arm and wrist to safety positions, open claw
+                arm.moveToAngle(SAFETY_ARM_ANGLE);
+                wrist.setAngle(SAFETY_WRIST_ANGLE);
+                claw.open();
+                break;
+
+            case WAIT_FOR_INPUT:
+                // Do nothing; waiting for right trigger input
+                break;
+
+            case MOVE_TO_PICKUP_POSITION:
+                // Move arm and wrist to pickup positions
+                if (!claw.isOpen()) {
+                claw.open();
+                executeCurrentStep();
+                }
+                arm.moveToAngle(PICKUP_ARM_ANGLE);
+                wrist.setAngle(PICKUP_WRIST_ANGLE);
+                break;
+
+            case CLOSE_CLAW:
+                // Close the claw
+                claw.close();
+                break;
+
+            case MOVE_BACK_TO_SAFETY:
+                // Move arm and wrist back to safety positions
+                arm.moveToAngle(SAFETY_ARM_ANGLE);
+                wrist.setAngle(SAFETY_WRIST_ANGLE);
+                break;
         }
-
-        // Re-activate to apply the new variation
-        activate();
     }
 
-    // Get current variation
-    public Variation getCurrentVariation() {
-        return currentVariation;
-    }
-
-    // Update method
+    // Update method to be called periodically
     public void update() {
-        if (isActive) {
-            switch (currentStep) {
-                case MOVE_TO_SAFE_POSITION:
-                    // Check if arm and wrist have reached safe positions
-                    if (arm.isCloseToTarget() && wrist.isAtTarget()) {
-                        // Proceed to final positions
-                        arm.moveToAngle(targetArmAngle);
-                        wrist.setAngle(targetWristAngle);
-                        currentStep = Step.MOVE_TO_FINAL_POSITION;
-                    }
-                    break;
+        if (!isActive) return;
 
-                case MOVE_TO_FINAL_POSITION:
-                    // Check if arm and wrist have reached final positions
-                    if (arm.isCloseToTarget() && wrist.isAtTarget()) {
-                        currentStep = Step.COMPLETED;
-                    }
-                    break;
+        switch (currentStep) {
+            case MOVE_TO_SAFETY_POSITION:
+                if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                    currentStep = Step.WAIT_FOR_INPUT;
+                    // No need to executeCurrentStep() here
+                }
+                break;
 
-                case COMPLETED:
-                    // Do nothing; home state is complete
-                    break;
-            }
+            case WAIT_FOR_INPUT:
+                // Waiting for right trigger input
+                break;
+
+            case MOVE_TO_PICKUP_POSITION:
+                if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                    currentStep = Step.CLOSE_CLAW;
+                    executeCurrentStep();
+                }
+                break;
+
+            case CLOSE_CLAW:
+                // Optionally, add a delay here if needed
+                currentStep = Step.MOVE_BACK_TO_SAFETY;
+                executeCurrentStep();
+                break;
+
+            case MOVE_BACK_TO_SAFETY:
+                if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                    currentStep = Step.WAIT_FOR_INPUT;
+                    // Cycle complete; waiting for next input
+                }
+                break;
         }
     }
 
-    // Check if home state is completed
-    public boolean isCompleted() {
-        return currentStep == Step.COMPLETED;
+    // Handle right trigger input
+    public void onRightTriggerPressed() {
+        if (isActive && currentStep == Step.WAIT_FOR_INPUT) {
+            currentStep = Step.MOVE_TO_PICKUP_POSITION;
+            executeCurrentStep();
+        }
+    }
+
+    // Check if the state is active
+    public boolean isActive() {
+        return isActive;
+    }
+
+    // Get current step (for telemetry or debugging)
+    public Step getCurrentStep() {
+        return currentStep;
     }
 }

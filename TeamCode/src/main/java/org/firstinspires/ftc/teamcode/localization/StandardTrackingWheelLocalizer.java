@@ -35,9 +35,9 @@ public class StandardTrackingWheelLocalizer extends ThreeTrackingWheelLocalizer 
         ));
 
         // Initialize the encoders using the hardware map
-        leftEncoder = new Encoder(hardwareMap, "FrontR");
-        rightEncoder = new Encoder(hardwareMap, "BackR");
-        frontEncoder = new Encoder(hardwareMap, "BackL");
+        leftEncoder = new Encoder(hardwareMap, "FrontL");
+        rightEncoder = new Encoder(hardwareMap, "FrontR");
+        frontEncoder = new Encoder(hardwareMap, "FrontL");
 
         // Reverse any encoders if necessary
         leftEncoder.setDirection(Encoder.Direction.REVERSE);
