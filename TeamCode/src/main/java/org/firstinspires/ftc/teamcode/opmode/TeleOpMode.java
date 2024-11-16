@@ -32,8 +32,12 @@ public class TeleOpMode extends LinearOpMode {
         // Initialize the drivetrain
         driveTrain = new DriveTrain(hardwareMap);
 
+
+
         // Initialize the robot with the drivetrain
         robot = new Robot(hardwareMap);
+
+        onInit();
 
         waitForStart();
 
@@ -90,7 +94,7 @@ public class TeleOpMode extends LinearOpMode {
         previousBButtonPressed = gamepad2.b;
 
         if (isButtonJustPressed(gamepad2.a, previousAButtonPressed)) {
-            robot.onHangingButtonPressed();
+            robot.onLevelOneAscentButtonPressed();
         }
         previousAButtonPressed = gamepad2.a;
 
@@ -194,10 +198,17 @@ public class TeleOpMode extends LinearOpMode {
         telemetry.addData("Wrist Target", robot.wrist.getTargetAngle());
         telemetry.addData("Claw Angle", robot.claw.getAngle());
         telemetry.addData("Claw Target", robot.claw.getTargetAngle());
+
+        telemetry.addData("Claw Position", robot.claw.getPosition());
+        telemetry.addData("Wrist Position", robot.wrist.getPosition());
     }
 
     // Helper method for detecting button press edges
     private boolean isButtonJustPressed(boolean currentState, boolean previousState) {
         return currentState && !previousState;
+    }
+    private void onInit(){
+        robot.wrist.setAngle(20);
+        robot.arm.moveToAngle(137.0);
     }
 }

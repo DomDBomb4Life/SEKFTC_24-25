@@ -125,7 +125,7 @@ public class CombinedTestOpMode extends LinearOpMode {
         telemetry.addLine("Running Turn Test");
 
         TrajectorySequence trajectory = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
-                .turn(Math.toRadians(ANGLE), MAX_ANG_VEL, MAX_ANG_ACCEL)
+                .turn(Math.toRadians(ANGLE))
                 .build();
 
         drive.followTrajectorySequence(trajectory);

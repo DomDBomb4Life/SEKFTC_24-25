@@ -1,44 +1,34 @@
+// File: TrajectorySequence.java
 package org.firstinspires.ftc.teamcode.trajectorysequence;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
-* Class representing a sequence of trajectory segments.
-*/
+ * Class representing a sequence of trajectories, turns, and waits.
+ */
 public class TrajectorySequence {
-   private final List<SequenceSegment> sequenceList;
+    private final List<Object> segments;
+    private final Pose2d startPose;
 
-   public TrajectorySequence(List<SequenceSegment> sequenceList) {
-       if (sequenceList.isEmpty()) {
-           throw new EmptySequenceException();
-       }
-       this.sequenceList = Collections.unmodifiableList(sequenceList);
-   }
+    public TrajectorySequence(
+            List<Object> segments,
+            Pose2d startPose
+    ) {
+        this.segments = segments;
+        this.startPose = startPose;
+    }
 
-   public Pose2d start() {
-       return sequenceList.get(0).getStartPose();
-   }
+    public int getTotalSegments() {
+        return segments.size();
+    }
 
-   public Pose2d end() {
-       return sequenceList.get(sequenceList.size() - 1).getEndPose();
-   }
+    public Object getSegment(int index) {
+        return segments.get(index);
+    }
 
-   public double duration() {
-       double total = 0.0;
-       for (SequenceSegment segment : sequenceList) {
-           total += segment.getDuration();
-       }
-       return total;
-   }
-
-   public SequenceSegment get(int index) {
-       return sequenceList.get(index);
-   }
-
-   public int size() {
-       return sequenceList.size();
-   }
+    public Pose2d getStartPose() {
+        return startPose;
+    }
 }

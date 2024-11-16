@@ -17,12 +17,12 @@ import java.util.List;
  */
 public class StandardTrackingWheelLocalizer extends ThreeTrackingWheelLocalizer {
     // Constants: These need to be tuned for your robot
-    public static double TICKS_PER_REV = 8192; // For an REV through-bore encoder
-    public static double WHEEL_RADIUS = 1.0; // In inches
+    public static double TICKS_PER_REV = 2000; // For an REV through-bore encoder
+    public static double WHEEL_RADIUS = 0.6299; // In inches
     public static double GEAR_RATIO = 1.0; // Ratio between wheel and encoder
 
-    public static double LATERAL_DISTANCE = 14.0; // Distance between the left and right wheels
-    public static double FORWARD_OFFSET = -7.0; // Offset of the lateral wheel
+    public static double LATERAL_DISTANCE = 12.283; // Distance between the left and right wheels
+    public static double FORWARD_OFFSET = 1.791; // Offset of the lateral wheel
 
     private Encoder leftEncoder, rightEncoder, frontEncoder;
 
@@ -36,13 +36,13 @@ public class StandardTrackingWheelLocalizer extends ThreeTrackingWheelLocalizer 
 
         // Initialize the encoders using the hardware map
         leftEncoder = new Encoder(hardwareMap, "FrontL");
-        rightEncoder = new Encoder(hardwareMap, "FrontR");
-        frontEncoder = new Encoder(hardwareMap, "FrontL");
+        rightEncoder = new Encoder(hardwareMap, "BackR");
+        frontEncoder = new Encoder(hardwareMap, "FrontR");
 
         // Reverse any encoders if necessary
-        leftEncoder.setDirection(Encoder.Direction.REVERSE);
+        leftEncoder.setDirection(Encoder.Direction.FORWARD);
         rightEncoder.setDirection(Encoder.Direction.FORWARD);
-        frontEncoder.setDirection(Encoder.Direction.FORWARD);
+        frontEncoder.setDirection(Encoder.Direction.REVERSE);
     }
 
     public static double encoderTicksToInches(double ticks) {

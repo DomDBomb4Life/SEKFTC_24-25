@@ -15,17 +15,18 @@ public class ScoringSpecimenState {
 
     // Steps in the scoring specimen process
     public enum Step {
-        STEP_1,
-        STEP_2,
-        LOOP_LOWERING,
-        STEP_3,
-        COMPLETED
+        LIFT_VIPERLIFT_UP,
+        MOVE_WRIST_AND_CLAW,
+        WAIT_FOR_RIGHT_TRIGGER,
+        LOWER_VIPERLIFT,
+        WAIT_FOR_BUTTON_PRESS,
+        OPEN_CLAW,
+        MOVE_ARM_AND_WRIST_BACK,
+        LOWER_VIPERLIFT_TO_BOTTOM,
+        FINAL // Remain here when done
     }
 
     private Step currentStep;
-
-    // Flag to track loop direction
-    private boolean isLowered = false;
 
     // Constructor
     public ScoringSpecimenState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw) {
@@ -33,41 +34,60 @@ public class ScoringSpecimenState {
         this.arm = arm;
         this.wrist = wrist;
         this.claw = claw;
-        this.currentStep = Step.STEP_1; // Initial step
+        this.currentStep = Step.LIFT_VIPERLIFT_UP; // Initial step
     }
 
     // Start the scoring specimen process
     public void start() {
-        currentStep = Step.STEP_1;
+        currentStep = Step.LIFT_VIPERLIFT_UP;
         executeCurrentStep();
     }
 
     // Execute actions for the current step
     private void executeCurrentStep() {
         switch (currentStep) {
-            case STEP_1:
-                // Raise Viper Lift to a certain height
+            case LIFT_VIPERLIFT_UP:
+                // Lift the ViperLift up to a specific position
                 viperLift.moveToPosition(5000); // Adjust this value as needed
                 break;
 
-            case STEP_2:
-                // Move arm and wrist to set positions
-                arm.moveToAngle(90);   // Adjust angle as needed
-                wrist.setAngle(45);    // Adjust angle as needed
+            case MOVE_WRIST_AND_CLAW:
+                // Move the wrist and claw to desired positions
+                arm.moveToAngle(45);   // Adjust angle as needed
+                wrist.setAngle(45); // Adjust angle as needed
                 break;
 
-            case LOOP_LOWERING:
-                // This step will be controlled by user input in the update method
+            case WAIT_FOR_RIGHT_TRIGGER:
+                // Waiting for right trigger input
                 break;
 
-            case STEP_3:
-                // Open the claw and lower Viper Lift all the way down
+            case LOWER_VIPERLIFT:
+                // Lower the ViperLift to a certain position
+                viperLift.moveToPosition(4500); // Adjust this value as needed
+                break;
+
+            case WAIT_FOR_BUTTON_PRESS:
+                // Waiting for primary button or right trigger input
+                break;
+
+            case OPEN_CLAW:
+                // Open the claw
                 claw.open();
+                break;
+
+            case MOVE_ARM_AND_WRIST_BACK:
+                // Move arm and wrist back to their correct locations
+                arm.moveToAngle(90);   // Adjust angle as needed
+                wrist.setAngle(90);    // Adjust angle as needed
+                break;
+
+            case LOWER_VIPERLIFT_TO_BOTTOM:
+                // Lower the ViperLift to the bottom position
                 viperLift.moveToPosition(0);
                 break;
 
-            case COMPLETED:
-                // Process completed
+            case FINAL:
+                // Do nothing; remain here
                 break;
 
             default:
@@ -77,49 +97,57 @@ public class ScoringSpecimenState {
     }
 
     // Update method to be called periodically
-    public void update(boolean primaryButtonPressed, boolean secondaryButtonPressed, boolean previousPrimaryButtonState, boolean previousSecondaryButtonState) {
+    public void update() {
         switch (currentStep) {
-            case STEP_1:
+            case LIFT_VIPERLIFT_UP:
                 if (viperLift.isCloseToTarget()) {
-                    currentStep = Step.STEP_2;
+                    currentStep = Step.MOVE_WRIST_AND_CLAW;
                     executeCurrentStep();
                 }
                 break;
 
-            case STEP_2:
+            case MOVE_WRIST_AND_CLAW:
+                // Assuming wrist movement is immediate; adjust if necessary
                 if (arm.isCloseToTarget() && wrist.isAtTarget()) {
-                    currentStep = Step.LOOP_LOWERING;
-                }
-                break;
-
-            case LOOP_LOWERING:
-                if (primaryButtonPressed && !previousPrimaryButtonState) {
-                    if (isLowered) {
-                        // Raise Viper Lift slightly
-                        viperLift.moveToPosition(viperLift.getCurrentPosition() + 100); // Adjust increment as needed
-                        isLowered = false;
-                    } else {
-                        // Lower Viper Lift slightly
-                        viperLift.moveToPosition(viperLift.getCurrentPosition() - 100); // Adjust decrement as needed
-                        isLowered = true;
-                    }
-                }
-
-                if (secondaryButtonPressed && !previousSecondaryButtonState) {
-                    // Proceed to next step
-                    currentStep = Step.STEP_3;
+                    currentStep = Step.WAIT_FOR_RIGHT_TRIGGER;
                     executeCurrentStep();
                 }
                 break;
 
-            case STEP_3:
+            case WAIT_FOR_RIGHT_TRIGGER:
+                // Waiting for right trigger input
+                break;
+
+            case LOWER_VIPERLIFT:
                 if (viperLift.isCloseToTarget()) {
-                    currentStep = Step.COMPLETED;
+                    currentStep = Step.WAIT_FOR_BUTTON_PRESS;
                 }
                 break;
 
-            case COMPLETED:
-                // Do nothing
+            case WAIT_FOR_BUTTON_PRESS:
+                // Waiting for primary button or right trigger input
+                break;
+
+            case OPEN_CLAW:
+                currentStep = Step.MOVE_ARM_AND_WRIST_BACK;
+                executeCurrentStep();
+                break;
+
+            case MOVE_ARM_AND_WRIST_BACK:
+                if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                    currentStep = Step.LOWER_VIPERLIFT_TO_BOTTOM;
+                    executeCurrentStep();
+                }
+                break;
+
+            case LOWER_VIPERLIFT_TO_BOTTOM:
+                if (viperLift.isCloseToTarget()) {
+                    currentStep = Step.FINAL;
+                }
+                break;
+
+            case FINAL:
+                // Process completed; remain here
                 break;
 
             default:
@@ -128,13 +156,33 @@ public class ScoringSpecimenState {
         }
     }
 
-    // Get the current step
+    // Method to handle right trigger input
+    public void onRightTriggerPressed() {
+        if (currentStep == Step.WAIT_FOR_RIGHT_TRIGGER) {
+            currentStep = Step.LOWER_VIPERLIFT;
+            executeCurrentStep();
+        } else if (currentStep == Step.WAIT_FOR_BUTTON_PRESS) {
+            // Loop back to lift ViperLift up again
+            currentStep = Step.LIFT_VIPERLIFT_UP;
+            executeCurrentStep();
+        }
+    }
+
+    // Method to handle primary button input
+    public void onPrimaryButtonPressed() {
+        if (currentStep == Step.WAIT_FOR_BUTTON_PRESS) {
+            currentStep = Step.OPEN_CLAW;
+            executeCurrentStep();
+        }
+    }
+
+    // Get the current step (for telemetry or debugging)
     public Step getCurrentStep() {
         return currentStep;
     }
 
     // Check if the process is completed
     public boolean isCompleted() {
-        return currentStep == Step.COMPLETED;
+        return currentStep == Step.FINAL;
     }
 }

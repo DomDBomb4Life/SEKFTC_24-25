@@ -57,7 +57,7 @@ public class DriveTrain {
         // Adjust input values for control remapping flexibility
         double pivot = -rightStickX;
         double adjustedLeftStickX = -leftStickX;
-        double adjustedLeftStickY = leftStickY;
+        double adjustedLeftStickY = -leftStickY;
 
         // Calculate motor powers using the adjusted inputs
         double flPower = (adjustedLeftStickY + adjustedLeftStickX + pivot) * speedMultiplier;

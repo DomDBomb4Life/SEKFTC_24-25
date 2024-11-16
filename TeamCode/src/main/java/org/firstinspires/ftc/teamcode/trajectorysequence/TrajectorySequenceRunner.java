@@ -1,13 +1,13 @@
+// File: TrajectorySequenceRunner.java
 package org.firstinspires.ftc.teamcode.trajectorysequence;
 
 import com.acmerobotics.roadrunner.control.*;
 import com.acmerobotics.roadrunner.drive.*;
 import com.acmerobotics.roadrunner.followers.*;
-import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.*;
 import com.acmerobotics.roadrunner.profile.*;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.acmerobotics.roadrunner.util.NanoClock;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.acmerobotics.roadrunner.util.*;
 
 import java.util.List;
 
@@ -17,88 +17,95 @@ import java.util.List;
 public class TrajectorySequenceRunner {
     private final TrajectoryFollower follower;
     private final PIDFController turnController;
-    private final VoltageSensor voltageSensor;
     private final NanoClock clock;
 
     private TrajectorySequence currentSequence;
-    private double sequenceStartTime;
     private int currentSegmentIndex;
+    private double segmentStartTime;
 
-    // New field to track if we've started following the current segment
-    private boolean segmentStarted = false;
+    private boolean isSegmentActive;
 
-    public TrajectorySequenceRunner(TrajectoryFollower follower, PIDCoefficients headingPID, VoltageSensor voltageSensor) {
+    public TrajectorySequenceRunner(TrajectoryFollower follower, PIDCoefficients headingPID) {
         this.follower = follower;
         this.turnController = new PIDFController(headingPID);
-        this.voltageSensor = voltageSensor;
         this.clock = NanoClock.system();
         this.turnController.setInputBounds(0, 2 * Math.PI);
+
+        this.isSegmentActive = false;
     }
 
     public void followTrajectorySequenceAsync(TrajectorySequence sequence) {
         this.currentSequence = sequence;
-        this.sequenceStartTime = clock.seconds();
         this.currentSegmentIndex = 0;
-        this.segmentStarted = false;
+        this.segmentStartTime = clock.seconds();
+        this.isSegmentActive = false;
     }
 
-    public DriveSignal update(Pose2d poseEstimate) {
+    public DriveSignal update(Pose2d poseEstimate, Pose2d poseVelocity) {
         if (currentSequence == null) {
             return new DriveSignal();
         }
 
-        double now = clock.seconds();
-        double elapsedTime = now - sequenceStartTime;
-
-        if (currentSegmentIndex >= currentSequence.size()) {
+        if (currentSegmentIndex >= getTotalSegments()) {
+            // Sequence complete
             currentSequence = null;
             return new DriveSignal();
         }
 
-        SequenceSegment currentSegment = currentSequence.get(currentSegmentIndex);
+        Object currentSegment = getCurrentSegment();
 
-        if (currentSegment instanceof TrajectorySegment) {
-            TrajectorySegment trajSegment = (TrajectorySegment) currentSegment;
+        if (currentSegment instanceof Trajectory) {
+            // Handle trajectory segments
+            Trajectory trajectory = (Trajectory) currentSegment;
 
-            // Ensure we start following the trajectory at the beginning of the segment
-            if (!segmentStarted) {
-                follower.followTrajectory(trajSegment.getTrajectory());
-                segmentStarted = true;
+            if (!isSegmentActive) {
+                follower.followTrajectory(trajectory);
+                isSegmentActive = true;
             }
 
-            DriveSignal signal = follower.update(poseEstimate);
+            DriveSignal signal = follower.update(poseEstimate, poseVelocity);
 
             if (!follower.isFollowing()) {
+                // Move to the next segment
                 currentSegmentIndex++;
-                sequenceStartTime = now;
-                segmentStarted = false;
+                isSegmentActive = false;
             }
+
             return signal;
-        } else if (currentSegment instanceof TurnSegment) {
-            TurnSegment turnSegment = (TurnSegment) currentSegment;
-            MotionProfile profile = turnSegment.getMotionProfile();
-            double profileTime = elapsedTime;
-            if (profileTime > profile.duration()) {
-                profileTime = profile.duration();
-                currentSegmentIndex++;
-                sequenceStartTime = now;
-            }
-            MotionState targetState = profile.get(profileTime);
+        } else if (currentSegment instanceof Turn) {
+            // Handle turn segments
+            Turn turn = (Turn) currentSegment;
 
-            turnController.setTargetPosition(targetState.getX());
-            double correction = turnController.update(poseEstimate.getHeading(), targetState.getV());
-
-            return new DriveSignal(new Pose2d(0, 0, correction), new Pose2d(0, 0, 0));
-        } else if (currentSegment instanceof WaitSegment) {
-            WaitSegment waitSegment = (WaitSegment) currentSegment;
-            if (elapsedTime >= waitSegment.getDuration()) {
-                currentSegmentIndex++;
-                sequenceStartTime = now;
+            if (!isSegmentActive) {
+                turnController.setTargetPosition(turn.endPose().getHeading());
+                isSegmentActive = true;
             }
-            return new DriveSignal();
+
+            double correction = turnController.update(poseEstimate.getHeading());
+
+            if (Math.abs(Angle.normDelta(poseEstimate.getHeading() - turn.endPose().getHeading())) < Math.toRadians(1)) {
+                // Turn complete
+                currentSegmentIndex++;
+                isSegmentActive = false;
+            }
+
+            return new DriveSignal(new Pose2d(0, 0, correction), new Pose2d());
+        } else if (currentSegment instanceof Wait) {
+            // Handle wait segments
+            Wait wait = (Wait) currentSegment;
+
+            double elapsedTime = clock.seconds() - segmentStartTime;
+
+            if (elapsedTime >= wait.getDuration()) {
+                // Wait complete
+                currentSegmentIndex++;
+                segmentStartTime = clock.seconds(); // Reset time for the next segment
+            }
+
+            return new DriveSignal(); // No movement during wait
+        } else {
+            throw new IllegalStateException("Unknown segment type in TrajectorySequenceRunner");
         }
-
-        return new DriveSignal();
     }
 
     public boolean isBusy() {
@@ -107,6 +114,15 @@ public class TrajectorySequenceRunner {
 
     public void stop() {
         currentSequence = null;
-        segmentStarted = false;
+        isSegmentActive = false;
+    }
+
+    // Helper methods
+    private int getTotalSegments() {
+        return currentSequence.getTotalSegments();
+    }
+
+    private Object getCurrentSegment() {
+        return currentSequence.getSegment(currentSegmentIndex);
     }
 }

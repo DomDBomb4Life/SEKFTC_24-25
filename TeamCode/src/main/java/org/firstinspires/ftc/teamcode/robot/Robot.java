@@ -8,11 +8,11 @@ import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.Claw;
 import org.firstinspires.ftc.teamcode.subsystems.Wrist;
 import org.firstinspires.ftc.teamcode.robot.states.HomeState;
-import org.firstinspires.ftc.teamcode.robot.states.HangingState;
 import org.firstinspires.ftc.teamcode.robot.states.ScoringBasketState;
 import org.firstinspires.ftc.teamcode.robot.states.ScoringSpecimenState;
 import org.firstinspires.ftc.teamcode.robot.states.ObservationState;
 import org.firstinspires.ftc.teamcode.robot.states.IdleState;
+import org.firstinspires.ftc.teamcode.robot.states.LevelOneAscentState;
 
 /**
  * The Robot class encapsulates all the subsystems and manages state transitions.
@@ -27,20 +27,20 @@ public class Robot {
 
     // State instances
     public HomeState homeState;
-    public HangingState hangingState;
     public ScoringBasketState scoringBasketState;
     public ScoringSpecimenState scoringSpecimenState;
     public ObservationState observationState;
     public IdleState idleState;
+    public LevelOneAscentState levelOneAscentState; // LevelOneAscentState instance
 
     // Current state
     public enum State {
         IDLE,
         HOME,
-        HANGING,
         SCORING,
         SCORING_SPECIMEN,
-        OBSERVATION
+        OBSERVATION,
+        LEVEL_ONE_ASCENT
     }
 
     public State currentState = State.IDLE;
@@ -55,11 +55,11 @@ public class Robot {
 
         // Initialize states
         homeState = new HomeState(viperLift, arm, wrist, claw);
-        hangingState = new HangingState(viperLift, arm);
         scoringBasketState = new ScoringBasketState(viperLift, arm, wrist, claw);
         scoringSpecimenState = new ScoringSpecimenState(viperLift, arm, wrist, claw);
         observationState = new ObservationState(viperLift, arm, wrist, claw);
         idleState = new IdleState(viperLift, arm, wrist, claw);
+        levelOneAscentState = new LevelOneAscentState(viperLift, arm); // Initialize new state
 
         // Activate initial state
         idleState.activate();
@@ -73,10 +73,6 @@ public class Robot {
                 homeState.update();
                 break;
 
-            case HANGING:
-                hangingState.update();
-                break;
-
             case SCORING:
                 scoringBasketState.update();
                 if (scoringBasketState.isCompleted()) {
@@ -85,7 +81,7 @@ public class Robot {
                 break;
 
             case SCORING_SPECIMEN:
-                // Update is handled in TeleOpMode to pass button states
+                scoringSpecimenState.update();
                 if (scoringSpecimenState.isCompleted()) {
                     setState(State.IDLE);
                 }
@@ -93,6 +89,11 @@ public class Robot {
 
             case OBSERVATION:
                 observationState.update();
+                break;
+
+            case LEVEL_ONE_ASCENT:
+                levelOneAscentState.update();
+                // Do not set to IDLE when completed, as per your request
                 break;
 
             case IDLE:
@@ -108,18 +109,19 @@ public class Robot {
     public void setState(State newState) {
         if (currentState != newState) {
             // Deactivate current state if necessary
-            if (currentState == State.HOME) {
-                homeState.deactivate();
+            switch (currentState) {
+                case HOME:
+                    homeState.deactivate();
+                    break;
+                // Add deactivation for other states if needed
+                default:
+                    break;
             }
 
             currentState = newState;
             switch (newState) {
                 case HOME:
                     homeState.start();
-                    break;
-
-                case HANGING:
-                    hangingState.start();
                     break;
 
                 case SCORING:
@@ -132,6 +134,10 @@ public class Robot {
 
                 case OBSERVATION:
                     observationState.activate();
+                    break;
+
+                case LEVEL_ONE_ASCENT:
+                    levelOneAscentState.start();
                     break;
 
                 case IDLE:
@@ -152,14 +158,14 @@ public class Robot {
         switch (currentState) {
             case HOME:
                 return homeState.getCurrentStep().toString();
-            case HANGING:
-                return hangingState.getCurrentStep().toString();
             case SCORING:
                 return scoringBasketState.getCurrentStep().toString();
             case SCORING_SPECIMEN:
                 return scoringSpecimenState.getCurrentStep().toString();
             case OBSERVATION:
                 return observationState.isActive() ? "ACTIVE" : "INACTIVE";
+            case LEVEL_ONE_ASCENT:
+                return levelOneAscentState.getCurrentStep().toString();
             case IDLE:
             default:
                 return "NONE";
@@ -175,16 +181,16 @@ public class Robot {
         }
     }
 
-    public void onHangingButtonPressed() {
-        setState(State.HANGING);
-    }
-
     public void onScoringButtonPressed() {
         setState(State.SCORING);
     }
 
     public void onScoringSpecimenButtonPressed() {
-        setState(State.SCORING_SPECIMEN);
+        if (currentState == State.SCORING_SPECIMEN) {
+            scoringSpecimenState.onPrimaryButtonPressed();
+        } else {
+            setState(State.SCORING_SPECIMEN);
+        }
     }
 
     public void onObservationButtonPressed() {
@@ -203,6 +209,15 @@ public class Robot {
     public void onRightTriggerPressed() {
         if (currentState == State.HOME) {
             homeState.onRightTriggerPressed();
+        } else if (currentState == State.LEVEL_ONE_ASCENT) {
+            levelOneAscentState.onRightTriggerPressed();
+        } else if (currentState == State.SCORING_SPECIMEN) {
+            scoringSpecimenState.onRightTriggerPressed();
         }
+    }
+
+    // Method to handle Level One Ascent button press
+    public void onLevelOneAscentButtonPressed() {
+        setState(State.LEVEL_ONE_ASCENT);
     }
 }

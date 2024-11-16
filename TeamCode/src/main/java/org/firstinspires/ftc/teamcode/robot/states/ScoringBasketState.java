@@ -17,7 +17,9 @@ public class ScoringBasketState {
     public enum Step {
         STEP_1,
         STEP_2,
+        TIMER_BEFORE_CLAW, // New step: Timer before opening claw
         STEP_3,
+        TIMER_AFTER_CLAW,  // New step: Timer after opening claw
         STEP_4,
         STEP_5,
         COMPLETED
@@ -25,9 +27,11 @@ public class ScoringBasketState {
 
     private Step currentStep;
 
-    // Timer for step 3
+    // Timers for steps
     private long stepStartTime;
-    private static final long STEP_3_DURATION_MS = 1000; // Adjust the duration as needed
+    private static final long TIMER_BEFORE_CLAW_MS = 100; // Adjust this value as needed
+    private static final long TIMER_AFTER_CLAW_MS = 100;  // Adjust this value as needed
+    private static final long STEP_3_DURATION_MS = 100;   // Duration for opening the claw
 
     // Constructor
     public ScoringBasketState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw) {
@@ -58,10 +62,19 @@ public class ScoringBasketState {
                 wrist.setAngle(90);
                 break;
 
+            case TIMER_BEFORE_CLAW:
+                // Start timer before opening the claw
+                stepStartTime = System.currentTimeMillis();
+                break;
+
             case STEP_3:
                 // Open the claw to drop the object
                 claw.open();
-                // Start timer
+                stepStartTime = System.currentTimeMillis(); // Start timer for after the claw opens
+                break;
+
+            case TIMER_AFTER_CLAW:
+                // Timer after opening the claw
                 stepStartTime = System.currentTimeMillis();
                 break;
 
@@ -99,22 +112,37 @@ public class ScoringBasketState {
 
             case STEP_2:
                 if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                    currentStep = Step.TIMER_BEFORE_CLAW;
+                    executeCurrentStep();
+                }
+                break;
+
+            case TIMER_BEFORE_CLAW:
+                // Wait for timer before opening the claw
+                if (System.currentTimeMillis() - stepStartTime >= TIMER_BEFORE_CLAW_MS) {
                     currentStep = Step.STEP_3;
                     executeCurrentStep();
                 }
                 break;
 
             case STEP_3:
-                // Wait for timer to complete
-                long elapsedTime = System.currentTimeMillis() - stepStartTime;
-                if (elapsedTime >= STEP_3_DURATION_MS) {
+                // Wait for the claw to open
+                if (claw.isOpen()) {
+                    currentStep = Step.TIMER_AFTER_CLAW;
+                    executeCurrentStep();
+                }
+                break;
+
+            case TIMER_AFTER_CLAW:
+                // Wait for timer after opening the claw
+                if (System.currentTimeMillis() - stepStartTime >= TIMER_AFTER_CLAW_MS) {
                     currentStep = Step.STEP_4;
                     executeCurrentStep();
                 }
                 break;
 
             case STEP_4:
-                if (arm.isCloseToTarget() ) {
+                if (arm.isCloseToTarget()) {
                     currentStep = Step.STEP_5;
                     executeCurrentStep();
                 }
