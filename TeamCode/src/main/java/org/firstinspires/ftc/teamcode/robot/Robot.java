@@ -56,6 +56,11 @@ public class Robot {
 
     // Constructor
     public Robot(HardwareMap hardwareMap) {
+        this(hardwareMap, false);
+    }
+
+    // Overloaded constructor for Autonomous mode
+    public Robot(HardwareMap hardwareMap, boolean isAutonomous) {
         // Initialize subsystems
         claw = new Claw(hardwareMap); // Initialize Claw first
         wrist = new Wrist(hardwareMap, claw); // Pass Claw to Wrist
@@ -64,12 +69,12 @@ public class Robot {
 
         // Initialize states
         homeState = new HomeState(viperLift, arm, wrist, claw);
-        scoringBasketState = new ScoringBasketState(viperLift, arm, wrist, claw);
+        scoringBasketState = new ScoringBasketState(viperLift, arm, wrist, claw, isAutonomous);
         scoringSpecimenState = new ScoringSpecimenState(viperLift, arm, wrist, claw);
         observationState = new ObservationState(viperLift, arm, wrist, claw);
         idleState = new IdleState(viperLift, arm, wrist, claw);
-        levelOneAscentState = new LevelOneAscentState(viperLift, arm);
-        pickupState = new PickupState(viperLift, arm, wrist, claw);
+        levelOneAscentState = new LevelOneAscentState(viperLift, arm, isAutonomous);
+        pickupState = new PickupState(viperLift, arm, wrist, claw, isAutonomous);
         initializeFromAscentState = new InitializeFromAscentState(viperLift, arm);
         initializeFromFloorState = new InitializeFromFloorState(viperLift, arm);
 
@@ -104,11 +109,16 @@ public class Robot {
 
             case LEVEL_ONE_ASCENT:
                 levelOneAscentState.update();
-                // Do not set to IDLE when completed, as per your request
+                if (levelOneAscentState.isCompleted()) {
+                    setState(State.IDLE);
+                }
                 break;
 
             case PICKUP:
                 pickupState.update();
+                if (pickupState.isCompleted()) {
+                    setState(State.IDLE);
+                }
                 break;
 
             case INIT_FROM_ASCENT:
@@ -211,7 +221,7 @@ public class Robot {
             case LEVEL_ONE_ASCENT:
                 return levelOneAscentState.getCurrentStep().toString();
             case PICKUP:
-                return pickupState.isReadyToPickUp() ? "READY" : "MOVING";
+                return pickupState.isCompleted() ? "COMPLETED" : "MOVING";
             case INIT_FROM_ASCENT:
                 return initializeFromAscentState.getCurrentStep().toString();
             case INIT_FROM_FLOOR:
@@ -222,7 +232,7 @@ public class Robot {
         }
     }
 
-    // Methods to handle button presses
+    // Methods to handle button presses (for TeleOp)
     public void onHomeButtonPressed() {
         if (currentState != State.HOME) {
             setState(State.HOME);
@@ -291,5 +301,12 @@ public class Robot {
 
     public void onInitFromFloorButtonPressed() {
         setState(State.INIT_FROM_FLOOR);
+    }
+
+    // Method to signal that drive forward is complete in Autonomous
+    public void onDriveForwardComplete() {
+        if (currentState == State.PICKUP) {
+            pickupState.onDriveForwardComplete();
+        }
     }
 }

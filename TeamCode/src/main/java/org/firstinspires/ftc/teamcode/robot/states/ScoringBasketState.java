@@ -17,21 +17,29 @@ public class ScoringBasketState {
     public enum Step {
         LIFT_UP,
         MOVE_ARM_WRIST,
-        WAIT_FOR_TRIGGER_OPEN,  // Wait for right trigger to open claw
-        WAIT_FOR_TRIGGER_CLOSE, // Wait for right trigger to close claw
+        WAIT_TO_OPEN_CLAW,
+        CLOSE_CLAW,
         MOVE_ARM_WRIST_BACK,
         LOWER_LIFT,
         COMPLETED
     }
 
     private Step currentStep;
+    private boolean isAutonomous;
+    private long waitStartTime;
+    private static final long OPEN_CLAW_DELAY = 1000; // 1 second delay in milliseconds
 
     // Constructor
     public ScoringBasketState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw) {
+        this(viperLift, arm, wrist, claw, false);
+    }
+
+    public ScoringBasketState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw, boolean isAutonomous) {
         this.viperLift = viperLift;
         this.arm = arm;
         this.wrist = wrist;
         this.claw = claw;
+        this.isAutonomous = isAutonomous;
         this.currentStep = Step.LIFT_UP; // Initial step
     }
 
@@ -55,12 +63,14 @@ public class ScoringBasketState {
                 wrist.setAngle(90);
                 break;
 
-            case WAIT_FOR_TRIGGER_OPEN:
-                // Waiting for right trigger to open the claw
+            case WAIT_TO_OPEN_CLAW:
+                if (isAutonomous) {
+                    waitStartTime = System.currentTimeMillis();
+                }
                 break;
 
-            case WAIT_FOR_TRIGGER_CLOSE:
-                // Waiting for right trigger to close the claw
+            case CLOSE_CLAW:
+                claw.close();
                 break;
 
             case MOVE_ARM_WRIST_BACK:
@@ -79,7 +89,6 @@ public class ScoringBasketState {
                 break;
 
             default:
-                // Handle unexpected cases
                 break;
         }
     }
@@ -96,17 +105,27 @@ public class ScoringBasketState {
 
             case MOVE_ARM_WRIST:
                 if (arm.isCloseToTarget() && wrist.isAtTarget()) {
-                    currentStep = Step.WAIT_FOR_TRIGGER_OPEN;
-                    // No need to executeCurrentStep() since we're waiting for input
+                    currentStep = Step.WAIT_TO_OPEN_CLAW;
+                    executeCurrentStep();
                 }
                 break;
 
-            case WAIT_FOR_TRIGGER_OPEN:
-                // Waiting for right trigger input to open the claw
+            case WAIT_TO_OPEN_CLAW:
+                if (isAutonomous) {
+                    if (System.currentTimeMillis() - waitStartTime >= OPEN_CLAW_DELAY) {
+                        claw.open();
+                        currentStep = Step.CLOSE_CLAW;
+                        executeCurrentStep();
+                    }
+                }
+                // In TeleOp, wait for user input
                 break;
 
-            case WAIT_FOR_TRIGGER_CLOSE:
-                // Waiting for right trigger input to close the claw
+            case CLOSE_CLAW:
+                if (claw.isClosed()) {
+                    currentStep = Step.MOVE_ARM_WRIST_BACK;
+                    executeCurrentStep();
+                }
                 break;
 
             case MOVE_ARM_WRIST_BACK:
@@ -127,21 +146,16 @@ public class ScoringBasketState {
                 break;
 
             default:
-                // Handle unexpected cases
                 break;
         }
     }
 
-    // Method to handle right trigger input
+    // Method to handle right trigger input in TeleOp
     public void onRightTriggerPressed() {
-        if (currentStep == Step.WAIT_FOR_TRIGGER_OPEN) {
+        if (!isAutonomous && currentStep == Step.WAIT_TO_OPEN_CLAW) {
             // Open the claw to drop the object
             claw.open();
-            currentStep = Step.WAIT_FOR_TRIGGER_CLOSE;
-        } else if (currentStep == Step.WAIT_FOR_TRIGGER_CLOSE) {
-            // Close the claw after scoring
-            claw.close();
-            currentStep = Step.MOVE_ARM_WRIST_BACK;
+            currentStep = Step.CLOSE_CLAW;
             executeCurrentStep();
         }
     }

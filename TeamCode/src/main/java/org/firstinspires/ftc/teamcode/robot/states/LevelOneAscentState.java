@@ -15,17 +15,23 @@ public class LevelOneAscentState {
     // Steps in the ascent process
     public enum Step {
         MOVE_TO_POSITIONS,    // Step 1
-        WAIT_FOR_TRIGGER,     // Step 2
+        WAIT_FOR_TRIGGER,     // Step 2 (skipped in Autonomous)
         MOVE_VIPER_AGAIN,     // Step 3
         FINAL                 // Step 4
     }
 
     private Step currentStep;
+    private boolean isAutonomous;
 
     // Constructor
     public LevelOneAscentState(ViperLift viperLift, Arm arm) {
+        this(viperLift, arm, false);
+    }
+
+    public LevelOneAscentState(ViperLift viperLift, Arm arm, boolean isAutonomous) {
         this.viperLift = viperLift;
         this.arm = arm;
+        this.isAutonomous = isAutonomous;
         this.currentStep = Step.MOVE_TO_POSITIONS; // Initial step
     }
 
@@ -45,7 +51,12 @@ public class LevelOneAscentState {
                 break;
 
             case WAIT_FOR_TRIGGER:
-                // Waiting for right trigger input
+                if (isAutonomous) {
+                    // Skip waiting for trigger in Autonomous
+                    currentStep = Step.MOVE_VIPER_AGAIN;
+                    executeCurrentStep();
+                }
+                // In TeleOp, wait for user input
                 break;
 
             case MOVE_VIPER_AGAIN:
@@ -58,7 +69,6 @@ public class LevelOneAscentState {
                 break;
 
             default:
-                // Handle unexpected cases
                 break;
         }
     }
@@ -69,18 +79,17 @@ public class LevelOneAscentState {
             case MOVE_TO_POSITIONS:
                 if (viperLift.isCloseToTarget() && arm.isCloseToTarget()) {
                     currentStep = Step.WAIT_FOR_TRIGGER;
-                    // Do not execute next step yet
+                    executeCurrentStep();
                 }
                 break;
 
             case WAIT_FOR_TRIGGER:
-                // Do nothing; waiting for right trigger input
+                // In Autonomous, this step is skipped
                 break;
 
             case MOVE_VIPER_AGAIN:
                 if (viperLift.isCloseToTarget()) {
                     currentStep = Step.FINAL;
-                    // Do not move to COMPLETED; remain in FINAL step
                 }
                 break;
 
@@ -89,14 +98,13 @@ public class LevelOneAscentState {
                 break;
 
             default:
-                // Handle unexpected cases
                 break;
         }
     }
 
     // Method to handle right trigger input
     public void onRightTriggerPressed() {
-        if (currentStep == Step.WAIT_FOR_TRIGGER) {
+        if (!isAutonomous && currentStep == Step.WAIT_FOR_TRIGGER) {
             currentStep = Step.MOVE_VIPER_AGAIN;
             executeCurrentStep();
         }
@@ -105,5 +113,10 @@ public class LevelOneAscentState {
     // Get the current step (for telemetry or debugging)
     public Step getCurrentStep() {
         return currentStep;
+    }
+
+    // Check if the ascent process is completed
+    public boolean isCompleted() {
+        return currentStep == Step.FINAL;
     }
 }
