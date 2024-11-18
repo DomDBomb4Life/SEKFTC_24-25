@@ -21,10 +21,10 @@ public class Arm {
     private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
 
     // Zero position angle (where encoder count is zero)
-    private static final double ZERO_POSITION_ANGLE = -18.0;
+    private static final double ZERO_POSITION_ANGLE = 137.0;
 
     // Target angle
-    private double targetAngle = ZERO_POSITION_ANGLE; // Start at -14 degrees as default
+    private double targetAngle = ZERO_POSITION_ANGLE; // Start at -18 degrees as default
 
     // Constructor
     public Arm(HardwareMap hardwareMap) {
@@ -33,9 +33,6 @@ public class Arm {
 
         // Motor configuration
         configureMotor(armMotor);
-
-        // Optionally move to a different angle after initialization
-        // moveToAngle(90.0); // Uncomment to move to 90 degrees after initialization
     }
 
     private void configureMotor(DcMotorEx motor) {
@@ -58,8 +55,11 @@ public class Arm {
         motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
     }
 
-    // Calibrate the encoder to treat the current position as ZERO_POSITION_ANGLE
-
+    // Initialize the arm encoder
+    public void initializeEncoder() {
+        armMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+    }
 
     // Move to a specific angle
     public void moveToAngle(double angle) {
@@ -121,5 +121,15 @@ public class Arm {
         armMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         // Apply power to hold position
         armMotor.setPower(0.5);
+    }
+
+    // Set power to the arm motor (e.g., to make it go limp)
+    public void setPower(double power) {
+        armMotor.setPower(power);
+        if (power == 0.0) {
+            armMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        } else {
+            armMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        }
     }
 }

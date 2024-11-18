@@ -13,7 +13,9 @@ import org.firstinspires.ftc.teamcode.robot.states.ScoringSpecimenState;
 import org.firstinspires.ftc.teamcode.robot.states.ObservationState;
 import org.firstinspires.ftc.teamcode.robot.states.IdleState;
 import org.firstinspires.ftc.teamcode.robot.states.LevelOneAscentState;
-import org.firstinspires.ftc.teamcode.robot.states.PickupState; // Import the new state
+import org.firstinspires.ftc.teamcode.robot.states.PickupState;
+import org.firstinspires.ftc.teamcode.robot.states.InitializeFromAscentState;
+import org.firstinspires.ftc.teamcode.robot.states.InitializeFromFloorState;
 
 /**
  * The Robot class encapsulates all the subsystems and manages state transitions.
@@ -33,7 +35,9 @@ public class Robot {
     public ObservationState observationState;
     public IdleState idleState;
     public LevelOneAscentState levelOneAscentState;
-    public PickupState pickupState; // New PickupState instance
+    public PickupState pickupState;
+    public InitializeFromAscentState initializeFromAscentState;
+    public InitializeFromFloorState initializeFromFloorState;
 
     // Current state
     public enum State {
@@ -43,7 +47,9 @@ public class Robot {
         SCORING_SPECIMEN,
         OBSERVATION,
         LEVEL_ONE_ASCENT,
-        PICKUP // New state added
+        PICKUP,
+        INIT_FROM_ASCENT,
+        INIT_FROM_FLOOR
     }
 
     public State currentState = State.IDLE;
@@ -63,10 +69,11 @@ public class Robot {
         observationState = new ObservationState(viperLift, arm, wrist, claw);
         idleState = new IdleState(viperLift, arm, wrist, claw);
         levelOneAscentState = new LevelOneAscentState(viperLift, arm);
-        pickupState = new PickupState(viperLift, arm, wrist, claw); // Initialize new state
+        pickupState = new PickupState(viperLift, arm, wrist, claw);
+        initializeFromAscentState = new InitializeFromAscentState(viperLift, arm);
+        initializeFromFloorState = new InitializeFromFloorState(viperLift, arm);
 
-        // Activate initial state
-        idleState.activate();
+        // Do not activate any state initially
     }
 
     // Update method called periodically
@@ -102,7 +109,14 @@ public class Robot {
 
             case PICKUP:
                 pickupState.update();
-                // Decide when to transition out of PICKUP state if needed
+                break;
+
+            case INIT_FROM_ASCENT:
+                initializeFromAscentState.update();
+                break;
+
+            case INIT_FROM_FLOOR:
+                initializeFromFloorState.update();
                 break;
 
             case IDLE:
@@ -124,6 +138,12 @@ public class Robot {
                     break;
                 case PICKUP:
                     pickupState.deactivate();
+                    break;
+                case INIT_FROM_ASCENT:
+                    initializeFromAscentState.deactivate();
+                    break;
+                case INIT_FROM_FLOOR:
+                    initializeFromFloorState.deactivate();
                     break;
                 // Add deactivation for other states if needed
                 default:
@@ -156,6 +176,14 @@ public class Robot {
                     pickupState.activate();
                     break;
 
+                case INIT_FROM_ASCENT:
+                    initializeFromAscentState.activate();
+                    break;
+
+                case INIT_FROM_FLOOR:
+                    initializeFromFloorState.activate();
+                    break;
+
                 case IDLE:
                     idleState.activate();
                     break;
@@ -184,6 +212,10 @@ public class Robot {
                 return levelOneAscentState.getCurrentStep().toString();
             case PICKUP:
                 return pickupState.isReadyToPickUp() ? "READY" : "MOVING";
+            case INIT_FROM_ASCENT:
+                return initializeFromAscentState.getCurrentStep().toString();
+            case INIT_FROM_FLOOR:
+                return initializeFromFloorState.getCurrentStep().toString();
             case IDLE:
             default:
                 return "NONE";
@@ -231,6 +263,10 @@ public class Robot {
             levelOneAscentState.onRightTriggerPressed();
         } else if (currentState == State.SCORING_SPECIMEN) {
             scoringSpecimenState.onRightTriggerPressed();
+        } else if (currentState == State.INIT_FROM_ASCENT) {
+            initializeFromAscentState.onRightTriggerPressed();
+        } else if (currentState == State.SCORING) {
+            scoringBasketState.onRightTriggerPressed();
         }
     }
 
@@ -246,5 +282,14 @@ public class Robot {
         } else {
             setState(State.IDLE);
         }
+    }
+
+    // Methods to handle initialization button presses
+    public void onInitFromAscentButtonPressed() {
+        setState(State.INIT_FROM_ASCENT);
+    }
+
+    public void onInitFromFloorButtonPressed() {
+        setState(State.INIT_FROM_FLOOR);
     }
 }

@@ -22,10 +22,11 @@ public class TeleOpMode extends LinearOpMode {
     private boolean previousAButtonPressed = false;
     private boolean previousBButtonPressed = false;
     private boolean previousXButtonPressed = false;
-    private boolean previousLeftBumperPressed = false; // New button tracker
+    private boolean previousLeftBumperPressed = false;
     private boolean previousRightTriggerPressed = false;
     private boolean previousDpadUpPressed = false;
     private boolean previousDpadDownPressed = false;
+    private boolean previousDpadLeftPressed = false; // New button tracker
     private boolean previousDpadRightPressed = false;
 
     @Override
@@ -36,7 +37,8 @@ public class TeleOpMode extends LinearOpMode {
         // Initialize the robot with the drivetrain
         robot = new Robot(hardwareMap);
 
-        onInit();
+        // Do not move any subsystems during init
+        // onInit(); // Removed to prevent movement during init
 
         waitForStart();
 
@@ -118,6 +120,17 @@ public class TeleOpMode extends LinearOpMode {
             robot.onPickupButtonPressed();
         }
         previousLeftBumperPressed = gamepad2.left_bumper;
+
+        // Handle Initialization States
+//        if (isButtonJustPressed(gamepad2.dpad_left, previousDpadLeftPressed)) {
+//            robot.onInitFromFloorButtonPressed();
+//        }
+//        previousDpadLeftPressed = gamepad2.dpad_left;
+//
+//        if (isButtonJustPressed(gamepad2.dpad_right, previousDpadRightPressed)) {
+//            robot.onInitFromAscentButtonPressed();
+//        }
+//        previousDpadRightPressed = gamepad2.dpad_right;
 
         // Read gamepad inputs for driving
         double leftStickY = -gamepad1.left_stick_y;
@@ -205,10 +218,5 @@ public class TeleOpMode extends LinearOpMode {
     // Helper method for detecting button press edges
     private boolean isButtonJustPressed(boolean currentState, boolean previousState) {
         return currentState && !previousState;
-    }
-
-    private void onInit(){
-        robot.wrist.setAngle(20);
-        robot.arm.moveToAngle(137.0);
     }
 }

@@ -18,6 +18,9 @@ public class ViperLift {
     // Target position
     private int targetPosition = POSITION_MIN;
 
+    // Encoder offset
+    private int encoderOffset = 0;
+
     // Constructor
     public ViperLift(HardwareMap hardwareMap) {
         // Initialize motors
@@ -47,6 +50,25 @@ public class ViperLift {
         rightLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        encoderOffset = 0;
+    }
+
+    // Initialize position without moving the lift
+    public void initializePosition(int position) {
+        // Stop motors
+        leftLiftMotor.setPower(0);
+        rightLiftMotor.setPower(0);
+
+        // Reset encoders
+        leftLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        // Set offset to match the physical position
+        encoderOffset = position;
+
+        // Set motors back to RUN_USING_ENCODER
+        leftLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Move to a specific position
@@ -54,9 +76,12 @@ public class ViperLift {
         // Clamp position within bounds
         targetPosition = Math.max(POSITION_MIN, Math.min(position, POSITION_MAX));
 
+        // Adjust target positions to account for the encoderOffset
+        int adjustedTargetPosition = targetPosition - encoderOffset;
+
         // Set target position for both motors
-        leftLiftMotor.setTargetPosition(targetPosition);
-        rightLiftMotor.setTargetPosition(targetPosition);
+        leftLiftMotor.setTargetPosition(adjustedTargetPosition);
+        rightLiftMotor.setTargetPosition(adjustedTargetPosition);
 
         // Apply power
         leftLiftMotor.setPower(1.0);
@@ -82,8 +107,8 @@ public class ViperLift {
 
     // Get current position
     public int getCurrentPosition() {
-        // Average the positions of both motors
-        return (leftLiftMotor.getCurrentPosition() + rightLiftMotor.getCurrentPosition()) / 2;
+        // Apply the offset
+        return ((leftLiftMotor.getCurrentPosition() + rightLiftMotor.getCurrentPosition()) / 2) + encoderOffset;
     }
 
     // Get target position

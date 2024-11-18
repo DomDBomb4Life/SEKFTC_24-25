@@ -31,7 +31,7 @@ public class HomeState {
     // Safety and pickup positions
     private static final double SAFETY_ARM_ANGLE = 0.0;     // Adjust as needed
     private static final double SAFETY_WRIST_ANGLE = 125.0; // Adjust as needed
-    private static final double PICKUP_ARM_ANGLE = -10.0;   // Adjust as needed
+    private static final double PICKUP_ARM_ANGLE = -14.0;   // Adjust as needed
     private static final double PICKUP_WRIST_ANGLE = 125.0; // Adjust as needed
 
     // Timer variables

@@ -46,7 +46,7 @@ public class ScoringBasketState {
         switch (currentStep) {
             case LIFT_UP:
                 // Move Viper Lift all the way up
-                viperLift.moveToPosition(6780);
+                viperLift.moveToPosition(8880);
                 break;
 
             case MOVE_ARM_WRIST:
