@@ -77,6 +77,7 @@ public class AutonomousOpModeV2 extends LinearOpMode {
         driveToPosition(netPosition);
 
         logAndWait("Scoring Preloaded Specimen", null);
+        robot.setState(Robot.State.IDLE);
         robot.setState(Robot.State.SCORING);
         waitForRobotState("COMPLETED");
 

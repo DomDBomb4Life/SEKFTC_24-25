@@ -17,8 +17,8 @@ public class FieldConstants {
     public static final double WALL_DISTANCE = 7.55;
 
     // Starting positions (defined for one side)
-    public static final Pose2d LEFT_START = new Pose2d(-1.5 * TILE_SIZE, -(2 * TILE_SIZE + WALL_DISTANCE), Math.toRadians(90)); // Facing positive X
-    public static final Pose2d RIGHT_START = new Pose2d(0.5 * TILE_SIZE, -(2 * TILE_SIZE + WALL_DISTANCE), Math.toRadians(90));
+    public static final Pose2d LEFT_START = new Pose2d(1.5 * TILE_SIZE, -(2 * TILE_SIZE + WALL_DISTANCE), Math.toRadians(90)); // Facing positive X
+    public static final Pose2d RIGHT_START = new Pose2d(-0.5 * TILE_SIZE, -(2 * TILE_SIZE + WALL_DISTANCE), Math.toRadians(90));
 
     // Net position
     public static final Pose2d NET_POSITION = new Pose2d(48, -48, Math.toRadians(135));

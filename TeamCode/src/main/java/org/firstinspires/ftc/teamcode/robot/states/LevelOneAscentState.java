@@ -116,7 +116,5 @@ public class LevelOneAscentState {
     }
 
     // Check if the ascent process is completed
-    public boolean isCompleted() {
-        return currentStep == Step.FINAL;
-    }
+
 }

@@ -109,9 +109,6 @@ public class Robot {
 
             case LEVEL_ONE_ASCENT:
                 levelOneAscentState.update();
-                if (levelOneAscentState.isCompleted()) {
-                    setState(State.IDLE);
-                }
                 break;
 
             case PICKUP:
@@ -167,7 +164,7 @@ public class Robot {
                     break;
 
                 case SCORING:
-                    scoringBasketState.start();
+                    scoringBasketState.activate();
                     break;
 
                 case SCORING_SPECIMEN:
