@@ -83,66 +83,55 @@ public class TeleOpMode extends LinearOpMode {
             robot.onHomeButtonPressed();
         }
         previousYButtonPressed = gamepad2.y;
-
-        if (gamepad2.right_trigger > 0.5 && !previousRightTriggerPressed) {
+    
+        if (isTriggerJustPressed(gamepad2.right_trigger, previousRightTriggerPressed)) {
             robot.onRightTriggerPressed();
         }
         previousRightTriggerPressed = gamepad2.right_trigger > 0.5;
-
+    
         if (isButtonJustPressed(gamepad2.b, previousBButtonPressed)) {
             robot.onClawToggleButtonPressed();
         }
         previousBButtonPressed = gamepad2.b;
-
+    
         if (isButtonJustPressed(gamepad2.a, previousAButtonPressed)) {
             robot.onLevelOneAscentButtonPressed();
         }
         previousAButtonPressed = gamepad2.a;
-
+    
         if (isButtonJustPressed(gamepad2.x, previousXButtonPressed)) {
             robot.onScoringButtonPressed();
         }
         previousXButtonPressed = gamepad2.x;
-
+    
         // Handle new states
         if (isButtonJustPressed(gamepad2.dpad_up, previousDpadUpPressed)) {
             robot.onObservationButtonPressed();
         }
         previousDpadUpPressed = gamepad2.dpad_up;
-
+    
         if (isButtonJustPressed(gamepad2.dpad_down, previousDpadDownPressed)) {
             robot.onScoringSpecimenButtonPressed();
         }
         previousDpadDownPressed = gamepad2.dpad_down;
-
+    
         // Handle Pickup State activation with left bumper
         if (isButtonJustPressed(gamepad2.left_bumper, previousLeftBumperPressed)) {
             robot.onPickupButtonPressed();
         }
         previousLeftBumperPressed = gamepad2.left_bumper;
-
-        // Handle Initialization States
-//        if (isButtonJustPressed(gamepad2.dpad_left, previousDpadLeftPressed)) {
-//            robot.onInitFromFloorButtonPressed();
-//        }
-//        previousDpadLeftPressed = gamepad2.dpad_left;
-//
-//        if (isButtonJustPressed(gamepad2.dpad_right, previousDpadRightPressed)) {
-//            robot.onInitFromAscentButtonPressed();
-//        }
-//        previousDpadRightPressed = gamepad2.dpad_right;
-
+    
         // Read gamepad inputs for driving
         double leftStickY = -gamepad1.left_stick_y;
         double leftStickX = -gamepad1.left_stick_x;
         double rightStickX = gamepad1.right_stick_x;
-
+    
         // Update speed based on triggers
         driveTrain.updateSpeed(gamepad1.left_trigger, gamepad1.right_trigger);
-
+    
         // Handle drivetrain control
         driveTrain.drive(leftStickY, leftStickX, rightStickX);
-
+    
         // Telemetry for normal mode
         telemetry.addData("Mode", devMode ? "Dev Mode" : "Normal Mode");
         telemetry.addData("Current State", robot.currentState);
@@ -216,7 +205,11 @@ public class TeleOpMode extends LinearOpMode {
     }
 
     // Helper method for detecting button press edges
-    private boolean isButtonJustPressed(boolean currentState, boolean previousState) {
+    private boolean isTriggerJustPressed(double triggerValue, boolean previousState) {
+        boolean currentState = triggerValue > 0.5;
+        return currentState && !previousState;
+    }
+        private boolean isButtonJustPressed(boolean currentState, boolean previousState) {
         return currentState && !previousState;
     }
 }

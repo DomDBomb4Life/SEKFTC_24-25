@@ -152,49 +152,55 @@ public class Robot {
                 case INIT_FROM_FLOOR:
                     initializeFromFloorState.deactivate();
                     break;
+                case OBSERVATION:
+                    observationState.deactivate();
+                    break;
+                case SCORING_SPECIMEN:
+                    scoringSpecimenState.deactivate();
+                    break;
                 // Add deactivation for other states if needed
                 default:
                     break;
             }
-
+    
             currentState = newState;
             switch (newState) {
                 case HOME:
                     homeState.start();
                     break;
-
+    
                 case SCORING:
                     scoringBasketState.activate();
                     break;
-
+    
                 case SCORING_SPECIMEN:
-                    scoringSpecimenState.start();
+                    scoringSpecimenState.activate();
                     break;
-
+    
                 case OBSERVATION:
                     observationState.activate();
                     break;
-
+    
                 case LEVEL_ONE_ASCENT:
                     levelOneAscentState.start();
                     break;
-
+    
                 case PICKUP:
                     pickupState.activate();
                     break;
-
+    
                 case INIT_FROM_ASCENT:
                     initializeFromAscentState.activate();
                     break;
-
+    
                 case INIT_FROM_FLOOR:
                     initializeFromFloorState.activate();
                     break;
-
+    
                 case IDLE:
                     idleState.activate();
                     break;
-
+    
                 default:
                     break;
             }
@@ -203,6 +209,8 @@ public class Robot {
             setState(State.IDLE);
         }
     }
+    
+    
 
     // Method to get current substate
     public String getCurrentSubstate() {
@@ -243,10 +251,10 @@ public class Robot {
     }
 
     public void onScoringSpecimenButtonPressed() {
-        if (currentState == State.SCORING_SPECIMEN) {
-            scoringSpecimenState.onPrimaryButtonPressed();
-        } else {
+        if (currentState != State.SCORING_SPECIMEN) {
             setState(State.SCORING_SPECIMEN);
+        } else {
+            setState(State.IDLE);
         }
     }
 
@@ -274,9 +282,10 @@ public class Robot {
             initializeFromAscentState.onRightTriggerPressed();
         } else if (currentState == State.SCORING) {
             scoringBasketState.onRightTriggerPressed();
+        } else if (currentState == State.OBSERVATION) {
+            observationState.onRightTriggerPressed();
         }
     }
-
     // Method to handle Level One Ascent button press
     public void onLevelOneAscentButtonPressed() {
         setState(State.LEVEL_ONE_ASCENT);

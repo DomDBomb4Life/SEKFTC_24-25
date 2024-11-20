@@ -16,14 +16,13 @@ public class ScoringSpecimenState {
     // Steps in the scoring specimen process
     public enum Step {
         LIFT_VIPERLIFT_UP,
-        MOVE_WRIST_AND_CLAW,
+        MOVE_ARM_DOWN_FORWARDS,
         WAIT_FOR_RIGHT_TRIGGER,
-        LOWER_VIPERLIFT,
-        WAIT_FOR_BUTTON_PRESS,
+        ROTATE_ARM_BACK_TO_HOOK,
         OPEN_CLAW,
-        MOVE_ARM_AND_WRIST_BACK,
+        MOVE_ARM_UP,
         LOWER_VIPERLIFT_TO_BOTTOM,
-        FINAL // Remain here when done
+        COMPLETED
     }
 
     private Step currentStep;
@@ -37,46 +36,49 @@ public class ScoringSpecimenState {
         this.currentStep = Step.LIFT_VIPERLIFT_UP; // Initial step
     }
 
-    // Start the scoring specimen process
-    public void start() {
+    // Activate the scoring specimen state
+    public void activate() {
         currentStep = Step.LIFT_VIPERLIFT_UP;
         executeCurrentStep();
+    }
+
+    // Deactivate the scoring specimen state
+    public void deactivate() {
+        currentStep = Step.COMPLETED;
     }
 
     // Execute actions for the current step
     private void executeCurrentStep() {
         switch (currentStep) {
             case LIFT_VIPERLIFT_UP:
-                // Lift the ViperLift up to a specific position
-                viperLift.moveToPosition(5000); // Adjust this value as needed
+                // Lift the ViperLift up to a high position
+                viperLift.moveToPosition(4000); // Adjust this value as needed
                 break;
 
-            case MOVE_WRIST_AND_CLAW:
-                // Move the wrist and claw to desired positions
-                arm.moveToAngle(45);   // Adjust angle as needed
-                wrist.setAngle(45); // Adjust angle as needed
+            case MOVE_ARM_DOWN_FORWARDS:
+                // Move the arm down forwards to hang the specimen
+                arm.moveToAngle(38);   // Adjust angle as needed
+                wrist.setAngle(110);     // Adjust angle as needed
+                // Assuming claw is already holding the specimen
                 break;
 
             case WAIT_FOR_RIGHT_TRIGGER:
                 // Waiting for right trigger input
                 break;
 
-            case LOWER_VIPERLIFT:
-                // Lower the ViperLift to a certain position
-                viperLift.moveToPosition(4500); // Adjust this value as needed
-                break;
-
-            case WAIT_FOR_BUTTON_PRESS:
-                // Waiting for primary button or right trigger input
+            case ROTATE_ARM_BACK_TO_HOOK:
+                // Rotate arm back a predetermined amount to hook the specimen
+                arm.moveToAngle(55); // Adjust angle as needed
+                // Claw remains closed
                 break;
 
             case OPEN_CLAW:
-                // Open the claw
+                // Open the claw to release the specimen
                 claw.open();
                 break;
 
-            case MOVE_ARM_AND_WRIST_BACK:
-                // Move arm and wrist back to their correct locations
+            case MOVE_ARM_UP:
+                // Move arm back up to idle position
                 arm.moveToAngle(90);   // Adjust angle as needed
                 wrist.setAngle(90);    // Adjust angle as needed
                 break;
@@ -86,8 +88,9 @@ public class ScoringSpecimenState {
                 viperLift.moveToPosition(0);
                 break;
 
-            case FINAL:
-                // Do nothing; remain here
+            case COMPLETED:
+                // Process completed; deactivate state
+                deactivate();
                 break;
 
             default:
@@ -101,16 +104,15 @@ public class ScoringSpecimenState {
         switch (currentStep) {
             case LIFT_VIPERLIFT_UP:
                 if (viperLift.isCloseToTarget()) {
-                    currentStep = Step.MOVE_WRIST_AND_CLAW;
+                    currentStep = Step.MOVE_ARM_DOWN_FORWARDS;
                     executeCurrentStep();
                 }
                 break;
 
-            case MOVE_WRIST_AND_CLAW:
-                // Assuming wrist movement is immediate; adjust if necessary
+            case MOVE_ARM_DOWN_FORWARDS:
                 if (arm.isCloseToTarget() && wrist.isAtTarget()) {
                     currentStep = Step.WAIT_FOR_RIGHT_TRIGGER;
-                    executeCurrentStep();
+                    // Do not executeCurrentStep() because we're waiting for input
                 }
                 break;
 
@@ -118,22 +120,21 @@ public class ScoringSpecimenState {
                 // Waiting for right trigger input
                 break;
 
-            case LOWER_VIPERLIFT:
-                if (viperLift.isCloseToTarget()) {
-                    currentStep = Step.WAIT_FOR_BUTTON_PRESS;
+            case ROTATE_ARM_BACK_TO_HOOK:
+                if (arm.isCloseToTarget()) {
+                    currentStep = Step.OPEN_CLAW;
+                    executeCurrentStep();
                 }
                 break;
 
-            case WAIT_FOR_BUTTON_PRESS:
-                // Waiting for primary button or right trigger input
-                break;
-
             case OPEN_CLAW:
-                currentStep = Step.MOVE_ARM_AND_WRIST_BACK;
-                executeCurrentStep();
+                if (arm.getCurrentAngle() > 50) {
+                    currentStep = Step.MOVE_ARM_UP;
+                    executeCurrentStep();
+                }
                 break;
 
-            case MOVE_ARM_AND_WRIST_BACK:
+            case MOVE_ARM_UP:
                 if (arm.isCloseToTarget() && wrist.isAtTarget()) {
                     currentStep = Step.LOWER_VIPERLIFT_TO_BOTTOM;
                     executeCurrentStep();
@@ -142,12 +143,13 @@ public class ScoringSpecimenState {
 
             case LOWER_VIPERLIFT_TO_BOTTOM:
                 if (viperLift.isCloseToTarget()) {
-                    currentStep = Step.FINAL;
+                    currentStep = Step.COMPLETED;
+                    executeCurrentStep();
                 }
                 break;
 
-            case FINAL:
-                // Process completed; remain here
+            case COMPLETED:
+                // Process completed; state remains here
                 break;
 
             default:
@@ -159,19 +161,7 @@ public class ScoringSpecimenState {
     // Method to handle right trigger input
     public void onRightTriggerPressed() {
         if (currentStep == Step.WAIT_FOR_RIGHT_TRIGGER) {
-            currentStep = Step.LOWER_VIPERLIFT;
-            executeCurrentStep();
-        } else if (currentStep == Step.WAIT_FOR_BUTTON_PRESS) {
-            // Loop back to lift ViperLift up again
-            currentStep = Step.LIFT_VIPERLIFT_UP;
-            executeCurrentStep();
-        }
-    }
-
-    // Method to handle primary button input
-    public void onPrimaryButtonPressed() {
-        if (currentStep == Step.WAIT_FOR_BUTTON_PRESS) {
-            currentStep = Step.OPEN_CLAW;
+            currentStep = Step.ROTATE_ARM_BACK_TO_HOOK;
             executeCurrentStep();
         }
     }
@@ -183,6 +173,6 @@ public class ScoringSpecimenState {
 
     // Check if the process is completed
     public boolean isCompleted() {
-        return currentStep == Step.FINAL;
+        return currentStep == Step.COMPLETED;
     }
 }
