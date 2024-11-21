@@ -77,7 +77,6 @@ public class AutonomousOpModeV2 extends LinearOpMode {
         driveToPosition(netPosition);
 
         logAndWait("Scoring Preloaded Specimen", null);
-        robot.setState(Robot.State.IDLE);
         robot.setState(Robot.State.SCORING);
         waitForRobotState("COMPLETED");
 
@@ -127,7 +126,7 @@ public class AutonomousOpModeV2 extends LinearOpMode {
         telemetry.update();
 
         TrajectorySequence sequence = driveTrain.trajectorySequenceBuilder(driveTrain.getPoseEstimate())
-                .splineTo(target.vec(), target.getHeading())
+                .lineToLinearHeading(target)
                 .build();
 
         driveTrain.followTrajectorySequence(sequence);

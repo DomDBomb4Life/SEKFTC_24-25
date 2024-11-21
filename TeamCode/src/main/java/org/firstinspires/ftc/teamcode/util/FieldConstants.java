@@ -21,7 +21,7 @@ public class FieldConstants {
     public static final Pose2d RIGHT_START = new Pose2d(-0.5 * TILE_SIZE, -(2 * TILE_SIZE + WALL_DISTANCE), Math.toRadians(90));
 
     // Net position
-    public static final Pose2d NET_POSITION = new Pose2d(48, -48, Math.toRadians(135));
+    public static final Pose2d NET_POSITION = new Pose2d(48, -48, Math.toRadians(45));
 
     // Neutral Sample positions (assuming they are placed along the Y-axis)
     public static final Pose2d SAMPLE_1_POSITION = new Pose2d(-24 - 1.25, 2.5 * TILE_SIZE + 10, Math.toRadians(90));
