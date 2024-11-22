@@ -9,7 +9,7 @@ public class ScoringSpecimenState extends BaseState {
         LIFT_VIPERLIFT_UP,
         MOVE_ARM_DOWN_FORWARDS,
         WAIT_FOR_RIGHT_TRIGGER,
-        ROTATE_ARM_BACK_TO_HOOK,
+        MOVE_VIPER_LIFT_UP_TO_HOOK,
         OPEN_CLAW,
         MOVE_ARM_UP,
         LOWER_VIPERLIFT_TO_BOTTOM,
@@ -40,7 +40,7 @@ public class ScoringSpecimenState extends BaseState {
         switch (currentStep) {
             case LIFT_VIPERLIFT_UP:
                 // Lift the ViperLift up to a high position
-                robot.viperLift.moveToPosition(4000); // Adjust this value as needed
+                robot.viperLift.moveToPosition(3500); // Adjust this value as needed
                 break;
 
             case MOVE_ARM_DOWN_FORWARDS:
@@ -54,9 +54,9 @@ public class ScoringSpecimenState extends BaseState {
                 // Waiting for right trigger input
                 break;
 
-            case ROTATE_ARM_BACK_TO_HOOK:
+            case MOVE_VIPER_LIFT_UP_TO_HOOK:
                 // Rotate arm back a predetermined amount to hook the specimen
-                robot.arm.moveToAngle(55); // Adjust angle as needed
+                robot.viperLift.moveToPosition(3750); // Adjust angle as needed
                 // Claw remains closed
                 break;
 
@@ -111,8 +111,8 @@ public class ScoringSpecimenState extends BaseState {
                 // Waiting for right trigger input
                 break;
 
-            case ROTATE_ARM_BACK_TO_HOOK:
-                if (robot.arm.isCloseToTarget()) {
+            case MOVE_VIPER_LIFT_UP_TO_HOOK:
+                if (robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.OPEN_CLAW;
                     executeCurrentStep();
                 }
@@ -152,7 +152,7 @@ public class ScoringSpecimenState extends BaseState {
     @Override
     public void onRightTriggerPressed() {
         if (currentStep == Step.WAIT_FOR_RIGHT_TRIGGER) {
-            currentStep = Step.ROTATE_ARM_BACK_TO_HOOK;
+            currentStep = Step.MOVE_VIPER_LIFT_UP_TO_HOOK;
             executeCurrentStep();
         }
     }
