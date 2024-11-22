@@ -27,6 +27,7 @@ public class ObservationState {
 
     private Step currentStep;
     private boolean isActive = false;
+    private static final long OPEN_CLAW_DELAY = 250;
 
     // Constructor
     public ObservationState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw) {
@@ -71,6 +72,7 @@ public class ObservationState {
             case CLOSE_THE_CLAW:
                 //i need the claw closed AAAAA
                 claw.close();
+                waitStartTime = System.currentTimeMillis();
                 break;
 
             case LIFT_VIPERLIFT_TO_SECOND_HEIGHT:
@@ -123,7 +125,7 @@ public class ObservationState {
                 break;
 
             case CLOSE_THE_CLAW:
-                if (wrist.isAtTarget()) {
+                if (System.currentTimeMillis() - waitStartTime >= OPEN_CLAW_DELAY) {
                     currentStep = Step.LIFT_VIPERLIFT_TO_SECOND_HEIGHT;
                     executeCurrentStep();
                 }

@@ -26,6 +26,7 @@ public class ScoringSpecimenState {
     }
 
     private Step currentStep;
+    private static final long OPEN_CLAW_DELAY = 250;
 
     // Constructor
     public ScoringSpecimenState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw) {
@@ -75,6 +76,7 @@ public class ScoringSpecimenState {
             case OPEN_CLAW:
                 // Open the claw to release the specimen
                 claw.open();
+                waitStartTime = System.currentTimeMillis();
                 break;
 
             case MOVE_ARM_UP:
@@ -128,7 +130,7 @@ public class ScoringSpecimenState {
                 break;
 
             case OPEN_CLAW:
-                if (arm.getCurrentAngle() > 50) {
+                if (System.currentTimeMillis() - waitStartTime >= OPEN_CLAW_DELAY) {
                     currentStep = Step.MOVE_ARM_UP;
                     executeCurrentStep();
                 }
