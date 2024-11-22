@@ -1,40 +1,53 @@
-// File: AutomaticFeedforwardTuner.java
 package org.firstinspires.ftc.teamcode.opmode.auto;
+
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_RPM;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.RUN_USING_ENCODER;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.rpmToVelocity;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.roadrunner.kinematics.Kinematics;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.util.NanoClock;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.internal.system.Misc;
 import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
+import org.firstinspires.ftc.teamcode.util.LoggingUtil;
 import org.firstinspires.ftc.teamcode.util.RegressionUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Op mode for computing kV, kStatic, and kA from various drive routines.
+/*
+ * Op mode for computing kV, kStatic, and kA from various drive routines. For the curious, here's an
+ * outline of the procedure:
+ *   1. Slowly ramp the motor power and record encoder values along the way.
+ *   2. Run a linear regression on the encoder velocity vs. motor power plot to obtain a slope (kV)
+ *      and an optional intercept (kStatic).
+ *   3. Accelerate the robot (apply constant power) and record the encoder counts.
+ *   4. Adjust the encoder data based on the velocity tuning data and find kA with another linear
+ *      regression.
  */
 @Config
 @Autonomous(group = "drive")
 public class AutomaticFeedforwardTuner extends LinearOpMode {
     public static double MAX_POWER = 0.7;
     public static double DISTANCE = 100; // in
-    public static double MAX_VEL = 50.0; // inches per second (adjust based on your robot)
-    public static double MAX_ACCEL = 30.0; // inches per second squared (adjust as needed)
 
     @Override
     public void runOpMode() throws InterruptedException {
-        MultipleTelemetry telemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
+        if (RUN_USING_ENCODER) {
+            RobotLog.setGlobalErrorMsg("Feedforward constants usually don't need to be tuned " +
+                    "when using the built-in drive motor velocity PID.");
+        }
+
+        Telemetry telemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
 
         DriveTrainRR drive = new DriveTrainRR(hardwareMap);
-        VoltageSensor batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         NanoClock clock = NanoClock.system();
 
@@ -47,14 +60,14 @@ public class AutomaticFeedforwardTuner extends LinearOpMode {
 
         telemetry.clearAll();
         telemetry.addLine("Would you like to fit kStatic?");
-        telemetry.addLine("Press (A) for yes, (B) for no");
+        telemetry.addLine("Press (Y/Δ) for yes, (B/O) for no");
         telemetry.update();
 
         boolean fitIntercept = false;
         while (!isStopRequested()) {
-            if (gamepad1.a) {
+            if (gamepad1.y) {
                 fitIntercept = true;
-                while (!isStopRequested() && gamepad1.a) {
+                while (!isStopRequested() && gamepad1.y) {
                     idle();
                 }
                 break;
@@ -70,13 +83,13 @@ public class AutomaticFeedforwardTuner extends LinearOpMode {
         telemetry.clearAll();
         telemetry.addLine(Misc.formatInvariant(
                 "Place your robot on the field with at least %.2f in of room in front", DISTANCE));
-        telemetry.addLine("Press (A) to begin");
+        telemetry.addLine("Press (Y/Δ) to begin");
         telemetry.update();
 
-        while (!isStopRequested() && !gamepad1.a) {
+        while (!isStopRequested() && !gamepad1.y) {
             idle();
         }
-        while (!isStopRequested() && gamepad1.a) {
+        while (!isStopRequested() && gamepad1.y) {
             idle();
         }
 
@@ -84,14 +97,13 @@ public class AutomaticFeedforwardTuner extends LinearOpMode {
         telemetry.addLine("Running...");
         telemetry.update();
 
-        double maxVel = MAX_VEL;
+        double maxVel = rpmToVelocity(MAX_RPM);
         double finalVel = MAX_POWER * maxVel;
         double accel = (finalVel * finalVel) / (2.0 * DISTANCE);
         double rampTime = Math.sqrt(2.0 * DISTANCE / accel);
 
         List<Double> timeSamples = new ArrayList<>();
         List<Double> positionSamples = new ArrayList<>();
-        List<Double> velocitySamples = new ArrayList<>();
         List<Double> powerSamples = new ArrayList<>();
 
         drive.setPoseEstimate(new Pose2d());
@@ -105,22 +117,19 @@ public class AutomaticFeedforwardTuner extends LinearOpMode {
             double vel = accel * elapsedTime;
             double power = vel / maxVel;
 
-            double voltage = batteryVoltageSensor.getVoltage();
-            double compensatedPower = power * (12.0 / voltage);
-
             timeSamples.add(elapsedTime);
             positionSamples.add(drive.getPoseEstimate().getX());
-            velocitySamples.add(vel);
-            powerSamples.add(compensatedPower);
+            powerSamples.add(power);
 
-            drive.setDrivePower(new Pose2d(compensatedPower, 0.0, 0.0));
-            drive.update();
+            drive.setDrivePower(new Pose2d(power, 0.0, 0.0));
+            drive.updatePoseEstimate();
         }
         drive.setDrivePower(new Pose2d(0.0, 0.0, 0.0));
 
-        // Fit the kV and kStatic using the collected data
         RegressionUtil.RampResult rampResult = RegressionUtil.fitRampData(
-                timeSamples, positionSamples, powerSamples, fitIntercept,null);
+                timeSamples, positionSamples, powerSamples, fitIntercept,
+                LoggingUtil.getLogFile(Misc.formatInvariant(
+                        "DriveRampRegression-%d.csv", System.currentTimeMillis())));
 
         telemetry.clearAll();
         telemetry.addLine("Quasi-static ramp up test complete");
@@ -129,17 +138,17 @@ public class AutomaticFeedforwardTuner extends LinearOpMode {
                     rampResult.kV, rampResult.kStatic, rampResult.rSquare));
         } else {
             telemetry.addLine(Misc.formatInvariant("kV = %.5f (R^2 = %.2f)",
-                    rampResult.kV, rampResult.rSquare));
+                    rampResult.kStatic, rampResult.rSquare));
         }
         telemetry.addLine("Would you like to fit kA?");
-        telemetry.addLine("Press (A) for yes, (B) for no");
+        telemetry.addLine("Press (Y/Δ) for yes, (B/O) for no");
         telemetry.update();
 
         boolean fitAccelFF = false;
         while (!isStopRequested()) {
-            if (gamepad1.a) {
+            if (gamepad1.y) {
                 fitAccelFF = true;
-                while (!isStopRequested() && gamepad1.a) {
+                while (!isStopRequested() && gamepad1.y) {
                     idle();
                 }
                 break;
@@ -155,13 +164,13 @@ public class AutomaticFeedforwardTuner extends LinearOpMode {
         if (fitAccelFF) {
             telemetry.clearAll();
             telemetry.addLine("Place the robot back in its starting position");
-            telemetry.addLine("Press (A) to continue");
+            telemetry.addLine("Press (Y/Δ) to continue");
             telemetry.update();
 
-            while (!isStopRequested() && !gamepad1.a) {
+            while (!isStopRequested() && !gamepad1.y) {
                 idle();
             }
-            while (!isStopRequested() && gamepad1.a) {
+            while (!isStopRequested() && gamepad1.y) {
                 idle();
             }
 
@@ -173,7 +182,6 @@ public class AutomaticFeedforwardTuner extends LinearOpMode {
 
             timeSamples.clear();
             positionSamples.clear();
-            velocitySamples.clear();
             powerSamples.clear();
 
             drive.setPoseEstimate(new Pose2d());
@@ -186,20 +194,18 @@ public class AutomaticFeedforwardTuner extends LinearOpMode {
                     break;
                 }
 
-                double voltage = batteryVoltageSensor.getVoltage();
-                double compensatedPower = MAX_POWER * (12.0 / voltage);
-
                 timeSamples.add(elapsedTime);
                 positionSamples.add(drive.getPoseEstimate().getX());
-                powerSamples.add(compensatedPower);
+                powerSamples.add(MAX_POWER);
 
-                drive.update();
+                drive.updatePoseEstimate();
             }
             drive.setDrivePower(new Pose2d(0.0, 0.0, 0.0));
 
-            // Fit the kA using the collected data
             RegressionUtil.AccelResult accelResult = RegressionUtil.fitAccelData(
-                    timeSamples, positionSamples, powerSamples, rampResult, null);
+                    timeSamples, positionSamples, powerSamples, rampResult,
+                    LoggingUtil.getLogFile(Misc.formatInvariant(
+                            "DriveAccelRegression-%d.csv", System.currentTimeMillis())));
 
             telemetry.clearAll();
             telemetry.addLine("Constant power test complete");

@@ -17,6 +17,7 @@ public class ScoringSpecimenState extends BaseState {
     }
 
     private Step currentStep;
+    private long waitStartTime;
     private static final long OPEN_CLAW_DELAY = 250;
 
     // Constructor
@@ -62,7 +63,7 @@ public class ScoringSpecimenState extends BaseState {
 
             case OPEN_CLAW:
                 // Open the claw to release the specimen
-                claw.open();
+                robot.claw.open();
                 waitStartTime = System.currentTimeMillis();
                 break;
 

@@ -17,6 +17,7 @@ public class ObservationState extends BaseState {
     }
 
     private Step currentStep;
+    private long waitStartTime;
     private boolean isActive = false;
     private static final long OPEN_CLAW_DELAY = 250;
 
@@ -57,7 +58,7 @@ public class ObservationState extends BaseState {
 
             case CLOSE_THE_CLAW:
                 //i need the claw closed AAAAA
-                claw.close();
+                robot.claw.close();
                 waitStartTime = System.currentTimeMillis();
                 break;
 

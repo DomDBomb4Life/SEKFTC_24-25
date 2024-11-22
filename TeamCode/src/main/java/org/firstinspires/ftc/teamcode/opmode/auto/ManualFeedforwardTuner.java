@@ -1,125 +1,154 @@
-// File: ManualFeedforwardTuner.java
 package org.firstinspires.ftc.teamcode.opmode.auto;
+
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ACCEL;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_VEL;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.RUN_USING_ENCODER;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kA;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kStatic;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.roadrunner.kinematics.Kinematics;
+import com.acmerobotics.roadrunner.drive.DriveSignal;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.profile.*;
+import com.acmerobotics.roadrunner.kinematics.Kinematics;
+import com.acmerobotics.roadrunner.profile.MotionProfile;
+import com.acmerobotics.roadrunner.profile.MotionProfileGenerator;
+import com.acmerobotics.roadrunner.profile.MotionState;
 import com.acmerobotics.roadrunner.util.NanoClock;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 
 import java.util.Objects;
 
-/**
-* Op mode for manually tuning feedforward coefficients.
-*/
+/*
+ * This routine is designed to tune the open-loop feedforward coefficients. Although it may seem unnecessary,
+ * tuning these coefficients is just as important as the positional parameters. Like the other
+ * manual tuning routines, this op mode relies heavily upon the dashboard. To access the dashboard,
+ * connect your computer to the RC's WiFi network. In your browser, navigate to
+ * https://192.168.49.1:8080/dash if you're using the RC phone or https://192.168.43.1:8080/dash if
+ * you are using the Control Hub. Once you've successfully connected, start the program, and your
+ * robot will begin moving forward and backward according to a motion profile. Your job is to graph
+ * the velocity errors over time and adjust the feedforward coefficients. Once you've found a
+ * satisfactory set of gains, add them to the appropriate fields in the DriveConstants.java file.
+ *
+ * Pressing Y/Δ (Xbox/PS4) will pause the tuning process and enter driver override, allowing the
+ * user to reset the position of the bot in the event that it drifts off the path.
+ * Pressing B/O (Xbox/PS4) will cede control back to the tuning process.
+ */
 @Config
-@TeleOp(group = "drive")
+@Autonomous(group = "drive")
 public class ManualFeedforwardTuner extends LinearOpMode {
-   public static double DISTANCE = 60; // in
-   public static double MAX_VEL = 50.0; // in/s
-   public static double MAX_ACCEL = 30.0; // in/s^2
-   public static double kV = 0.0; // Set initial value
-   public static double kA = 0.0; // Set initial value
-   public static double kStatic = 0.0; // Set initial value
+    public static double DISTANCE = 72; // in
 
-   enum Mode {
-       DRIVER_MODE,
-       TUNING_MODE
-   }
+    private FtcDashboard dashboard = FtcDashboard.getInstance();
 
-   private Mode mode;
+    private DriveTrainRR drive;
 
-   @Override
-   public void runOpMode() {
-       MultipleTelemetry telemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
+    enum Mode {
+        DRIVER_MODE,
+        TUNING_MODE
+    }
 
-       DriveTrainRR drive = new DriveTrainRR(hardwareMap);
+    private Mode mode;
 
-       VoltageSensor batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
+    private static MotionProfile generateProfile(boolean movingForward) {
+        MotionState start = new MotionState(movingForward ? 0 : DISTANCE, 0, 0, 0);
+        MotionState goal = new MotionState(movingForward ? DISTANCE : 0, 0, 0, 0);
+        return MotionProfileGenerator.generateSimpleMotionProfile(start, goal, MAX_VEL, MAX_ACCEL);
+    }
 
-       mode = Mode.TUNING_MODE;
+    @Override
+    public void runOpMode() {
+        if (RUN_USING_ENCODER) {
+            RobotLog.setGlobalErrorMsg("Feedforward constants usually don't need to be tuned " +
+                    "when using the built-in drive motor velocity PID.");
+        }
 
-       NanoClock clock = NanoClock.system();
+        Telemetry telemetry = new MultipleTelemetry(this.telemetry, dashboard.getTelemetry());
 
-       telemetry.addLine("Ready!");
-       telemetry.update();
+        DriveTrainRR drive = new DriveTrainRR(hardwareMap);
 
-       waitForStart();
+        final VoltageSensor voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-       if (isStopRequested()) return;
+        mode = Mode.TUNING_MODE;
 
-       boolean movingForwards = true;
-       MotionProfile activeProfile = generateProfile(true);
-       double profileStart = clock.seconds();
+        NanoClock clock = NanoClock.system();
 
-       while (!isStopRequested()) {
-           telemetry.addData("mode", mode);
+        telemetry.addLine("Ready!");
+        telemetry.update();
+        telemetry.clearAll();
 
-           switch (mode) {
-               case TUNING_MODE:
-                   if (gamepad1.a) {
-                       mode = Mode.DRIVER_MODE;
-                   }
+        waitForStart();
 
-                   // Calculate and set the motor power
-                   double profileTime = clock.seconds() - profileStart;
+        if (isStopRequested()) return;
 
-                   if (profileTime > activeProfile.duration()) {
-                       // Generate a new profile
-                       movingForwards = !movingForwards;
-                       activeProfile = generateProfile(movingForwards);
-                       profileStart = clock.seconds();
-                   }
+        boolean movingForwards = true;
+        MotionProfile activeProfile = generateProfile(true);
+        double profileStart = clock.seconds();
 
-                   MotionState motionState = activeProfile.get(profileTime);
-                   double targetPower = Kinematics.calculateMotorFeedforward(motionState.getV(), motionState.getA(), kV, kA, kStatic);
 
-                   double voltage = batteryVoltageSensor.getVoltage();
-                   double compensatedPower = targetPower * (12.0 / voltage);
+        while (!isStopRequested()) {
+            telemetry.addData("mode", mode);
 
-                   drive.setDrivePower(new Pose2d(compensatedPower, 0, 0));
-                   drive.update();
+            switch (mode) {
+                case TUNING_MODE:
+                    if (gamepad1.y) {
+                        mode = Mode.DRIVER_MODE;
+                    }
 
-                   Pose2d poseVelo = Objects.requireNonNull(drive.getPoseVelocity(), "poseVelocity() must not be null.");
-                   double currentVelo = poseVelo.getX();
+                    // calculate and set the motor power
+                    double profileTime = clock.seconds() - profileStart;
 
-                   // Update telemetry
-                   telemetry.addData("targetVelocity", motionState.getV());
-                   telemetry.addData("measuredVelocity", currentVelo);
-                   telemetry.addData("error", motionState.getV() - currentVelo);
-                   break;
-               case DRIVER_MODE:
-                   if (gamepad1.b) {
-                       mode = Mode.TUNING_MODE;
-                       movingForwards = true;
-                       activeProfile = generateProfile(movingForwards);
-                       profileStart = clock.seconds();
-                   }
+                    if (profileTime > activeProfile.duration()) {
+                        // generate a new profile
+                        movingForwards = !movingForwards;
+                        activeProfile = generateProfile(movingForwards);
+                        profileStart = clock.seconds();
+                    }
 
-                   drive.setWeightedDrivePower(
-                           new Pose2d(
-                                   -gamepad1.left_stick_y,
-                                   -gamepad1.left_stick_x,
-                                   -gamepad1.right_stick_x
-                           )
-                   );
-                   break;
-           }
+                    MotionState motionState = activeProfile.get(profileTime);
+                    double targetPower = Kinematics.calculateMotorFeedforward(motionState.getV(), motionState.getA(), kV, kA, kStatic);
 
-           telemetry.update();
-       }
-   }
+                    final double NOMINAL_VOLTAGE = 12.0;
+                    final double voltage = voltageSensor.getVoltage();
+                    drive.setDrivePower(new Pose2d(NOMINAL_VOLTAGE / voltage * targetPower, 0, 0));
+                    drive.updatePoseEstimate();
 
-   private MotionProfile generateProfile(boolean movingForward) {
-       MotionState start = new MotionState(movingForward ? 0 : DISTANCE, 0, 0, 0);
-       MotionState goal = new MotionState(movingForward ? DISTANCE : 0, 0, 0, 0);
-       return MotionProfileGenerator.generateSimpleMotionProfile(start, goal, MAX_VEL, MAX_ACCEL);
-   }
+                    Pose2d poseVelo = Objects.requireNonNull(drive.getPoseVelocity(), "poseVelocity() must not be null. Ensure that the getWheelVelocities() method has been overridden in your localizer.");
+                    double currentVelo = poseVelo.getX();
+
+                    // update telemetry
+                    telemetry.addData("targetVelocity", motionState.getV());
+                    telemetry.addData("measuredVelocity", currentVelo);
+                    telemetry.addData("error", motionState.getV() - currentVelo);
+                    break;
+                case DRIVER_MODE:
+                    if (gamepad1.b) {
+                        mode = Mode.TUNING_MODE;
+                        movingForwards = true;
+                        activeProfile = generateProfile(movingForwards);
+                        profileStart = clock.seconds();
+                    }
+
+                    drive.setWeightedDrivePower(
+                            new Pose2d(
+                                    -gamepad1.left_stick_y,
+                                    -gamepad1.left_stick_x,
+                                    -gamepad1.right_stick_x
+                            )
+                    );
+                    break;
+            }
+
+            telemetry.update();
+        }
+    }
 }

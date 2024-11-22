@@ -1,7 +1,6 @@
 // File: DriveTrainRR.java
 package org.firstinspires.ftc.teamcode.drive;
 
-import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.drive.*;
 import com.acmerobotics.roadrunner.followers.*;
@@ -9,50 +8,20 @@ import com.acmerobotics.roadrunner.geometry.*;
 import com.acmerobotics.roadrunner.trajectory.*;
 import com.acmerobotics.roadrunner.trajectory.constraints.*;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.*;
-import org.firstinspires.ftc.robotcore.external.navigation.*;
 import org.firstinspires.ftc.teamcode.localization.StandardTrackingWheelLocalizer;
 import org.firstinspires.ftc.teamcode.trajectorysequence.*;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.*;
+
 /**
  * DriveTrain subsystem using RoadRunner for trajectory following.
  */
-@Config
 public class DriveTrainRR extends MecanumDrive {
-    // PID coefficients can be adjusted in the dashboard
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(8, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(8, 0, 0);
-
-    public static double LATERAL_MULTIPLIER = 1.0;
-
-    public static double VX_WEIGHT = 1.0;
-    public static double VY_WEIGHT = 1.0;
-    public static double OMEGA_WEIGHT = 1.0;
-
-    // Motor constants
-    public static final double TICKS_PER_REV = 537.6;
-    public static final double MAX_RPM = 312;
-
-    // Physical constants
-    public static double WHEEL_RADIUS = 1.8898; // in
-    public static double GEAR_RATIO = 1; // output (wheel) speed / input (motor) speed
-    public static double TRACK_WIDTH = 8.839; // in
-
-    // Feedforward parameters
-    public static double kV = 1.0 / rpmToVelocity(MAX_RPM);
-    public static double kA = 0.0;
-    public static double kStatic = 0.0;
-
-    // Constraints
-    public static double MAX_VEL = rpmToVelocity(MAX_RPM);
-    public static double MAX_ACCEL = 30;
-    public static double MAX_ANG_VEL = Math.toRadians(180);
-    public static double MAX_ANG_ACCEL = Math.toRadians(180);
-
+    // Hardware components
     private DcMotorEx leftFront, leftRear, rightRear, rightFront;
     private List<DcMotorEx> motors;
 
@@ -73,12 +42,20 @@ public class DriveTrainRR extends MecanumDrive {
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
+        // Set motor modes and directions
         for (DcMotorEx motor : motors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+            if (RUN_USING_ENCODER) {
+                motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                motor.setVelocityPIDFCoefficients(
+                        MOTOR_VELO_PID.p, MOTOR_VELO_PID.i, MOTOR_VELO_PID.d, MOTOR_VELO_PID.f);
+            } else {
+                motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            }
         }
 
-        // Reverse motors if necessary (make configurable)
+        // Reverse motors if necessary
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -104,24 +81,36 @@ public class DriveTrainRR extends MecanumDrive {
 
     @Override
     public double getRawExternalHeading() {
+        // Return the heading from an external sensor if available
         return 0;
     }
 
     @Override
     public Double getExternalHeadingVelocity() {
+        // Return the heading velocity from an external sensor if available
         return 0.0;
     }
 
     @Override
     public List<Double> getWheelPositions() {
-        // Since motors don't have encoders, return zeros
-        return Arrays.asList(0.0, 0.0, 0.0, 0.0);
+        // Return the current positions of the drive motors in inches
+        return Arrays.asList(
+                encoderTicksToInches(leftFront.getCurrentPosition()),
+                encoderTicksToInches(leftRear.getCurrentPosition()),
+                encoderTicksToInches(rightRear.getCurrentPosition()),
+                encoderTicksToInches(rightFront.getCurrentPosition())
+        );
     }
 
     @Override
     public List<Double> getWheelVelocities() {
-        // Since motors don't have encoders, return zeros
-        return Arrays.asList(0.0, 0.0, 0.0, 0.0);
+        // Return the current velocities of the drive motors in inches per second
+        return Arrays.asList(
+                encoderTicksToInches(leftFront.getVelocity()),
+                encoderTicksToInches(leftRear.getVelocity()),
+                encoderTicksToInches(rightRear.getVelocity()),
+                encoderTicksToInches(rightFront.getVelocity())
+        );
     }
 
     public void update() {
@@ -161,7 +150,7 @@ public class DriveTrainRR extends MecanumDrive {
         );
     }
 
-    // Added methods
+    // Trajectory builders
     public TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {
         return new TrajectoryBuilder(
                 startPose,
@@ -179,6 +168,7 @@ public class DriveTrainRR extends MecanumDrive {
         );
     }
 
+    // Constraints for trajectory generation
     public static TrajectoryVelocityConstraint getVelocityConstraint(double maxVel, double maxAngularVel, double trackWidth) {
         return new MinVelocityConstraint(
                 Arrays.asList(
@@ -192,27 +182,27 @@ public class DriveTrainRR extends MecanumDrive {
         return new ProfileAccelerationConstraint(maxAccel);
     }
 
-    // Added method for manual control
+    // Manual control method with power weighting
     public void setWeightedDrivePower(Pose2d drivePower) {
         Pose2d vel = drivePower;
-    
+
         if (Math.abs(drivePower.getX()) + Math.abs(drivePower.getY()) + Math.abs(drivePower.getHeading()) > 1) {
             // Normalize the powers according to the weights
             double denom = VX_WEIGHT * Math.abs(drivePower.getX())
                     + VY_WEIGHT * Math.abs(drivePower.getY())
                     + OMEGA_WEIGHT * Math.abs(drivePower.getHeading());
-    
+
             vel = new Pose2d(
                     VX_WEIGHT * drivePower.getX(),
                     VY_WEIGHT * drivePower.getY(),
                     OMEGA_WEIGHT * drivePower.getHeading()
             ).div(denom);
         }
-    
+
         setDrivePower(vel);
     }
 
-    // Added method for turning
+    // Methods for turning
     public void turnAsync(double angle) {
         TrajectorySequence turnSequence = trajectorySequenceBuilder(getPoseEstimate())
                 .turn(angle)
@@ -225,10 +215,5 @@ public class DriveTrainRR extends MecanumDrive {
         while (isBusy()) {
             update();
         }
-    }
-
-    // Helper method to compute RPM to velocity
-    public static double rpmToVelocity(double rpm) {
-        return rpm * GEAR_RATIO * 2 * Math.PI * WHEEL_RADIUS / 60.0;
     }
 }
