@@ -1,18 +1,9 @@
 // File: HomeState.java
 package org.firstinspires.ftc.teamcode.robot.states;
 
-import org.firstinspires.ftc.teamcode.subsystems.ViperLift;
-import org.firstinspires.ftc.teamcode.subsystems.Arm;
-import org.firstinspires.ftc.teamcode.subsystems.Wrist;
-import org.firstinspires.ftc.teamcode.subsystems.Claw;
+import org.firstinspires.ftc.teamcode.robot.Robot;
 
-public class HomeState {
-    // Subsystems
-    private ViperLift viperLift;
-    private Arm arm;
-    private Wrist wrist;
-    private Claw claw;
-
+public class HomeState extends BaseState {
     // Steps in the state machine
     public enum Step {
         MOVE_TO_SAFETY_POSITION,
@@ -27,99 +18,81 @@ public class HomeState {
     }
 
     private Step currentStep;
-
-    // Safety and pickup positions
-    private static final double SAFETY_ARM_ANGLE = 0.0;     // Adjust as needed
-    private static final double SAFETY_WRIST_ANGLE = 125.0; // Adjust as needed
-    private static final double PICKUP_ARM_ANGLE = -14.0;   // Adjust as needed
-    private static final double PICKUP_WRIST_ANGLE = 125.0; // Adjust as needed
-
-    // Timer variables
+    private static final double SAFETY_ARM_ANGLE = 0.0;
+    private static final double SAFETY_WRIST_ANGLE = 125.0;
+    private static final double PICKUP_ARM_ANGLE = -14.0;
+    private static final double PICKUP_WRIST_ANGLE = 125.0;
     private long stepStartTime;
-    private static final long WAIT_DURATION_MS = 100; // 1-second wait
-
-    // State active flag
-    private boolean isActive = false;
+    private static final long WAIT_DURATION_MS = 100; // Wait duration in milliseconds
 
     // Constructor
-    public HomeState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw) {
-        this.viperLift = viperLift;
-        this.arm = arm;
-        this.wrist = wrist;
-        this.claw = claw;
+    public HomeState(Robot robot, boolean isAutonomous) {
+        super(robot, isAutonomous);
     }
 
-    // Activate the home state
-    public void start() {
-        isActive = true;
+    @Override
+    protected void start() {
         currentStep = Step.MOVE_TO_SAFETY_POSITION;
         executeCurrentStep();
     }
 
-    // Deactivate the home state
+    @Override
     public void deactivate() {
-        isActive = false;
+        super.deactivate();
     }
 
-    // Execute actions for the current step
     private void executeCurrentStep() {
         switch (currentStep) {
             case MOVE_TO_SAFETY_POSITION:
-                // Move arm and wrist to safety positions, open claw
-                arm.moveToAngle(SAFETY_ARM_ANGLE);
-                wrist.setAngle(SAFETY_WRIST_ANGLE);
-                claw.open();
+                robot.arm.moveToAngle(SAFETY_ARM_ANGLE);
+                robot.wrist.setAngle(SAFETY_WRIST_ANGLE);
+                robot.claw.open();
                 break;
 
             case WAIT_FOR_INPUT:
-                // Do nothing; waiting for right trigger input
+                // Waiting for right trigger input
                 break;
 
             case OPEN_CLAW_BEFORE_PICKUP:
-                // Ensure the claw is open
-                claw.open();
-                stepStartTime = System.currentTimeMillis(); // Start wait timer
+                robot.claw.open();
+                stepStartTime = System.currentTimeMillis();
                 break;
 
             case WAIT_AFTER_OPENING_CLAW:
-                // Do nothing; waiting for the timer to complete
+                // Waiting for the timer
                 break;
 
             case MOVE_WRIST_TO_PICKUP_POSITION:
-                // Move wrist to pickup position
-                wrist.setAngle(PICKUP_WRIST_ANGLE);
+                robot.wrist.setAngle(PICKUP_WRIST_ANGLE);
                 break;
 
             case MOVE_ARM_TO_PICKUP_POSITION:
-                // Move arm to pickup position
-                arm.moveToAngle(PICKUP_ARM_ANGLE);
+                robot.arm.moveToAngle(PICKUP_ARM_ANGLE);
                 break;
 
             case CLOSE_CLAW:
-                // Close the claw
-                claw.close();
-                stepStartTime = System.currentTimeMillis(); // Start wait timer
+                robot.claw.close();
+                stepStartTime = System.currentTimeMillis();
                 break;
 
             case WAIT_AFTER_CLOSING_CLAW:
-                // Do nothing; waiting for the timer to complete
+                // Waiting for the timer
                 break;
 
             case MOVE_BACK_TO_SAFETY:
-                // Move arm and wrist back to safety positions
-                arm.moveToAngle(SAFETY_ARM_ANGLE);
-                wrist.setAngle(SAFETY_WRIST_ANGLE);
+                robot.arm.moveToAngle(SAFETY_ARM_ANGLE);
+                robot.wrist.setAngle(SAFETY_WRIST_ANGLE);
                 break;
         }
     }
 
-    // Update method to be called periodically
+    @Override
     public void update() {
         if (!isActive) return;
 
         switch (currentStep) {
             case MOVE_TO_SAFETY_POSITION:
-                if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                if (robot.arm.isCloseToTarget() && robot.wrist.isAtTarget()) {
                     currentStep = Step.WAIT_FOR_INPUT;
                 }
                 break;
@@ -129,28 +102,27 @@ public class HomeState {
                 break;
 
             case OPEN_CLAW_BEFORE_PICKUP:
-                if (claw.isOpen()) {
+                if (robot.claw.isOpen()) {
                     currentStep = Step.WAIT_AFTER_OPENING_CLAW;
                 }
                 break;
 
             case WAIT_AFTER_OPENING_CLAW:
-                long elapsedTimeAfterOpen = System.currentTimeMillis() - stepStartTime;
-                if (elapsedTimeAfterOpen >= WAIT_DURATION_MS) {
+                if (System.currentTimeMillis() - stepStartTime >= WAIT_DURATION_MS) {
                     currentStep = Step.MOVE_WRIST_TO_PICKUP_POSITION;
                     executeCurrentStep();
                 }
                 break;
 
             case MOVE_WRIST_TO_PICKUP_POSITION:
-                if (wrist.isAtTarget()) {
+                if (robot.wrist.isAtTarget()) {
                     currentStep = Step.MOVE_ARM_TO_PICKUP_POSITION;
                     executeCurrentStep();
                 }
                 break;
 
             case MOVE_ARM_TO_PICKUP_POSITION:
-                if (arm.isCloseToTarget()) {
+                if (robot.arm.isCloseToTarget()) {
                     currentStep = Step.CLOSE_CLAW;
                     executeCurrentStep();
                 }
@@ -161,22 +133,21 @@ public class HomeState {
                 break;
 
             case WAIT_AFTER_CLOSING_CLAW:
-                long elapsedTimeAfterClose = System.currentTimeMillis() - stepStartTime;
-                if (elapsedTimeAfterClose >= WAIT_DURATION_MS) {
+                if (System.currentTimeMillis() - stepStartTime >= WAIT_DURATION_MS) {
                     currentStep = Step.MOVE_BACK_TO_SAFETY;
                     executeCurrentStep();
                 }
                 break;
 
             case MOVE_BACK_TO_SAFETY:
-                if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                if (robot.arm.isCloseToTarget() && robot.wrist.isAtTarget()) {
                     currentStep = Step.WAIT_FOR_INPUT;
                 }
                 break;
         }
     }
 
-    // Handle right trigger input
+    @Override
     public void onRightTriggerPressed() {
         if (isActive && currentStep == Step.WAIT_FOR_INPUT) {
             currentStep = Step.OPEN_CLAW_BEFORE_PICKUP;
@@ -184,13 +155,8 @@ public class HomeState {
         }
     }
 
-    // Check if the state is active
-    public boolean isActive() {
-        return isActive;
-    }
-
-    // Get current step (for telemetry or debugging)
-    public Step getCurrentStep() {
-        return currentStep;
+    @Override
+    public String getCurrentStep() {
+        return currentStep.toString();
     }
 }

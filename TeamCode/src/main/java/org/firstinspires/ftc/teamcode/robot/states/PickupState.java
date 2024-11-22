@@ -1,18 +1,9 @@
 // File: PickupState.java
 package org.firstinspires.ftc.teamcode.robot.states;
 
-import org.firstinspires.ftc.teamcode.subsystems.ViperLift;
-import org.firstinspires.ftc.teamcode.subsystems.Arm;
-import org.firstinspires.ftc.teamcode.subsystems.Wrist;
-import org.firstinspires.ftc.teamcode.subsystems.Claw;
+import org.firstinspires.ftc.teamcode.robot.Robot;
 
-public class PickupState {
-    // Subsystems
-    private ViperLift viperLift;
-    private Arm arm;
-    private Wrist wrist;
-    private Claw claw;
-
+public class PickupState extends BaseState {
     // Steps in the pickup process
     public enum Step {
         MOVE_TO_PICKUP_POSITION,
@@ -23,48 +14,36 @@ public class PickupState {
     }
 
     private Step currentStep;
-    private boolean isAutonomous;
-    private boolean isActive;
+    private long waitStartTime;
+    private static final long OPEN_CLAW_DELAY = 200; // Delay in milliseconds
 
     // Constructor
-    public PickupState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw) {
-        this(viperLift, arm, wrist, claw, false);
+    public PickupState(Robot robot, boolean isAutonomous) {
+        super(robot, isAutonomous);
     }
 
-    public PickupState(ViperLift viperLift, Arm arm, Wrist wrist, Claw claw, boolean isAutonomous) {
-        this.viperLift = viperLift;
-        this.arm = arm;
-        this.wrist = wrist;
-        this.claw = claw;
-        this.isAutonomous = isAutonomous;
-        this.currentStep = Step.MOVE_TO_PICKUP_POSITION;
-        this.isActive = false;
-    }
-
-    // Activate the pickup state
-    public void activate() {
-        isActive = true;
+    @Override
+    protected void start() {
         currentStep = Step.MOVE_TO_PICKUP_POSITION;
         executeCurrentStep();
     }
 
-    // Deactivate the pickup state
+    @Override
     public void deactivate() {
-        isActive = false;
+        super.deactivate();
         currentStep = Step.COMPLETED;
     }
 
-    // Execute actions for the current step
     private void executeCurrentStep() {
         switch (currentStep) {
             case MOVE_TO_PICKUP_POSITION:
                 // Lower Viper Lift if necessary
-                viperLift.moveToPosition(0);
+                robot.viperLift.moveToPosition(0);
 
                 // Move arm and wrist to positions suitable for picking up pieces
-                arm.moveToAngle(-14);      // Arm down to pick up
-                wrist.setAngle(90);        // Wrist angle for floor level
-                claw.open();               // Open claw to grab piece
+                robot.arm.moveToAngle(-20);      // Arm down to pick up
+                robot.wrist.setAngle(75);        // Wrist angle for floor level
+                robot.claw.open();               // Open claw to grab piece
                 break;
 
             case WAIT_FOR_DRIVE_FORWARD:
@@ -72,16 +51,18 @@ public class PickupState {
                 break;
 
             case CLOSE_CLAW:
-                claw.close();
+                robot.claw.close();
+                waitStartTime = System.currentTimeMillis();
                 break;
 
             case LIFT_UP:
-                arm.moveToAngle(90);       // Move arm back to idle position
-                viperLift.moveToPosition(0);
+                robot.arm.moveToAngle(90);       // Move arm back to idle position
+                robot.viperLift.moveToPosition(0);
                 break;
 
             case COMPLETED:
                 // Pickup process completed
+                deactivate();
                 break;
 
             default:
@@ -89,13 +70,13 @@ public class PickupState {
         }
     }
 
-    // Update method
+    @Override
     public void update() {
         if (!isActive) return;
 
         switch (currentStep) {
             case MOVE_TO_PICKUP_POSITION:
-                if (arm.isCloseToTarget() && wrist.isAtTarget() && viperLift.isCloseToTarget()) {
+                if (robot.arm.isCloseToTarget() && robot.wrist.isAtTarget() && robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.WAIT_FOR_DRIVE_FORWARD;
                     // In TeleOp, you might wait for user input here
                 }
@@ -107,14 +88,15 @@ public class PickupState {
                 break;
 
             case CLOSE_CLAW:
-                if (claw.isClosed()) {
+                if (System.currentTimeMillis() - waitStartTime >= OPEN_CLAW_DELAY) {
                     currentStep = Step.LIFT_UP;
                     executeCurrentStep();
+
                 }
                 break;
 
             case LIFT_UP:
-                if (arm.isCloseToTarget()) {
+                if (robot.arm.isCloseToTarget()) {
                     currentStep = Step.COMPLETED;
                     deactivate(); // Automatically deactivate after completion
                 }
@@ -136,9 +118,21 @@ public class PickupState {
             executeCurrentStep();
         }
     }
+    @Override
+    public void onRightTriggerPressed() {
+        if (currentStep == Step.WAIT_FOR_DRIVE_FORWARD) {
+            currentStep = Step.CLOSE_CLAW;
+            executeCurrentStep();
+        }
+    }
 
-    // Method to check if the pickup process is completed
+    @Override
     public boolean isCompleted() {
         return currentStep == Step.COMPLETED;
+    }
+
+    @Override
+    public String getCurrentStep() {
+        return currentStep.toString();
     }
 }

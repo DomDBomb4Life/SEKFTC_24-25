@@ -1,17 +1,9 @@
 // File: LevelOneAscentState.java
 package org.firstinspires.ftc.teamcode.robot.states;
 
-import org.firstinspires.ftc.teamcode.subsystems.ViperLift;
-import org.firstinspires.ftc.teamcode.subsystems.Arm;
+import org.firstinspires.ftc.teamcode.robot.Robot;
 
-/**
- * State for achieving a Level One Ascent.
- */
-public class LevelOneAscentState {
-    // Subsystems
-    private ViperLift viperLift;
-    private Arm arm;
-
+public class LevelOneAscentState extends BaseState {
     // Steps in the ascent process
     public enum Step {
         MOVE_TO_POSITIONS,    // Step 1
@@ -21,33 +13,24 @@ public class LevelOneAscentState {
     }
 
     private Step currentStep;
-    private boolean isAutonomous;
 
     // Constructor
-    public LevelOneAscentState(ViperLift viperLift, Arm arm) {
-        this(viperLift, arm, false);
+    public LevelOneAscentState(Robot robot, boolean isAutonomous) {
+        super(robot, isAutonomous);
     }
 
-    public LevelOneAscentState(ViperLift viperLift, Arm arm, boolean isAutonomous) {
-        this.viperLift = viperLift;
-        this.arm = arm;
-        this.isAutonomous = isAutonomous;
-        this.currentStep = Step.MOVE_TO_POSITIONS; // Initial step
-    }
-
-    // Start the ascent process
-    public void start() {
+    @Override
+    protected void start() {
         currentStep = Step.MOVE_TO_POSITIONS;
         executeCurrentStep();
     }
 
-    // Execute actions for the current step
     private void executeCurrentStep() {
         switch (currentStep) {
             case MOVE_TO_POSITIONS:
                 // Move ViperLift and Arm to desired positions
-                viperLift.moveToPosition(5000); // Adjust this value as needed
-                arm.moveToAngle(0);            // Adjust this angle as needed
+                robot.viperLift.moveToPosition(5000); // Adjust this value as needed
+                robot.arm.moveToAngle(0);            // Adjust this angle as needed
                 break;
 
             case WAIT_FOR_TRIGGER:
@@ -61,7 +44,7 @@ public class LevelOneAscentState {
 
             case MOVE_VIPER_AGAIN:
                 // Move ViperLift again
-                viperLift.moveToPosition(3930); // Adjust this value as needed
+                robot.viperLift.moveToPosition(3930); // Adjust this value as needed
                 break;
 
             case FINAL:
@@ -73,11 +56,13 @@ public class LevelOneAscentState {
         }
     }
 
-    // Update method to be called periodically
+    @Override
     public void update() {
+        if (!isActive) return;
+
         switch (currentStep) {
             case MOVE_TO_POSITIONS:
-                if (viperLift.isCloseToTarget() && arm.isCloseToTarget()) {
+                if (robot.viperLift.isCloseToTarget() && robot.arm.isCloseToTarget()) {
                     currentStep = Step.WAIT_FOR_TRIGGER;
                     executeCurrentStep();
                 }
@@ -88,8 +73,9 @@ public class LevelOneAscentState {
                 break;
 
             case MOVE_VIPER_AGAIN:
-                if (viperLift.isCloseToTarget()) {
+                if (robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.FINAL;
+                    deactivate();
                 }
                 break;
 
@@ -102,7 +88,7 @@ public class LevelOneAscentState {
         }
     }
 
-    // Method to handle right trigger input
+    @Override
     public void onRightTriggerPressed() {
         if (!isAutonomous && currentStep == Step.WAIT_FOR_TRIGGER) {
             currentStep = Step.MOVE_VIPER_AGAIN;
@@ -110,11 +96,13 @@ public class LevelOneAscentState {
         }
     }
 
-    // Get the current step (for telemetry or debugging)
-    public Step getCurrentStep() {
-        return currentStep;
+    @Override
+    public boolean isCompleted() {
+        return currentStep == Step.FINAL;
     }
 
-    // Check if the ascent process is completed
-
+    @Override
+    public String getCurrentStep() {
+        return currentStep.toString();
+    }
 }

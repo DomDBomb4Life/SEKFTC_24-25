@@ -24,9 +24,9 @@ public class FieldConstants {
     public static final Pose2d NET_POSITION = new Pose2d(48, -48, Math.toRadians(45));
 
     // Neutral Sample positions (assuming they are placed along the Y-axis)
-    public static final Pose2d SAMPLE_1_POSITION = new Pose2d(-24 - 1.25, 2.5 * TILE_SIZE + 10, Math.toRadians(90));
-    public static final Pose2d SAMPLE_2_POSITION = new Pose2d(-24 - 1.25, 2.5 * TILE_SIZE, Math.toRadians(90));
-    public static final Pose2d SAMPLE_3_POSITION = new Pose2d(-24 - 1.25, 2.5 * TILE_SIZE - 10, Math.toRadians(90));
+    public static final Pose2d SAMPLE_1_POSITION = new Pose2d(2.5 * TILE_SIZE + 10, -24 - 1.25, Math.toRadians(90));
+    public static final Pose2d SAMPLE_2_POSITION = new Pose2d(2.5 * TILE_SIZE, -24 - 1.25, Math.toRadians(90));
+    public static final Pose2d SAMPLE_3_POSITION = new Pose2d(2.5 * TILE_SIZE - 10, -24 - 1.25, Math.toRadians(90));
 
     // Ascent zone position
     public static final Pose2d ASCENT_ZONE_POSITION = new Pose2d(0, 36, 0);
