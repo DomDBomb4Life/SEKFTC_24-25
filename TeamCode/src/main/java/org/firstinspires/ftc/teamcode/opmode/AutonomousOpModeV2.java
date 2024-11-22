@@ -26,6 +26,9 @@ public class AutonomousOpModeV2 extends LinearOpMode {
     private Robot robot;
     private DriveTrainRR driveTrain;
 
+    // Add this boolean to control waiting for user input
+    private boolean waitForUserInput = true; // Set to false to disable waiting for 'A' between steps
+
     @Override
     public void runOpMode() {
         robot = new Robot(hardwareMap, true); // Pass true for isAutonomous
@@ -51,6 +54,8 @@ public class AutonomousOpModeV2 extends LinearOpMode {
         } else {
             executeRightStartingPosition();
         }
+
+        // Ensure the robot keeps updating after the main tasks
         while (opModeIsActive()) {
             robot.update();
             driveTrain.update();
@@ -77,9 +82,8 @@ public class AutonomousOpModeV2 extends LinearOpMode {
         driveToPosition(netPosition);
 
         logAndWait("Scoring Preloaded Specimen", null);
-        robot.setState(Robot.State.IDLE);
-        robot.setState(Robot.State.SCORING);
-        waitForRobotState("COMPLETED");
+        robot.setState(robot.scoringBasketState);
+        waitForRobotStateCompletion();
 
         Pose2d[] samplePositions = FieldConstants.getSamplePositions(teamColor);
 
@@ -88,22 +92,22 @@ public class AutonomousOpModeV2 extends LinearOpMode {
             driveToPosition(samplePosition);
 
             logAndWait("Picking Up Sample", null);
-            robot.setState(Robot.State.PICKUP);
-            waitForRobotState("WAIT_FOR_DRIVE_FORWARD");
+            robot.setState(robot.pickupState);
+            waitForRobotStateStep("WAIT_FOR_DRIVE_FORWARD");
 
             logAndWait("Driving Forward to Pick Up Sample", null);
             driveForward(4);
 
             logAndWait("Completing Pickup", null);
-            robot.onDriveForwardComplete();
-            waitForRobotState("COMPLETED");
+            robot.pickupState.onDriveForwardComplete();
+            waitForRobotStateCompletion();
 
             logAndWait("Returning to Net Position", netPosition);
             driveToPosition(netPosition);
 
             logAndWait("Scoring Sample", null);
-            robot.setState(Robot.State.SCORING);
-            waitForRobotState("COMPLETED");
+            robot.setState(robot.scoringBasketState);
+            waitForRobotStateCompletion();
         }
 
         Pose2d ascentZonePosition = FieldConstants.getAscentZonePosition(teamColor);
@@ -111,8 +115,8 @@ public class AutonomousOpModeV2 extends LinearOpMode {
         driveToPosition(ascentZonePosition);
 
         logAndWait("Starting Level One Ascent", null);
-        robot.setState(Robot.State.LEVEL_ONE_ASCENT);
-        waitForRobotState("FINAL");
+        robot.setState(robot.levelOneAscentState);
+        waitForRobotStateCompletion();
     }
 
     private void executeRightStartingPosition() {
@@ -127,7 +131,7 @@ public class AutonomousOpModeV2 extends LinearOpMode {
         telemetry.update();
 
         TrajectorySequence sequence = driveTrain.trajectorySequenceBuilder(driveTrain.getPoseEstimate())
-                .splineTo(target.vec(), target.getHeading())
+                .lineToLinearHeading(target)
                 .build();
 
         driveTrain.followTrajectorySequence(sequence);
@@ -160,26 +164,46 @@ public class AutonomousOpModeV2 extends LinearOpMode {
             telemetry.addData("Target Position", position);
         }
         telemetry.addData("Current Position", driveTrain.getPoseEstimate());
-        telemetry.addLine("Press 'A' to Continue...");
-        telemetry.update();
 
-        while (!gamepad1.a && opModeIsActive()) {
-            sleep(50); // Wait for button press
+        if (waitForUserInput) {
+            telemetry.addLine("Press 'A' to Continue...");
+            telemetry.update();
+
+            while (!gamepad1.a && opModeIsActive()) {
+                sleep(50); // Wait for button press
+            }
+
+            telemetry.addLine("Continuing...");
+        } else {
+            telemetry.update();
+            sleep(500); // Optional brief pause to allow telemetry to update
         }
-
-        telemetry.addLine("Continuing...");
         telemetry.update();
     }
 
-    private void waitForRobotState(String expectedState) {
-        while (opModeIsActive() && !robot.getCurrentSubstate().equals(expectedState)) {
-            telemetry.addLine("Waiting for Robot State...");
-            telemetry.addData("Expected State", expectedState);
-            telemetry.addData("Current State", robot.getCurrentSubstate());
+    private void waitForRobotStateCompletion() {
+        while (opModeIsActive() && !robot.isCurrentStateCompleted()) {
+            telemetry.addLine("Waiting for Robot State to Complete...");
+            telemetry.addData("Current State", robot.getCurrentStateName());
+            telemetry.addData("Current Step", robot.getCurrentSubstate());
             telemetry.update();
             robot.update();
+            driveTrain.update();
         }
-        telemetry.addLine("State Reached.");
+        telemetry.addLine("State Completed.");
+        telemetry.update();
+    }
+
+    private void waitForRobotStateStep(String expectedStep) {
+        while (opModeIsActive() && !robot.getCurrentSubstate().equals(expectedStep)) {
+            telemetry.addLine("Waiting for Robot State Step...");
+            telemetry.addData("Expected Step", expectedStep);
+            telemetry.addData("Current Step", robot.getCurrentSubstate());
+            telemetry.update();
+            robot.update();
+            driveTrain.update();
+        }
+        telemetry.addLine("Expected Step Reached.");
         telemetry.update();
     }
 }
