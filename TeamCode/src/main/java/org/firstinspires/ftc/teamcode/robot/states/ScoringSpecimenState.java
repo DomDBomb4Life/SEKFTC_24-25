@@ -15,10 +15,13 @@ public class ScoringSpecimenState {
 
     // Steps in the scoring specimen process
     public enum Step {
-        STEP_1,
-        STEP_2,
-        LOOP_LOWERING,
-        STEP_3,
+        LIFT_VIPERLIFT_UP,
+        MOVE_ARM_DOWN_FORWARDS,
+        WAIT_FOR_RIGHT_TRIGGER,
+        MOVE_VIPER_UP_TO_HOOK,
+        OPEN_CLAW,
+        MOVE_ARM_UP,
+        LOWER_VIPERLIFT_TO_BOTTOM,
         COMPLETED
     }
 
@@ -45,23 +48,30 @@ public class ScoringSpecimenState {
     // Execute actions for the current step
     private void executeCurrentStep() {
         switch (currentStep) {
-            case STEP_1:
-                // Raise Viper Lift to a certain height
-                viperLift.moveToPosition(5000); // Adjust this value as needed
+            case LIFT_VIPERLIFT_UP:
+                // Lift the ViperLift up to a high position
+                viperLift.moveToPosition(1680); // Adjust this value as needed
                 break;
 
-            case STEP_2:
-                // Move arm and wrist to set positions
-                arm.moveToAngle(90);   // Adjust angle as needed
-                wrist.setAngle(45);    // Adjust angle as needed
+            case MOVE_ARM_DOWN_FORWARDS:
+                // Move the arm down forwards to hang the specimen
+                arm.moveToAngle(45);   // Adjust angle as needed
+                wrist.setAngle(110);     // Adjust angle as needed
+                // Assuming claw is already holding the specimen
                 break;
 
             case LOOP_LOWERING:
                 // This step will be controlled by user input in the update method
                 break;
 
-            case STEP_3:
-                // Open the claw and lower Viper Lift all the way down
+            case MOVE_VIPER_UP_TO_HOOK:
+                // Rotate arm back a predetermined amount to hook the specimen
+                viperLift.moveToPosition(3550); // Adjust angle as needed
+                // Claw remains closed
+                break;
+
+            case OPEN_CLAW:
+                // Open the claw to release the specimen
                 claw.open();
                 viperLift.moveToPosition(0);
                 break;
@@ -92,22 +102,27 @@ public class ScoringSpecimenState {
                 }
                 break;
 
-            case LOOP_LOWERING:
-                if (primaryButtonPressed && !previousPrimaryButtonState) {
-                    if (isLowered) {
-                        // Raise Viper Lift slightly
-                        viperLift.moveToPosition(viperLift.getCurrentPosition() + 100); // Adjust increment as needed
-                        isLowered = false;
-                    } else {
-                        // Lower Viper Lift slightly
-                        viperLift.moveToPosition(viperLift.getCurrentPosition() - 100); // Adjust decrement as needed
-                        isLowered = true;
-                    }
-                }
+            case WAIT_FOR_RIGHT_TRIGGER:
+                // Waiting for right trigger input
+                break;
 
-                if (secondaryButtonPressed && !previousSecondaryButtonState) {
-                    // Proceed to next step
-                    currentStep = Step.STEP_3;
+            case MOVE_VIPER_UP_TO_HOOK:
+                if (viperLift.isCloseToTarget()) {
+                    currentStep = Step.OPEN_CLAW;
+                    executeCurrentStep();
+                }
+                break;
+
+            case OPEN_CLAW:
+                if (viperLift.isCloseToTarget()) {
+                    currentStep = Step.MOVE_ARM_UP;
+                    executeCurrentStep();
+                }
+                break;
+
+            case MOVE_ARM_UP:
+                if (arm.isCloseToTarget() && wrist.isAtTarget()) {
+                    currentStep = Step.LOWER_VIPERLIFT_TO_BOTTOM;
                     executeCurrentStep();
                 }
                 break;
@@ -128,7 +143,15 @@ public class ScoringSpecimenState {
         }
     }
 
-    // Get the current step
+    // Method to handle right trigger input
+    public void onRightTriggerPressed() {
+        if (currentStep == Step.WAIT_FOR_RIGHT_TRIGGER) {
+            currentStep = Step.MOVE_VIPER_UP_TO_HOOK;
+            executeCurrentStep();
+        }
+    }
+
+    // Get the current step (for telemetry or debugging)
     public Step getCurrentStep() {
         return currentStep;
     }
