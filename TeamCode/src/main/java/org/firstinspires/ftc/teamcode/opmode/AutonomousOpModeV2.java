@@ -87,28 +87,28 @@ public class AutonomousOpModeV2 extends LinearOpMode {
 
         Pose2d[] samplePositions = FieldConstants.getSamplePositions(teamColor);
 
-        // for (Pose2d samplePosition : samplePositions) {
-        //     logAndWait("Driving to Sample Position", samplePosition);
-        //     driveToPosition(samplePosition);
+        for (Pose2d samplePosition : samplePositions) {
+            logAndWait("Driving to Sample Position", samplePosition);
+            driveToPosition(samplePosition);
 
-        //     logAndWait("Picking Up Sample", null);
-        //     robot.setState(robot.pickupState);
-        //     waitForRobotStateStep("WAIT_FOR_DRIVE_FORWARD");
+            logAndWait("Picking Up Sample", null);
+            robot.setState(robot.pickupState);
+            waitForRobotStateStep("WAIT_FOR_DRIVE_FORWARD");
 
-        //     logAndWait("Driving Forward to Pick Up Sample", null);
-        //     driveForward(4);
+            logAndWait("Driving Forward to Pick Up Sample", null);
+            driveForward(4);
 
-        //     logAndWait("Completing Pickup", null);
-        //     robot.pickupState.onDriveForwardComplete();
-        //     waitForRobotStateCompletion();
+            logAndWait("Completing Pickup", null);
+            robot.pickupState.onDriveForwardComplete();
+            waitForRobotStateCompletion();
 
-        //     logAndWait("Returning to Net Position", netPosition);
-        //     driveToPosition(netPosition);
+            logAndWait("Returning to Net Position", netPosition);
+            driveToPosition(netPosition);
 
-        //     logAndWait("Scoring Sample", null);
-        //     robot.setState(robot.scoringBasketState);
-        //     waitForRobotStateCompletion();
-        // }
+            logAndWait("Scoring Sample", null);
+            robot.setState(robot.scoringBasketState);
+            waitForRobotStateCompletion();
+        }
 
         Pose2d ascentZonePosition = FieldConstants.getAscentZonePosition(teamColor);
         logAndWait("Driving to Ascent Zone Position", ascentZonePosition);
