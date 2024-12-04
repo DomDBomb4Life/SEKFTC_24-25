@@ -69,7 +69,11 @@ public class Robot {
 
     // Methods to handle button presses
     public void onHomeButtonPressed() {
+        if (currentState != homeState){
         setState(homeState);
+        } else{
+            setState(idleState);
+        }
     }
 
     public void onScoringButtonPressed() {
