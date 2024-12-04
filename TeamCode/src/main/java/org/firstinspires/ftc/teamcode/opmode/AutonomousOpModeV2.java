@@ -22,6 +22,8 @@ public class AutonomousOpModeV2 extends LinearOpMode {
 
     private TeamColor teamColor = TeamColor.BLUE;
     private StartingPosition startingPosition = StartingPosition.LEFT;
+    Pose2d startPose = FieldConstants.getStartingPose(teamColor, startingPosition);
+
 
     private Robot robot;
     private DriveTrainRR driveTrain;
@@ -42,7 +44,6 @@ public class AutonomousOpModeV2 extends LinearOpMode {
             sleep(100); // Prevent button spamming
         }
 
-        Pose2d startPose = FieldConstants.getStartingPose(teamColor, startingPosition);
         driveTrain.setPoseEstimate(startPose);
 
         waitForStart();
@@ -76,10 +77,11 @@ public class AutonomousOpModeV2 extends LinearOpMode {
     }
 
     private void executeLeftStartingPosition() {
+        Pose2d endPose;
         Pose2d netPosition = FieldConstants.getNetPosition(teamColor);
 
         logAndWait("Driving to Net Position", netPosition);
-        driveToPosition(netPosition);
+        endPose = driveToPosition(netPosition, startPose);
 
         logAndWait("Scoring Preloaded Specimen", null);
         robot.setState(robot.scoringBasketState);
@@ -89,21 +91,21 @@ public class AutonomousOpModeV2 extends LinearOpMode {
 
         for (Pose2d samplePosition : samplePositions) {
             logAndWait("Driving to Sample Position", samplePosition);
-            driveToPosition(samplePosition);
+            endPose = driveToPosition(samplePosition, endPose);
 
             logAndWait("Picking Up Sample", null);
             robot.setState(robot.pickupState);
             waitForRobotStateStep("WAIT_FOR_DRIVE_FORWARD");
 
             logAndWait("Driving Forward to Pick Up Sample", null);
-            driveForward(4);
+            endPose = driveForward(4, endPose);
 
             logAndWait("Completing Pickup", null);
             robot.pickupState.onDriveForwardComplete();
             waitForRobotStateCompletion();
 
             logAndWait("Returning to Net Position", netPosition);
-            driveToPosition(netPosition);
+            endPose = driveToPosition(netPosition, endPose);
 
             logAndWait("Scoring Sample", null);
             robot.setState(robot.scoringBasketState);
@@ -112,7 +114,7 @@ public class AutonomousOpModeV2 extends LinearOpMode {
 
         Pose2d ascentZonePosition = FieldConstants.getAscentZonePosition(teamColor);
         logAndWait("Driving to Ascent Zone Position", ascentZonePosition);
-        driveToPosition(ascentZonePosition);
+        endPose = driveToPosition(ascentZonePosition, endPose);
 
         logAndWait("Starting Level One Ascent", null);
         robot.setState(robot.levelOneAscentState);
@@ -124,13 +126,13 @@ public class AutonomousOpModeV2 extends LinearOpMode {
         telemetry.update();
     }
 
-    private void driveToPosition(Pose2d target) {
+    private Pose2d driveToPosition(Pose2d target, Pose2d start) {
         telemetry.addLine("Building Trajectory to Position...");
         telemetry.addData("Target Position", target);
         telemetry.addData("Current Position", driveTrain.getPoseEstimate());
         telemetry.update();
 
-        TrajectorySequence sequence = driveTrain.trajectorySequenceBuilder(driveTrain.getPoseEstimate())
+        TrajectorySequence sequence = driveTrain.trajectorySequenceBuilder(start)
                 .lineToLinearHeading(target)
                 .build();
 
@@ -139,15 +141,16 @@ public class AutonomousOpModeV2 extends LinearOpMode {
         telemetry.addLine("Trajectory Complete.");
         telemetry.addData("Final Position", driveTrain.getPoseEstimate());
         telemetry.update();
+        return sequence.end();
     }
 
-    private void driveForward(double distance) {
+    private Pose2d driveForward(double distance, Pose2d start) {
         telemetry.addLine("Building Forward Trajectory...");
         telemetry.addData("Distance", distance);
         telemetry.addData("Current Position", driveTrain.getPoseEstimate());
         telemetry.update();
 
-        TrajectorySequence forwardSequence = driveTrain.trajectorySequenceBuilder(driveTrain.getPoseEstimate())
+        TrajectorySequence forwardSequence = driveTrain.trajectorySequenceBuilder(start)
                 .forward(distance)
                 .build();
 
@@ -156,6 +159,7 @@ public class AutonomousOpModeV2 extends LinearOpMode {
         telemetry.addLine("Forward Trajectory Complete.");
         telemetry.addData("Final Position", driveTrain.getPoseEstimate());
         telemetry.update();
+        return forwardSequence.end();
     }
 
     private void logAndWait(String message, Pose2d position) {

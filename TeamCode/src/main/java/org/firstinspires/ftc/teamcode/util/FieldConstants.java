@@ -14,25 +14,24 @@ public class FieldConstants {
     public static final double TILE_SIZE = 24.0;
 
     // Distance from robot to wall
-    public static final double WALL_DISTANCE = 7.55;
+    public static final double WALL_DISTANCE = 7.55+2.0;
 
     // Starting positions (defined for one side)
-    public static final Pose2d LEFT_START = new Pose2d(1.5 * TILE_SIZE, -(2 * TILE_SIZE + WALL_DISTANCE), Math.toRadians(90)); // Facing positive X
-    public static final Pose2d RIGHT_START = new Pose2d(-0.5 * TILE_SIZE, -(2 * TILE_SIZE + WALL_DISTANCE), Math.toRadians(90));
+    public static final Pose2d LEFT_START = new Pose2d(1.5 * TILE_SIZE, (2 * TILE_SIZE + WALL_DISTANCE), Math.toRadians(270)); // Facing positive X
+    public static final Pose2d RIGHT_START = new Pose2d(-0.5 * TILE_SIZE, (2 * TILE_SIZE + WALL_DISTANCE), Math.toRadians(270));
 
     // Net position
-    public static final Pose2d NET_POSITION = new Pose2d(48, -48, Math.toRadians(45));
+    public static final Pose2d NET_POSITION = new Pose2d(56, 56, Math.toRadians(225));
 
     // Neutral Sample positions (assuming they are placed along the Y-axis)
-    public static final Pose2d SAMPLE_1_POSITION = new Pose2d(2.5 * TILE_SIZE + 10, -24 - 1.25, Math.toRadians(90));
-    public static final Pose2d SAMPLE_2_POSITION = new Pose2d(2.5 * TILE_SIZE, -24 - 1.25, Math.toRadians(90));
-    public static final Pose2d SAMPLE_3_POSITION = new Pose2d(2.5 * TILE_SIZE - 10, -24 - 1.25, Math.toRadians(90));
+    public static final Pose2d SAMPLE_1_POSITION = new Pose2d(2.5 * TILE_SIZE - 10, 44, Math.toRadians(270));
+    public static final Pose2d SAMPLE_2_POSITION = new Pose2d(2.5 * TILE_SIZE, 44, Math.toRadians(270));
+    public static final Pose2d SAMPLE_3_POSITION = new Pose2d(2.5 * TILE_SIZE + 10, 44, Math.toRadians(270));
 
     // Ascent zone position
-    public static final Pose2d ASCENT_ZONE_POSITION = new Pose2d(0, 36, 0);
+    public static final Pose2d ASCENT_ZONE_POSITION = new Pose2d(2*TILE_SIZE, 0, 180);
 
     // Adjustments for headings
-    public static final double NET_HEADING = Math.toRadians(45); // Adjust as needed
 
     /**
      * Mirrors a pose over the Y-axis to get the equivalent position on the other side of the field.
@@ -111,7 +110,9 @@ public class FieldConstants {
      * @return An array of sample positions.
      */
     public static Pose2d[] getSamplePositions(TeamColor teamColor) {
-        Pose2d[] samples = new Pose2d[]{SAMPLE_1_POSITION, SAMPLE_2_POSITION, SAMPLE_3_POSITION};
+        Pose2d[] samples = new Pose2d[]{SAMPLE_1_POSITION, SAMPLE_2_POSITION
+//                , SAMPLE_3_POSITION
+        };
 
         if (teamColor == TeamColor.RED) {
             for (int i = 0; i < samples.length; i++) {
