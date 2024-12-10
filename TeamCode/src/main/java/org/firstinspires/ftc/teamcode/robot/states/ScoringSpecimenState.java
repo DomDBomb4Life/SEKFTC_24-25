@@ -41,7 +41,7 @@ public class ScoringSpecimenState extends BaseState {
         switch (currentStep) {
             case LIFT_VIPERLIFT_UP:
                 // Lift the ViperLift up to a high position
-                robot.viperLift.moveToPosition(3500); // Adjust this value as needed
+                robot.viperLift.moveToPosition(1987); // Adjust this value as needed
                 break;
 
             case MOVE_ARM_DOWN_FORWARDS:
@@ -57,7 +57,8 @@ public class ScoringSpecimenState extends BaseState {
 
             case MOVE_VIPER_LIFT_UP_TO_HOOK:
                 // Rotate arm back a predetermined amount to hook the specimen
-                robot.viperLift.moveToPosition(3750); // Adjust angle as needed
+                robot.viperLift.moveToPosition(4000); // Adjust angle as needed
+                robot.arm.moveToAngle(105);   // Adjust angle as needed
                 // Claw remains closed
                 break;
 

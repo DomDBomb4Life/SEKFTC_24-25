@@ -81,11 +81,7 @@ public class Robot {
     }
 
     public void onScoringSpecimenButtonPressed() {
-        if (currentState == scoringSpecimenState) {
-            scoringSpecimenState.onPrimaryButtonPressed();
-        } else {
-            setState(scoringSpecimenState);
-        }
+        setState(scoringSpecimenState);
     }
 
     public void onObservationButtonPressed() {

@@ -29,7 +29,7 @@ public class LevelOneAscentState extends BaseState {
         switch (currentStep) {
             case MOVE_TO_POSITIONS:
                 // Move ViperLift and Arm to desired positions
-                robot.viperLift.moveToPosition(5000); // Adjust this value as needed
+                robot.viperLift.moveToPosition(3285); // Adjust this value as needed
                 robot.arm.moveToAngle(0);            // Adjust this angle as needed
                 break;
 

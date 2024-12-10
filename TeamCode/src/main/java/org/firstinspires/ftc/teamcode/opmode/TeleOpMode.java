@@ -93,15 +93,15 @@ public class TeleOpMode extends LinearOpMode {
         }
         previousXButtonPressed = gamepad2.x;
 
-        if (isButtonJustPressed(gamepad2.dpad_up, previousDpadUpPressed)) {
+        if (isButtonJustPressed(gamepad2.dpad_down, previousDpadDownPressed)) {
             robot.onObservationButtonPressed();
         }
-        previousDpadUpPressed = gamepad2.dpad_up;
+        previousDpadDownPressed = gamepad2.dpad_down;
 
-        if (isButtonJustPressed(gamepad2.dpad_down, previousDpadDownPressed)) {
+        if (isButtonJustPressed(gamepad2.dpad_up, previousDpadUpPressed)) {
             robot.onScoringSpecimenButtonPressed();
         }
-        previousDpadDownPressed = gamepad2.dpad_down;
+        previousDpadUpPressed = gamepad2.dpad_up;
 
         if (isButtonJustPressed(gamepad2.left_bumper, previousLeftBumperPressed)) {
             robot.onPickupButtonPressed();

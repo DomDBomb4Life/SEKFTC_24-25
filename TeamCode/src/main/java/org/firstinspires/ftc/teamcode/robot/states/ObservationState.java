@@ -18,7 +18,6 @@ public class ObservationState extends BaseState {
 
     private Step currentStep;
     private long waitStartTime;
-    private boolean isActive = false;
     private static final long OPEN_CLAW_DELAY = 250;
 
     // Constructor
@@ -42,12 +41,12 @@ public class ObservationState extends BaseState {
         switch (currentStep) {
             case LIFT_VIPERLIFT_TO_PRE_HEIGHT:
                 // Raise ViperLift to predetermined height
-                robot.viperLift.moveToPosition(670); // Adjust as needed
+                robot.viperLift.moveToPosition(553); // Adjust as needed
                 break;
 
             case MOVE_ARM_DOWN_BACKWARDS_AND_OPEN_CLAW:
                 // Move arm down backwards and open claw
-                robot.arm.moveToAngle(178); // Adjust angle as needed for backwards position
+                robot.arm.moveToAngle(167); // Adjust angle as needed for backwards position
                 robot.wrist.setAngle(90);   // Adjust wrist angle as needed
                 robot.claw.open();
                 break;
@@ -64,7 +63,7 @@ public class ObservationState extends BaseState {
 
             case LIFT_VIPERLIFT_TO_SECOND_HEIGHT:
                 // Lift ViperLift up more to take specimen off the wall
-                robot.viperLift.moveToPosition(950); // Adjust as needed
+                robot.viperLift.moveToPosition(553); // Adjust as needed
                 break;
 
             case MOVE_ARM_UP:

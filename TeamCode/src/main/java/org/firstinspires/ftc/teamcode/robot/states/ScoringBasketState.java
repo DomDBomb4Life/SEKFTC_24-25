@@ -40,11 +40,11 @@ public class ScoringBasketState extends BaseState {
     private void executeCurrentStep() {
         switch (currentStep) {
             case LIFT_UP:
-                robot.viperLift.moveToPosition(8080);
+                robot.viperLift.moveToPosition(7065);
                 break;
 
             case MOVE_ARM_WRIST:
-                robot.arm.moveToAngle(148);
+                robot.arm.moveToAngle(123);
                 robot.wrist.setAngle(90);
                 break;
 

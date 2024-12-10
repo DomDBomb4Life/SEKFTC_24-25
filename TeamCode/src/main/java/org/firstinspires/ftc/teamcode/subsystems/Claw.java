@@ -13,7 +13,7 @@ public class Claw {
     private static final double CLAW_MIN_POSITION = 0.0;     // Adjust based on your hardware
     private static final double CLAW_MAX_POSITION = 1.0;     // Adjust based on your hardware
 
-    private static final double closed = -25.0;
+    private static final double closed = -37.0;
 
     private static final double open = 10.0;
 

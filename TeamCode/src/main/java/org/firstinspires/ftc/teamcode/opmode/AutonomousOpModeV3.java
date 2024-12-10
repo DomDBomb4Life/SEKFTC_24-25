@@ -104,8 +104,8 @@ public class AutonomousOpModeV3 extends OpMode {
             seqBuilder.lineToLinearHeading(samplePosition);
 
             // Add marker to set robot state to pickupState
-            seqBuilder.addTemporalMarkerOffset(0, () -> {
-                robot.setState(robot.pickupState);
+            seqBuilder.addTemporalMarkerOffset(-0.5, () -> {
+                robot.setState(robot.homeState);
             });
 
             // Wait for robot to reach "WAIT_FOR_DRIVE_FORWARD"
@@ -113,11 +113,10 @@ public class AutonomousOpModeV3 extends OpMode {
             seqBuilder.waitSeconds(2.0);
 
             // Drive forward 4 inches
-            seqBuilder.forward(2);
 
             // Add marker to call robot.pickupState.onDriveForwardComplete()
-            seqBuilder.addTemporalMarkerOffset(0.5,() -> {
-                robot.pickupState.onDriveForwardComplete();
+            seqBuilder.addTemporalMarkerOffset(0.0,() -> {
+                robot.onRightTriggerPressed();
             });
 
             // Wait for robot state completion
