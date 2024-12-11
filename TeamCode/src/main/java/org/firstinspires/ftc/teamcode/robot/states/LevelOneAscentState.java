@@ -46,8 +46,6 @@ public class LevelOneAscentState extends BaseState {
 
             case MOVE_VIPER_AGAIN:
                 if (robot.arm.isCloseToTarget()) {
-                    robot.viperLift.moveToPosition(3930);
-                    currentStep = Step.COMPLETED;
                 }
                 break;
 
@@ -61,7 +59,7 @@ public class LevelOneAscentState extends BaseState {
     public void onUserInput(UserInput input) {
         if (!isAutonomous && input == UserInput.RIGHT_TRIGGER && currentStep == Step.WAIT_FOR_TRIGGER) {
             currentStep = Step.MOVE_VIPER_AGAIN;
-            robot.arm.moveToAngle(45);
+            robot.arm.moveToAngle(50);
         }
     }
 

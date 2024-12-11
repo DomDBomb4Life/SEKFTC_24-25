@@ -24,7 +24,7 @@ public class ScoringBasketState extends BaseState {
     @Override
     protected void start() {
         currentStep = Step.LIFT_UP;
-        robot.viperLift.moveToPosition(7065);
+        robot.viperLift.moveToPosition(7100);
     }
 
     @Override
@@ -48,10 +48,16 @@ public class ScoringBasketState extends BaseState {
             case MOVE_ARM_WRIST:
                 if (robot.arm.isCloseToTarget() && robot.wrist.isAtTarget()) {
                     currentStep = Step.WAIT_TO_OPEN_CLAW;
+                    if (isAutonomous) {
+                        waitStartTime = System.currentTimeMillis();
+                    }
                 }
                 break;
 
             case WAIT_TO_OPEN_CLAW:
+                if (isAutonomous && (System.currentTimeMillis() - waitStartTime >= 200)) {
+                    currentStep = Step.OPEN_CLAW;
+                }
                 // Wait for input in TeleOp or delay in Autonomous
                 break;
 

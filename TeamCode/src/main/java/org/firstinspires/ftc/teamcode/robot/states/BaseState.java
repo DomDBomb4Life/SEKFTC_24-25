@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.robot.states;
 
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
-public abstract class BaseState implements State {
+public class BaseState implements State {
     protected Robot robot;
     protected boolean isAutonomous;
     protected boolean isActive = false;
@@ -24,11 +24,16 @@ public abstract class BaseState implements State {
         cleanup();
     }
 
+    @Override
+    public void onUpdate() {
+        
+    }
+
     // start() for initializing state logic on entry
-    protected abstract void start();
+    protected void start(){};
 
     // cleanup() for resetting any resources on exit
-    protected abstract void cleanup();
+    protected void cleanup(){};
 
     @Override
     public void onUserInput(UserInput input) {

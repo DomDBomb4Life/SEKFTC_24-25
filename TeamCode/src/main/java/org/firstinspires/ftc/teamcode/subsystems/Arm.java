@@ -21,15 +21,19 @@ public class Arm {
     private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
 
     // Zero position angle (where encoder count is zero)
-    private static final double ZERO_POSITION_ANGLE = -18.0;
+    private double ZERO_POSITION_ANGLE = -18.0;
 
     // Target angle
     private double targetAngle = ZERO_POSITION_ANGLE; // Start at -18 degrees as default
 
     // Constructor
-    public Arm(HardwareMap hardwareMap) {
+    public Arm(HardwareMap hardwareMap, Boolean isAutonomous) {
         // Initialize motor
         armMotor = hardwareMap.get(DcMotorEx.class, "Arm");
+
+        if (isAutonomous){
+            ZERO_POSITION_ANGLE = 137.0;
+        }
 
         // Motor configuration
         configureMotor(armMotor);

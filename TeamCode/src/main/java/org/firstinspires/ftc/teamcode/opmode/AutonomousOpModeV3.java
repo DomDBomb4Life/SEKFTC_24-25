@@ -132,13 +132,19 @@ public class AutonomousOpModeV3 extends OpMode {
             seqBuilder.waitSeconds(4);
         }
 
+
+        // Add marker to set robot state to levelOneAscentState
+        seqBuilder.addTemporalMarkerOffset(1, () -> {
+            robot.setState(robot.levelOneAscentState);
+        });
+        
         // Drive to Ascent Zone Position
         seqBuilder.lineToLinearHeading(ascentZonePosition);
 
-        // Add marker to set robot state to levelOneAscentState
-        seqBuilder.addTemporalMarker(() -> {
-            robot.setState(robot.levelOneAscentState);
+        seqBuilder.addTemporalMarkerOffset(0.0,() -> {
+            robot.onRightTriggerPressed();
         });
+
 
         // Build the trajectory sequence
         TrajectorySequence sequence = seqBuilder.build();

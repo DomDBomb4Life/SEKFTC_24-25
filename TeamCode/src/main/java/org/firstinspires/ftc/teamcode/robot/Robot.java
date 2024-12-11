@@ -29,7 +29,7 @@ public class Robot {
     public Robot(HardwareMap hardwareMap, boolean isAutonomous) {
         claw = new Claw(hardwareMap);
         wrist = new Wrist(hardwareMap, claw);
-        arm = new Arm(hardwareMap);
+        arm = new Arm(hardwareMap, isAutonomous);
         viperLift = new ViperLift(hardwareMap);
 
         idleState = new IdleState(this, isAutonomous);
