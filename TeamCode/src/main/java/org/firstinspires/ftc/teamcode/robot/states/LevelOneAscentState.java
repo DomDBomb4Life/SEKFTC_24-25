@@ -1,20 +1,17 @@
-// File: LevelOneAscentState.java
 package org.firstinspires.ftc.teamcode.robot.states;
 
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 public class LevelOneAscentState extends BaseState {
-    // Steps in the ascent process
     public enum Step {
-        MOVE_TO_POSITIONS,    // Step 1
-        WAIT_FOR_TRIGGER,     // Step 2 (skipped in Autonomous)
-        MOVE_VIPER_AGAIN,     // Step 3
-        FINAL                 // Step 4
+        MOVE_TO_POSITIONS,
+        WAIT_FOR_TRIGGER,
+        MOVE_VIPER_AGAIN,
+        COMPLETED
     }
 
     private Step currentStep;
 
-    // Constructor
     public LevelOneAscentState(Robot robot, boolean isAutonomous) {
         super(robot, isAutonomous);
     }
@@ -22,83 +19,55 @@ public class LevelOneAscentState extends BaseState {
     @Override
     protected void start() {
         currentStep = Step.MOVE_TO_POSITIONS;
-        executeCurrentStep();
-    }
-
-    private void executeCurrentStep() {
-        switch (currentStep) {
-            case MOVE_TO_POSITIONS:
-                // Move ViperLift and Arm to desired positions
-                robot.viperLift.moveToPosition(3285); // Adjust this value as needed
-                robot.arm.moveToAngle(0);            // Adjust this angle as needed
-                break;
-
-            case WAIT_FOR_TRIGGER:
-                if (isAutonomous) {
-                    // Skip waiting for trigger in Autonomous
-                    currentStep = Step.MOVE_VIPER_AGAIN;
-                    executeCurrentStep();
-                }
-                // In TeleOp, wait for user input
-                break;
-
-            case MOVE_VIPER_AGAIN:
-                // Move ViperLift again
-                robot.viperLift.moveToPosition(3930); // Adjust this value as needed
-                break;
-
-            case FINAL:
-                // Do nothing; state remains here
-                break;
-
-            default:
-                break;
-        }
+        robot.viperLift.moveToPosition(0);
+        robot.arm.moveToAngle(40);
+        robot.wrist.setAngle(60);
     }
 
     @Override
-    public void update() {
+    protected void cleanup() {
+        // No special cleanup
+    }
+
+    @Override
+    public void onUpdate() {
         if (!isActive) return;
 
         switch (currentStep) {
             case MOVE_TO_POSITIONS:
                 if (robot.viperLift.isCloseToTarget() && robot.arm.isCloseToTarget()) {
-                    currentStep = Step.WAIT_FOR_TRIGGER;
-                    executeCurrentStep();
+                    currentStep = isAutonomous ? Step.MOVE_VIPER_AGAIN : Step.WAIT_FOR_TRIGGER;
                 }
                 break;
 
             case WAIT_FOR_TRIGGER:
-                // In Autonomous, this step is skipped
+                // Wait for input in TeleOp
                 break;
 
             case MOVE_VIPER_AGAIN:
-                if (robot.viperLift.isCloseToTarget()) {
-                    currentStep = Step.FINAL;
-                    deactivate();
+                if (robot.arm.isCloseToTarget()) {
+                    robot.viperLift.moveToPosition(3930);
+                    currentStep = Step.COMPLETED;
                 }
                 break;
 
-            case FINAL:
-                // Do nothing; state remains here
-                break;
-
-            default:
+            case COMPLETED:
+                // Done
                 break;
         }
     }
 
     @Override
-    public void onRightTriggerPressed() {
-        if (!isAutonomous && currentStep == Step.WAIT_FOR_TRIGGER) {
+    public void onUserInput(UserInput input) {
+        if (!isAutonomous && input == UserInput.RIGHT_TRIGGER && currentStep == Step.WAIT_FOR_TRIGGER) {
             currentStep = Step.MOVE_VIPER_AGAIN;
-            executeCurrentStep();
+            robot.arm.moveToAngle(45);
         }
     }
 
     @Override
     public boolean isCompleted() {
-        return currentStep == Step.FINAL;
+        return currentStep == Step.COMPLETED;
     }
 
     @Override

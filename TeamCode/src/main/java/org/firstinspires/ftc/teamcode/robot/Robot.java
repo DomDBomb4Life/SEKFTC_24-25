@@ -1,4 +1,3 @@
-// File: Robot.java
 package org.firstinspires.ftc.teamcode.robot;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -8,14 +7,13 @@ import org.firstinspires.ftc.teamcode.subsystems.*;
 
 public class Robot {
 
-    // Subsystems
     public final ViperLift viperLift;
     public final Arm arm;
     public final Claw claw;
     public final Wrist wrist;
 
-    // State instances
-    private BaseState currentState;
+    // States
+    private StateController stateController;
     public IdleState idleState;
     public HomeState homeState;
     public ScoringBasketState scoringBasketState;
@@ -24,19 +22,16 @@ public class Robot {
     public ObservationState observationState;
     public LevelOneAscentState levelOneAscentState;
 
-    // Constructor
     public Robot(HardwareMap hardwareMap) {
         this(hardwareMap, false);
     }
 
     public Robot(HardwareMap hardwareMap, boolean isAutonomous) {
-        // Initialize subsystems
         claw = new Claw(hardwareMap);
         wrist = new Wrist(hardwareMap, claw);
         arm = new Arm(hardwareMap);
         viperLift = new ViperLift(hardwareMap);
 
-        // Initialize states
         idleState = new IdleState(this, isAutonomous);
         homeState = new HomeState(this, isAutonomous);
         scoringBasketState = new ScoringBasketState(this, isAutonomous);
@@ -45,55 +40,15 @@ public class Robot {
         observationState = new ObservationState(this, isAutonomous);
         levelOneAscentState = new LevelOneAscentState(this, isAutonomous);
 
-        // Set initial state
-        setState(idleState);
+        stateController = new StateController(idleState);
     }
 
-    // Update method called periodically
     public void update() {
-        if (currentState != null) {
-            currentState.update();
-        }
+        stateController.update();
     }
 
-    // Method to set the current state
-    public void setState(BaseState newState) {
-        if (currentState != null) {
-            currentState.deactivate();
-        }
-        currentState = newState;
-        if (currentState != null) {
-            currentState.activate();
-        }
-    }
-
-    // Methods to handle button presses
-    public void onHomeButtonPressed() {
-        if (currentState != homeState){
-        setState(homeState);
-        } else{
-            setState(idleState);
-        }
-    }
-
-    public void onScoringButtonPressed() {
-        setState(scoringBasketState);
-    }
-
-    public void onScoringSpecimenButtonPressed() {
-        setState(scoringSpecimenState);
-    }
-
-    public void onObservationButtonPressed() {
-        setState(observationState);
-    }
-
-    public void onLevelOneAscentButtonPressed() {
-        setState(levelOneAscentState);
-    }
-
-    public void onPickupButtonPressed() {
-        setState(pickupState);
+    public void setState(State newState) {
+        stateController.setState(newState);
     }
 
     public void onClawToggleButtonPressed() {
@@ -105,29 +60,48 @@ public class Robot {
     }
 
     public void onRightTriggerPressed() {
-        if (currentState != null) {
-            currentState.onRightTriggerPressed();
+        stateController.handleUserInput(UserInput.RIGHT_TRIGGER);
+    }
+
+    public void onHomeButtonPressed() {
+        if (stateController.getCurrentStateName().equals(homeState.getClass().getSimpleName())) {
+            // If already in HomeState, return to Idle
+            stateController.setState(idleState);
+        } else {
+            stateController.setState(homeState);
         }
+    }
+
+    public void onScoringButtonPressed() {
+        stateController.setState(scoringBasketState);
+    }
+
+    public void onScoringSpecimenButtonPressed() {
+        stateController.setState(scoringSpecimenState);
+    }
+
+    public void onObservationButtonPressed() {
+        stateController.setState(observationState);
+    }
+
+    public void onLevelOneAscentButtonPressed() {
+        stateController.setState(levelOneAscentState);
+    }
+
+    public void onPickupButtonPressed() {
+        stateController.setState(pickupState);
     }
 
     public String getCurrentStateName() {
-        if (currentState != null) {
-            return currentState.getClass().getSimpleName();
-        }
-        return "None";
+        return stateController.getCurrentStateName();
     }
 
     public String getCurrentSubstate() {
-        if (currentState != null) {
-            return currentState.getCurrentStep();
-        }
-        return "None";
+        return stateController.getCurrentSubstate();
     }
 
     public boolean isCurrentStateCompleted() {
-        if (currentState != null) {
-            return currentState.isCompleted();
-        }
-        return false;
+        // If the current state completed last loop, it would've returned to idle
+        return stateController.getCurrentStateName().equals("IdleState");
     }
 }

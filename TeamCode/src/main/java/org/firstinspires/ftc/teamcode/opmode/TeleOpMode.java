@@ -1,4 +1,3 @@
-// File: TeleOpMode.java
 package org.firstinspires.ftc.teamcode.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -13,7 +12,6 @@ public class TeleOpMode extends LinearOpMode {
     private DriveTrain driveTrain;
     private Robot robot;
 
-    // Variable to track dev mode
     private boolean devMode = false;
 
     // Button toggle states
@@ -29,19 +27,13 @@ public class TeleOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        // Initialize the drivetrain
         driveTrain = new DriveTrain(hardwareMap);
-
-        // Initialize the robot
         robot = new Robot(hardwareMap);
 
         waitForStart();
 
         while (opModeIsActive()) {
-            // Update robot systems
             robot.update();
-
-            // Handle dev mode toggle
             handleDevModeToggle();
 
             if (devMode) {
@@ -49,9 +41,13 @@ public class TeleOpMode extends LinearOpMode {
             } else {
                 handleNormalModeControls();
             }
+
             handleCommonControls();
 
             // Update telemetry
+            telemetry.addData("Mode", devMode ? "Dev Mode" : "Normal Mode");
+            telemetry.addData("State", robot.getCurrentStateName());
+            telemetry.addData("Substate", robot.getCurrentSubstate());
             telemetry.update();
         }
     }
@@ -107,36 +103,28 @@ public class TeleOpMode extends LinearOpMode {
             robot.onPickupButtonPressed();
         }
         previousLeftBumperPressed = gamepad2.left_bumper;
-
-        // Telemetry for normal mode
-        telemetry.addData("Current State", robot.getCurrentStateName());
-        telemetry.addData("Substate", robot.getCurrentSubstate());
     }
 
     private void handleDevModeControls() {
-        // Threshold to prevent unintentional adjustments
         double threshold = 0.05;
 
         // Scale factors for adjustments
-        double armIncrementScale = 1.0;       // Degrees per input unit
+        double armIncrementScale = 1.0;        // Degrees per input unit
         int liftIncrementScale = 50;          // Encoder counts per input unit
-        double servoIncrementScale = 1.0;    // Degrees per input unit
+        double servoIncrementScale = 1.0;     // Degrees per input unit
 
-        // Manual control of ViperLift
-        double liftInput = -gamepad2.left_stick_y; // Up is negative
+        double liftInput = -gamepad2.left_stick_y;
         if (Math.abs(liftInput) > threshold && robot.viperLift.isCloseToTarget()) {
             int liftIncrement = (int) (liftInput * liftIncrementScale);
             robot.viperLift.adjustTargetPosition(liftIncrement);
         }
 
-        // Manual control of Arm
-        double armInput = -gamepad2.right_stick_y; // Up is negative
+        double armInput = -gamepad2.right_stick_y;
         if (Math.abs(armInput) > threshold && robot.arm.isCloseToTarget()) {
             double armIncrement = armInput * armIncrementScale;
             robot.arm.adjustTargetAngle(armIncrement);
         }
 
-        // Manual control of Wrist
         double wristInput = 0.0;
         if (gamepad2.dpad_up) {
             wristInput = servoIncrementScale;
@@ -147,7 +135,6 @@ public class TeleOpMode extends LinearOpMode {
             robot.wrist.adjustAngle(wristInput);
         }
 
-        // Manual control of Claw
         double clawInput = 0.0;
         if (gamepad2.dpad_right) {
             clawInput = servoIncrementScale;
@@ -157,28 +144,16 @@ public class TeleOpMode extends LinearOpMode {
         if (clawInput != 0.0) {
             robot.claw.adjustAngle(clawInput);
         }
-
-        // Telemetry for dev mode
-        telemetry.addData("Mode", "Dev Mode");
-        telemetry.addData("ViperLift Position", robot.viperLift.getCurrentPosition());
-        telemetry.addData("ViperLift Target", robot.viperLift.getTargetPosition());
-        telemetry.addData("Arm Angle", robot.arm.getCurrentAngle());
-        telemetry.addData("Arm Target", robot.arm.getTargetAngle());
-        telemetry.addData("Wrist Angle", robot.wrist.getAngle());
-        telemetry.addData("Wrist Target", robot.wrist.getTargetAngle());
-        telemetry.addData("Claw Angle", robot.claw.getAngle());
-        telemetry.addData("Claw Target", robot.claw.getTargetAngle());
     }
 
     private void handleCommonControls() {
-        // Drivetrain control
         double leftStickY = -gamepad1.left_stick_y;
         double leftStickX = -gamepad1.left_stick_x;
         double rightStickX = gamepad1.right_stick_x;
 
         driveTrain.updateSpeed(gamepad1.left_trigger, gamepad1.right_trigger);
-        driveTrain.drive(leftStickY, leftStickX, rightStickX);   
-        
+        driveTrain.drive(leftStickY, leftStickX, rightStickX);
+
         telemetry.addData("Mode", devMode ? "Dev Mode" : "Normal Mode");
         telemetry.addData("ViperLift Position", robot.viperLift.getCurrentPosition());
         telemetry.addData("ViperLift Target", robot.viperLift.getTargetPosition());

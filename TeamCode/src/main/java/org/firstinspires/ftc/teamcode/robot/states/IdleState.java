@@ -1,26 +1,47 @@
-// File: IdleState.java
 package org.firstinspires.ftc.teamcode.robot.states;
 
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 public class IdleState extends BaseState {
+    public enum Step {
+        IDLE,
+        COMPLETED
+    }
 
-    // Constructor
+    private Step currentStep = Step.IDLE;
+
     public IdleState(Robot robot, boolean isAutonomous) {
         super(robot, isAutonomous);
     }
 
     @Override
     protected void start() {
-        // Position subsystems to idle positions
+        // Reset all subsystems to known idle positions
         robot.viperLift.moveToPosition(0);
         robot.arm.moveToAngle(90);
-        robot.wrist.setAngle(90); // Adjust to default idle angle for wrist
-        robot.claw.close(); // Adjust to default position for claw
+        robot.wrist.setAngle(90);
+        robot.claw.close();
+        currentStep = Step.IDLE;
     }
 
     @Override
-    public void update() {
-        // No ongoing actions; could add monitoring if needed
+    protected void cleanup() {
+        // No cleanup needed for idle
+    }
+
+    @Override
+    public void onUpdate() {
+        // Idle does nothing, just waits
+    }
+
+    @Override
+    public boolean isCompleted() {
+        // Idle never truly completes by itself
+        return currentStep == Step.COMPLETED;
+    }
+
+    @Override
+    public String getCurrentStep() {
+        return currentStep.toString();
     }
 }

@@ -1,15 +1,14 @@
-// File: ObservationState.java
 package org.firstinspires.ftc.teamcode.robot.states;
 
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 public class ObservationState extends BaseState {
-    // Steps in the observation process
     public enum Step {
         LIFT_VIPERLIFT_TO_PRE_HEIGHT,
         MOVE_ARM_DOWN_BACKWARDS_AND_OPEN_CLAW,
-        WAIT_FOR_RIGHT_TRIGGER_TO_CLOSE_CLAW,
-        CLOSE_THE_CLAW,
+        WAIT_FOR_TRIGGER,
+        CLOSE_CLAW,
+        WAIT_CLAW_CLOSE_DELAY,
         LIFT_VIPERLIFT_TO_SECOND_HEIGHT,
         MOVE_ARM_UP,
         LOWER_VIPERLIFT,
@@ -17,10 +16,9 @@ public class ObservationState extends BaseState {
     }
 
     private Step currentStep;
-    private long waitStartTime;
     private static final long OPEN_CLAW_DELAY = 250;
+    private long waitStartTime;
 
-    // Constructor
     public ObservationState(Robot robot, boolean isAutonomous) {
         super(robot, isAutonomous);
     }
@@ -28,131 +26,85 @@ public class ObservationState extends BaseState {
     @Override
     protected void start() {
         currentStep = Step.LIFT_VIPERLIFT_TO_PRE_HEIGHT;
-        executeCurrentStep();
+        robot.viperLift.moveToPosition(553);
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-        currentStep = Step.COMPLETED;
-    }
-
-    private void executeCurrentStep() {
-        switch (currentStep) {
-            case LIFT_VIPERLIFT_TO_PRE_HEIGHT:
-                // Raise ViperLift to predetermined height
-                robot.viperLift.moveToPosition(553); // Adjust as needed
-                break;
-
-            case MOVE_ARM_DOWN_BACKWARDS_AND_OPEN_CLAW:
-                // Move arm down backwards and open claw
-                robot.arm.moveToAngle(167); // Adjust angle as needed for backwards position
-                robot.wrist.setAngle(90);   // Adjust wrist angle as needed
-                robot.claw.open();
-                break;
-
-            case WAIT_FOR_RIGHT_TRIGGER_TO_CLOSE_CLAW:
-                // Waiting for right trigger input
-                break;
-
-            case CLOSE_THE_CLAW:
-                //i need the claw closed AAAAA
-                robot.claw.close();
-                waitStartTime = System.currentTimeMillis();
-                break;
-
-            case LIFT_VIPERLIFT_TO_SECOND_HEIGHT:
-                // Lift ViperLift up more to take specimen off the wall
-                robot.viperLift.moveToPosition(553); // Adjust as needed
-                break;
-
-            case MOVE_ARM_UP:
-                // Move arm back up to idle position
-                robot.arm.moveToAngle(90); // Adjust angle as needed
-                robot.wrist.setAngle(90);  // Adjust wrist angle as needed
-                break;
-
-            case LOWER_VIPERLIFT:
-                // Lower ViperLift to the bottom position
-                robot.viperLift.moveToPosition(0);
-                break;
-
-            case COMPLETED:
-                // Process completed; deactivate state
-                deactivate();
-                break;
-
-            default:
-                // Handle unexpected cases
-                break;
-        }
+    protected void cleanup() {
+        // No special cleanup
     }
 
     @Override
-    public void update() {
+    public void onUpdate() {
         if (!isActive) return;
 
         switch (currentStep) {
             case LIFT_VIPERLIFT_TO_PRE_HEIGHT:
                 if (robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.MOVE_ARM_DOWN_BACKWARDS_AND_OPEN_CLAW;
-                    executeCurrentStep();
+                    robot.arm.moveToAngle(167);
+                    robot.wrist.setAngle(90);
+                    robot.claw.open();
                 }
                 break;
 
             case MOVE_ARM_DOWN_BACKWARDS_AND_OPEN_CLAW:
                 if (robot.arm.isCloseToTarget() && robot.wrist.isAtTarget()) {
-                    currentStep = Step.WAIT_FOR_RIGHT_TRIGGER_TO_CLOSE_CLAW;
+                    currentStep = Step.WAIT_FOR_TRIGGER;
                 }
                 break;
 
-            case WAIT_FOR_RIGHT_TRIGGER_TO_CLOSE_CLAW:
-                // Waiting for right trigger input
+            case WAIT_FOR_TRIGGER:
+                // Wait for user input (RIGHT_TRIGGER)
                 break;
 
-            case CLOSE_THE_CLAW:
+            case CLOSE_CLAW:
+                robot.claw.close();
+                waitStartTime = System.currentTimeMillis();
+                currentStep = Step.WAIT_CLAW_CLOSE_DELAY;
+                break;
+
+            case WAIT_CLAW_CLOSE_DELAY:
                 if (System.currentTimeMillis() - waitStartTime >= OPEN_CLAW_DELAY) {
                     currentStep = Step.LIFT_VIPERLIFT_TO_SECOND_HEIGHT;
-                    executeCurrentStep();
+                    robot.viperLift.moveToPosition(553);
                 }
                 break;
 
             case LIFT_VIPERLIFT_TO_SECOND_HEIGHT:
                 if (robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.MOVE_ARM_UP;
-                    executeCurrentStep();
+                    robot.arm.moveToAngle(90);
+                    robot.wrist.setAngle(90);
                 }
                 break;
 
             case MOVE_ARM_UP:
                 if (robot.arm.isCloseToTarget() && robot.wrist.isAtTarget()) {
                     currentStep = Step.LOWER_VIPERLIFT;
-                    executeCurrentStep();
+                    robot.viperLift.moveToPosition(0);
                 }
                 break;
 
             case LOWER_VIPERLIFT:
                 if (robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.COMPLETED;
-                    executeCurrentStep();
                 }
                 break;
 
             case COMPLETED:
-                // Do nothing; state remains here
-                break;
-
-            default:
-                // Handle unexpected cases
+                // Done
                 break;
         }
     }
 
     @Override
-    public void onRightTriggerPressed() {
-        if (currentStep == Step.WAIT_FOR_RIGHT_TRIGGER_TO_CLOSE_CLAW) {
-            currentStep = Step.CLOSE_THE_CLAW;
-            executeCurrentStep();
+    public void onUserInput(UserInput input) {
+        if (input == UserInput.RIGHT_TRIGGER && currentStep == Step.WAIT_FOR_TRIGGER) {
+            currentStep = Step.CLOSE_CLAW;
+            robot.claw.close();
+            waitStartTime = System.currentTimeMillis();
+            currentStep = Step.WAIT_CLAW_CLOSE_DELAY;
         }
     }
 

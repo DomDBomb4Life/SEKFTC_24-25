@@ -1,47 +1,47 @@
-// File: BaseState.java
 package org.firstinspires.ftc.teamcode.robot.states;
 
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
-public abstract class BaseState {
+public abstract class BaseState implements State {
     protected Robot robot;
+    protected boolean isAutonomous;
     protected boolean isActive = false;
-    protected boolean isAutonomous = false;
 
-    // Constructor
     public BaseState(Robot robot, boolean isAutonomous) {
         this.robot = robot;
         this.isAutonomous = isAutonomous;
     }
 
-    // Activate the state
-    public void activate() {
+    @Override
+    public final void onEnter() {
         isActive = true;
         start();
     }
 
-    // Deactivate the state
-    public void deactivate() {
+    @Override
+    public final void onExit() {
         isActive = false;
+        cleanup();
     }
 
-    // Abstract methods to be implemented by subclasses
+    // start() for initializing state logic on entry
     protected abstract void start();
 
-    public abstract void update();
+    // cleanup() for resetting any resources on exit
+    protected abstract void cleanup();
 
-    // Optional method to handle right trigger input
-    public void onRightTriggerPressed() {}
+    @Override
+    public void onUserInput(UserInput input) {
+        // Default empty, states override if needed
+    }
 
-    // Optional method to handle primary button input
-    public void onPrimaryButtonPressed() {}
-
-    // Method to check if the state is completed
+    @Override
     public boolean isCompleted() {
+        // Default false, states override once their step = COMPLETED
         return false;
     }
 
-    // For telemetry or debugging
+    @Override
     public String getCurrentStep() {
         return "N/A";
     }

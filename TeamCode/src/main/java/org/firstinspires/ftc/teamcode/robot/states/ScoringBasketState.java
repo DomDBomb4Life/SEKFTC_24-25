@@ -1,10 +1,8 @@
-// File: ScoringBasketState.java
 package org.firstinspires.ftc.teamcode.robot.states;
 
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 public class ScoringBasketState extends BaseState {
-    // Steps in the scoring basket process
     public enum Step {
         LIFT_UP,
         MOVE_ARM_WRIST,
@@ -18,9 +16,7 @@ public class ScoringBasketState extends BaseState {
 
     private Step currentStep;
     private long waitStartTime;
-    private static final long OPEN_CLAW_DELAY = 200; // Delay in milliseconds
 
-    // Constructor
     public ScoringBasketState(Robot robot, boolean isAutonomous) {
         super(robot, isAutonomous);
     }
@@ -28,123 +24,74 @@ public class ScoringBasketState extends BaseState {
     @Override
     protected void start() {
         currentStep = Step.LIFT_UP;
-        executeCurrentStep();
+        robot.viperLift.moveToPosition(7065);
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-        currentStep = Step.COMPLETED;
-    }
-
-    private void executeCurrentStep() {
-        switch (currentStep) {
-            case LIFT_UP:
-                robot.viperLift.moveToPosition(7065);
-                break;
-
-            case MOVE_ARM_WRIST:
-                robot.arm.moveToAngle(123);
-                robot.wrist.setAngle(90);
-                break;
-
-            case WAIT_TO_OPEN_CLAW:
-                if (isAutonomous) {
-                    waitStartTime = System.currentTimeMillis();
-                }
-                break;
-
-            case OPEN_CLAW:
-                robot.claw.open();
-                break;
-
-            case WAIT_FOR_CLAW_OPEN:
-                waitStartTime = System.currentTimeMillis();
-                break;
-
-            case MOVE_ARM_WRIST_BACK:
-                robot.arm.moveToAngle(90);
-                robot.wrist.setAngle(90);
-                break;
-
-            case LOWER_LIFT:
-                robot.viperLift.moveToPosition(0);
-                break;
-
-            case COMPLETED:
-                deactivate();
-                break;
-        }
+    protected void cleanup() {
+        // No special cleanup
     }
 
     @Override
-    public void update() {
+    public void onUpdate() {
         if (!isActive) return;
 
         switch (currentStep) {
             case LIFT_UP:
                 if (robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.MOVE_ARM_WRIST;
-                    executeCurrentStep();
+                    robot.arm.moveToAngle(123);
+                    robot.wrist.setAngle(90);
                 }
                 break;
 
             case MOVE_ARM_WRIST:
                 if (robot.arm.isCloseToTarget() && robot.wrist.isAtTarget()) {
                     currentStep = Step.WAIT_TO_OPEN_CLAW;
-                    executeCurrentStep();
                 }
                 break;
 
             case WAIT_TO_OPEN_CLAW:
-                if (isAutonomous) {
-                    if (System.currentTimeMillis() - waitStartTime >= OPEN_CLAW_DELAY) {
-                        currentStep = Step.OPEN_CLAW;
-                        executeCurrentStep();
-                    }
-                }
-                // In TeleOp, wait for user input
+                // Wait for input in TeleOp or delay in Autonomous
                 break;
 
             case OPEN_CLAW:
-                if (robot.claw.isOpen()) {
-                    currentStep = Step.WAIT_FOR_CLAW_OPEN;
-                    executeCurrentStep();
-                }
+                robot.claw.open();
+                waitStartTime = System.currentTimeMillis();
+                currentStep = Step.WAIT_FOR_CLAW_OPEN;
                 break;
 
             case WAIT_FOR_CLAW_OPEN:
-                if (System.currentTimeMillis() - waitStartTime >= OPEN_CLAW_DELAY) {
+                if (System.currentTimeMillis() - waitStartTime >= 200) {
                     currentStep = Step.MOVE_ARM_WRIST_BACK;
-                    executeCurrentStep();
+                    robot.arm.moveToAngle(90);
+                    robot.wrist.setAngle(90);
                 }
                 break;
 
             case MOVE_ARM_WRIST_BACK:
                 if (robot.arm.isCloseToTarget()) {
                     currentStep = Step.LOWER_LIFT;
-                    executeCurrentStep();
+                    robot.viperLift.moveToPosition(0);
                 }
                 break;
 
             case LOWER_LIFT:
                 if (robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.COMPLETED;
-                    executeCurrentStep();
                 }
                 break;
 
             case COMPLETED:
-                // Process completed
+                // Done
                 break;
         }
     }
 
     @Override
-    public void onRightTriggerPressed() {
-        if (!isAutonomous && currentStep == Step.WAIT_TO_OPEN_CLAW) {
+    public void onUserInput(UserInput input) {
+        if (input == UserInput.RIGHT_TRIGGER && currentStep == Step.WAIT_TO_OPEN_CLAW) {
             currentStep = Step.OPEN_CLAW;
-            executeCurrentStep();
         }
     }
 
