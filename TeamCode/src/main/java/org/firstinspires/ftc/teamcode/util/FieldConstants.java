@@ -24,32 +24,26 @@ public class FieldConstants {
     public static final Pose2d NET_POSITION = new Pose2d(58, 55, Math.toRadians(225));
 
     // Neutral Sample positions (assuming they are placed along the Y-axis)
-    public static final Pose2d SAMPLE_1_POSITION = new Pose2d(50, 40.9, Math.toRadians(270));
-    public static final Pose2d SAMPLE_2_POSITION = new Pose2d(60, 40.9, Math.toRadians(270));
+    public static final Pose2d SAMPLE_1_POSITION = new Pose2d(50, 41.8, Math.toRadians(270));
+    public static final Pose2d SAMPLE_2_POSITION = new Pose2d(60, 41.8, Math.toRadians(270));
     public static final Pose2d SAMPLE_3_POSITION = new Pose2d(2.5 * TILE_SIZE + 10, 44, Math.toRadians(270));
 
+    public static final Pose2d SAMPLE_4_POSITION = new Pose2d(-50, 41.8, Math.toRadians(270));
+    public static final Pose2d SAMPLE_5_POSITION = new Pose2d(-60, 41.8, Math.toRadians(270));
+    public static final Pose2d SAMPLE_6_POSITION = new Pose2d(2.5 * TILE_SIZE + 10, 44, Math.toRadians(270));
+
+    public static final Pose2d SPECIMEN_SCORING_POSITION = new Pose2d(0, 40, Math.toRadians(270));
+
+
+
     // Ascent zone position
-    public static final Pose2d ASCENT_ZONE_POSITION = new Pose2d(1.3*TILE_SIZE, 0, Math.toRadians(180));
+    public static final Pose2d ASCENT_ZONE_POSITION = new Pose2d(1.5*TILE_SIZE, 0, Math.toRadians(180));
 
-    // Adjustments for headings
-
-    /**
-     * Mirrors a pose over the Y-axis to get the equivalent position on the other side of the field.
-     *
-     * @param pose The original pose.
-     * @return The mirrored pose.
-     */
     public static Pose2d mirrorPose(Pose2d pose) {
         return new Pose2d(-pose.getX(), pose.getY(), -pose.getHeading());
     }
 
-    /**
-     * Returns the starting pose based on the team color and starting position.
-     *
-     * @param teamColor        The team color (RED or BLUE).
-     * @param startingPosition The starting position (LEFT or RIGHT).
-     * @return The starting pose.
-     */
+
     public static Pose2d getStartingPose(TeamColor teamColor, StartingPosition startingPosition) {
         Pose2d pose;
         if (startingPosition == StartingPosition.LEFT) {
@@ -66,32 +60,17 @@ public class FieldConstants {
         return pose;
     }
 
-    /**
-     * Mirrors a pose over the X-axis to get the equivalent position on the other side of the field.
-     *
-     * @param pose The original pose.
-     * @return The mirrored pose.
-     */
+
     public static Pose2d mirrorPoseOverX(Pose2d pose) {
         return new Pose2d(pose.getX(), -pose.getY(), -pose.getHeading());
     }
 
-    /**
-     * Adjusts the heading for the RED team if necessary.
-     *
-     * @param pose The pose with heading to adjust.
-     * @return The pose with adjusted heading.
-     */
+
     private static Pose2d adjustHeadingForRed(Pose2d pose) {
         return new Pose2d(pose.getX(), pose.getY(), pose.getHeading() + Math.toRadians(180));
     }
 
-    /**
-     * Returns the net position based on the team color.
-     *
-     * @param teamColor The team color (RED or BLUE).
-     * @return The net position.
-     */
+
     public static Pose2d getNetPosition(TeamColor teamColor) {
         Pose2d pose = NET_POSITION;
 
@@ -103,12 +82,7 @@ public class FieldConstants {
         return pose;
     }
 
-    /**
-     * Returns the sample positions based on the team color.
-     *
-     * @param teamColor The team color (RED or BLUE).
-     * @return An array of sample positions.
-     */
+
     public static Pose2d[] getSamplePositions(TeamColor teamColor) {
         Pose2d[] samples = new Pose2d[]{SAMPLE_1_POSITION, SAMPLE_2_POSITION
 //                , SAMPLE_3_POSITION
@@ -124,14 +98,25 @@ public class FieldConstants {
         return samples;
     }
 
-    /**
-     * Returns the ascent zone position based on the team color.
-     *
-     * @param teamColor The team color (RED or BLUE).
-     * @return The ascent zone position.
-     */
+    public static Pose2d[] getAllianceSamplePositions(TeamColor teamColor) {
+        Pose2d[] samples = new Pose2d[]{SAMPLE_4_POSITION, SAMPLE_5_POSITION
+        //      , SAMPLE_6_POSITION
+        };
+        return samples;
+    }
+
     public static Pose2d getAscentZonePosition(TeamColor teamColor) {
         Pose2d pose = ASCENT_ZONE_POSITION;
+
+        if (teamColor == TeamColor.RED) {
+            pose = mirrorPoseOverX(pose);
+            pose = adjustHeadingForRed(pose);
+        }
+
+        return pose;
+    }
+    public static Pose2d getSpecimenScoringPosition(TeamColor teamColor) {
+        Pose2d pose = SPECIMEN_SCORING_POSITION;
 
         if (teamColor == TeamColor.RED) {
             pose = mirrorPoseOverX(pose);

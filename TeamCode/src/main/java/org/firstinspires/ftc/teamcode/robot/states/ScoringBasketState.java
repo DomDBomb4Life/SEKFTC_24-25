@@ -41,7 +41,7 @@ public class ScoringBasketState extends BaseState {
                 if (robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.MOVE_ARM_WRIST;
                     robot.arm.moveToAngle(123);
-                    robot.wrist.setAngle(90);
+                    robot.wrist.setAngle(33);
                 }
                 break;
 
@@ -68,7 +68,7 @@ public class ScoringBasketState extends BaseState {
                 break;
 
             case WAIT_FOR_CLAW_OPEN:
-                if (System.currentTimeMillis() - waitStartTime >= 200) {
+                if (System.currentTimeMillis() - waitStartTime >= 500) {
                     currentStep = Step.MOVE_ARM_WRIST_BACK;
                     robot.arm.moveToAngle(90);
                     robot.wrist.setAngle(90);

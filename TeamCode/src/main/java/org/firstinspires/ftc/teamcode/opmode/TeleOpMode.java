@@ -100,9 +100,11 @@ public class TeleOpMode extends LinearOpMode {
         previousDpadUpPressed = gamepad2.dpad_up;
 
         if (isButtonJustPressed(gamepad2.left_bumper, previousLeftBumperPressed)) {
-            robot.onPickupButtonPressed();
+            robot.onInitArmButtonPresses();
         }
         previousLeftBumperPressed = gamepad2.left_bumper;
+
+
     }
 
     private void handleDevModeControls() {

@@ -60,9 +60,11 @@ public class Arm {
     }
 
     // Initialize the arm encoder
-    public void initializeEncoder() {
+    public void initializeEncoder(double zeroPos) {
         armMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         armMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        ZERO_POSITION_ANGLE = zeroPos;
+
     }
 
     // Move to a specific angle
@@ -79,6 +81,21 @@ public class Arm {
         // Apply power and set mode
         armMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         armMotor.setPower(0.5); // Use a moderate power for smooth movement
+    }
+
+    public void moveToAngleStrong(double angle) {
+        // Clamp angle within bounds
+        targetAngle = Math.max(ANGLE_MIN, Math.min(angle, ANGLE_MAX));
+
+        // Calculate target encoder counts based on the calibrated zero position
+        int targetPosition = angleToCounts(targetAngle);
+
+        // Set target position
+        armMotor.setTargetPosition(targetPosition);
+
+        // Apply power and set mode
+        armMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        armMotor.setPower(1.0); // Use a moderate power for smooth movement
     }
 
     // Adjust target angle incrementally
@@ -121,10 +138,9 @@ public class Arm {
 
     // Update method to be called periodically
     public void update() {
-        // Ensure the motor is in RUN_TO_POSITION mode
-        armMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        // Apply power to hold position
-        armMotor.setPower(0.5);
+        if(isCloseToTarget()) {
+            armMotor.setPower(1.0);
+        }
     }
 
     // Set power to the arm motor (e.g., to make it go limp)

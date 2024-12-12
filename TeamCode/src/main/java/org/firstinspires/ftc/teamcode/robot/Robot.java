@@ -22,6 +22,8 @@ public class Robot {
     public ObservationState observationState;
     public LevelOneAscentState levelOneAscentState;
 
+    public InitializeArmState initializeArmState;
+
     public Robot(HardwareMap hardwareMap) {
         this(hardwareMap, false);
     }
@@ -41,10 +43,12 @@ public class Robot {
         levelOneAscentState = new LevelOneAscentState(this, isAutonomous);
 
         stateController = new StateController(idleState);
+        if (!isAutonomous){arm.moveToAngle(0);}
     }
 
     public void update() {
         stateController.update();
+        arm.update();
     }
 
     public void setState(State newState) {
@@ -61,6 +65,9 @@ public class Robot {
 
     public void onRightTriggerPressed() {
         stateController.handleUserInput(UserInput.RIGHT_TRIGGER);
+    }
+    public void onPrimaryButtonPressed() {
+        stateController.handleUserInput(UserInput.PRIMARY_BUTTON);
     }
 
     public void onHomeButtonPressed() {
@@ -90,6 +97,11 @@ public class Robot {
 
     public void onPickupButtonPressed() {
         stateController.setState(pickupState);
+    }
+
+    public void onInitArmButtonPresses() {
+        stateController.setState(initializeArmState);
+
     }
 
     public String getCurrentStateName() {

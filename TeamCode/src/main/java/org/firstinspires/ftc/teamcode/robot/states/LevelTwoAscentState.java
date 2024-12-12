@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.robot.states;
 
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
-public class LevelOneAscentState extends BaseState {
+public class LevelTwoAscentState extends BaseState {
     public enum Step {
         MOVE_TO_POSITIONS,
         WAIT_FOR_TRIGGER,
@@ -12,7 +12,7 @@ public class LevelOneAscentState extends BaseState {
 
     private Step currentStep;
 
-    public LevelOneAscentState(Robot robot, boolean isAutonomous) {
+    public LevelTwoAscentState(Robot robot, boolean isAutonomous) {
         super(robot, isAutonomous);
     }
 
