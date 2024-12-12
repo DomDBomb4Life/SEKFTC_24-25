@@ -45,9 +45,7 @@ public class LocalizationTest extends LinearOpMode {
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         double speed;
-        FieldConstants.TeamColor teamColor = FieldConstants.TeamColor.BLUE;
-        FieldConstants.StartingPosition startingPosition = FieldConstants.StartingPosition.LEFT;
-        Pose2d startPose = FieldConstants.getStartingPose(teamColor, startingPosition);
+        Pose2d startPose = FieldConstants.RIGHT_START;
         dashboard = FtcDashboard.getInstance();
         dashboard.setTelemetryTransmissionInterval(25);
 

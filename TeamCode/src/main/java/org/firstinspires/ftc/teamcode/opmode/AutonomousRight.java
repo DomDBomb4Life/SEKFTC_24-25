@@ -33,6 +33,10 @@ public class AutonomousRight extends OpMode {
 
     @Override
     public void start() {
+        Pose2d pushPos1 = new Pose2d(-36.0, 36.0, Math.toRadians(180));
+        Pose2d pushPos2 = new Pose2d(-47.0, 12.0, Math.toRadians(180));
+        Pose2d pushPos3 = new Pose2d(-55.0, 12.0, Math.toRadians(180));
+        Pose2d pushPos4 = new Pose2d(-63.0, 12.0, Math.toRadians(180));
         // Example logic for right start:
         // Just an example. Adjust as needed. 
         TrajectorySequenceBuilder seqBuilder = driveTrain.trajectorySequenceBuilder(FieldConstants.RIGHT_START);
@@ -55,13 +59,29 @@ public class AutonomousRight extends OpMode {
             robot.setState(robot.idleState);
         });
 
-        // Example forward/back paths
+        // Push the alliance samples into observation zone
         seqBuilder.back(12);
+        seqBuilder.lineToLinearHeading(pushPos1);
+        seqBuilder.strafeLeft(24);
+        seqBuilder.lineToLinearHeading(pushPos2);
 
-        // Add any additional steps you want for the right start
-        // ...
-        // For demonstration, let's just wait and end
-        seqBuilder.waitSeconds(2);
+        //Push first sample
+        seqBuilder.strafeRight(48);
+        seqBuilder.strafeLeft(48);
+        seqBuilder.lineToLinearHeading(pushPos3);
+
+        //Push second sample
+        seqBuilder.strafeRight(48);
+        seqBuilder.strafeLeft(48);
+        seqBuilder.lineToLinearHeading(pushPos4);
+
+        //Push second sample
+        seqBuilder.strafeRight(48);
+        seqBuilder.strafeLeft(24);
+
+        //Park w/ 3 sec on timer
+        seqBuilder.addTemporalMarker(27, () -> {});
+        seqBuilder.strafeRight(24);
 
         TrajectorySequence sequence = seqBuilder.build();
         driveTrain.followTrajectorySequenceAsync(sequence);
