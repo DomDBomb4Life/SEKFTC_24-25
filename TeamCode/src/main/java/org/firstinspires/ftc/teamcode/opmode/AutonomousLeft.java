@@ -41,10 +41,10 @@ public class AutonomousLeft extends OpMode {
         seqBuilder.lineToLinearHeading(FieldConstants.NET_POSITION);
 
         // Score preloaded specimen
-        seqBuilder.addTemporalMarkerOffset(-1, () -> {
+        seqBuilder.addTemporalMarkerOffset(-2, () -> {
             robot.setState(robot.scoringBasketState);
         });
-        seqBuilder.waitSeconds(5);
+        seqBuilder.waitSeconds(4);
 
         // For each sample position
         for (Pose2d samplePosition : FieldConstants.SAMPLE_POSITIONS) {
@@ -72,15 +72,14 @@ public class AutonomousLeft extends OpMode {
         }
 
         // Move to ascent zone
-        seqBuilder.addTemporalMarkerOffset(0, () -> {
+        seqBuilder.addTemporalMarkerOffset(-1, () -> {
             robot.setState(robot.levelOneAscentState);
         });
 
         seqBuilder.lineToLinearHeading(FieldConstants.ASCENT_ZONE_POSITION);
-        seqBuilder.waitSeconds(1);
-        seqBuilder.forward(4);
+        seqBuilder.forward(6);
 
-        seqBuilder.addTemporalMarkerOffset(0.0,() -> {
+        seqBuilder.addTemporalMarkerOffset(0.25,() -> {
             robot.onRightTriggerPressed();
         });
 

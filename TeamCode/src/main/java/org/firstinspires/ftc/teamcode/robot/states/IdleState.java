@@ -20,7 +20,6 @@ public class IdleState extends BaseState {
         robot.viperLift.moveToPosition(0);
         robot.arm.moveToAngle(90);
         robot.wrist.setAngle(90);
-        robot.claw.close();
         currentStep = Step.IDLE;
     }
 

@@ -1,4 +1,3 @@
-// File: Claw.java
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.hardware.Servo;
@@ -9,98 +8,82 @@ public class Claw {
     // Servo
     private Servo clawServo;
 
-    // Servo positions (normalized from 0.0 to 1.0)
-    private static final double CLAW_MIN_POSITION = 0.0;     // Adjust based on your hardware
-    private static final double CLAW_MAX_POSITION = 1.0;     // Adjust based on your hardware
+    // Servo positions (assuming normalized 0.0 to 1.0)
+    private static final double CLAW_MIN_POSITION = 0.0; 
+    private static final double CLAW_MAX_POSITION = 1.0;
 
-    private static final double closed = -37.0;
+    // Angles for the claw (in degrees)
+    private static final double closed = -50.0;        // Full close
+    private static final double open = 20.0;           // Open position
+    private static final double mediumClosed = -25.0;  // Added: Medium close position
 
-    private static final double open = 10.0;
+    private static final double POSITION_THRESHOLD = 0.02;
 
-
-
-    private static final double POSITION_THRESHOLD = 0.02; // Threshold for position checking
-
-    // Target angle for the claw (in degrees)
-    private double targetAngle = 0.0; // Closed position
-
-    // Wrist angle offset
+    private double targetAngle = 0.0;
     private double wristAngleOffset = 0.0;
 
-    // Constructor
     public Claw(HardwareMap hardwareMap) {
-        // Initialize the servo
         clawServo = hardwareMap.get(Servo.class, "ClawServo");
-
-        // Set initial position
-        close(); // Start with the claw closed
+        close(); // Start closed
     }
 
-    // Open the claw
     public void open() {
-        setAngle(open); // Adjust angle as needed for open position
+        setAngle(open);
     }
 
-    // Close the claw
     public void close() {
-        setAngle(closed); // Closed position
+        setAngle(closed);
     }
 
-    // Set claw angle (in degrees)
+    // New method for medium close
+    public void closeMedium() {
+        setAngle(mediumClosed);
+    }
+
     public void setAngle(double angleDegrees) {
         this.targetAngle = angleDegrees;
         updateServoPosition();
     }
 
-    // Set wrist angle offset (called from Wrist class)
     public void setWristAngleOffset(double offsetDegrees) {
         this.wristAngleOffset = offsetDegrees;
         updateServoPosition();
     }
 
-    // Update servo position based on target angle and wrist offset
     private void updateServoPosition() {
         double totalAngle = targetAngle + wristAngleOffset;
         double position = angleToServoPosition(totalAngle);
-        // Clamp position between min and max
         position = Math.max(CLAW_MIN_POSITION, Math.min(position, CLAW_MAX_POSITION));
         clawServo.setPosition(position);
     }
 
-    // Convert angle in degrees to servo position (normalized)
     private double angleToServoPosition(double angleDegrees) {
-        // Assuming the servo rotates from 0 to 180 degrees
-        double servoRangeDegrees = 180.0; // Adjust if your servo has a different range
-        // Flip direction by subtracting from 1.0
+        double servoRangeDegrees = 180.0;
         return 1.0 - (angleDegrees / servoRangeDegrees);
     }
 
-    // Get current angle (in degrees)
     public double getAngle() {
         double position = clawServo.getPosition();
-        double servoRangeDegrees = 180.0; // Adjust if your servo has a different range
+        double servoRangeDegrees = 180.0;
         return (1.0 - position) * servoRangeDegrees - wristAngleOffset;
     }
 
-    // Get target angle (in degrees)
     public double getTargetAngle() {
         return targetAngle;
     }
 
-    // Manual control method (in degrees)
     public void adjustAngle(double deltaDegrees) {
         setAngle(targetAngle + deltaDegrees);
     }
 
-    // Check if the claw is open
     public boolean isOpen() {
         return Math.abs(targetAngle - open) < POSITION_THRESHOLD * 180.0;
     }
 
-    // Check if the claw is closed
     public boolean isClosed() {
         return Math.abs(targetAngle - closed) < POSITION_THRESHOLD * 180.0;
     }
+
     public double getPosition() {
         return clawServo.getPosition();
     }

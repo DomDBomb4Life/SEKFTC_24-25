@@ -23,6 +23,10 @@ public class HomeState extends BaseState {
     private static final double PICKUP_WRIST_ANGLE = 125.0;
     private long stepStartTime;
     private static final long WAIT_DURATION_MS = 100;
+    private static final long ARM_WAIT_DURATION_MS = 750;
+
+
+    private boolean useMediumClose = false; // Added: to track which close method to use
 
     public HomeState(Robot robot, boolean isAutonomous) {
         super(robot, isAutonomous);
@@ -31,8 +35,8 @@ public class HomeState extends BaseState {
     @Override
     protected void start() {
         currentStep = Step.MOVE_TO_SAFETY_POSITION;
-        robot.arm.moveToAngle(SAFETY_ARM_ANGLE);
-        robot.wrist.setAngle(SAFETY_WRIST_ANGLE);
+        robot.arm.moveToAngle(0);
+        robot.wrist.setAngle(146);
         robot.claw.open();
     }
 
@@ -53,7 +57,7 @@ public class HomeState extends BaseState {
                 break;
 
             case WAIT_FOR_INPUT:
-                // Wait for user input (onUserInput)
+                // Wait for user input
                 break;
 
             case OPEN_CLAW_BEFORE_PICKUP:
@@ -66,7 +70,7 @@ public class HomeState extends BaseState {
             case WAIT_AFTER_OPENING_CLAW:
                 if (System.currentTimeMillis() - stepStartTime >= WAIT_DURATION_MS) {
                     currentStep = Step.MOVE_WRIST_TO_PICKUP_POSITION;
-                    robot.wrist.setAngle(PICKUP_WRIST_ANGLE);
+                    robot.wrist.setAngle(125);
                 }
                 break;
 
@@ -74,13 +78,19 @@ public class HomeState extends BaseState {
                 if (robot.wrist.isAtTarget()) {
                     currentStep = Step.MOVE_ARM_TO_PICKUP_POSITION;
                     robot.arm.moveToAngle(PICKUP_ARM_ANGLE);
+                    stepStartTime = System.currentTimeMillis();
                 }
                 break;
 
             case MOVE_ARM_TO_PICKUP_POSITION:
-                if (robot.arm.isCloseToTarget()) {
+                if (System.currentTimeMillis()-stepStartTime >= ARM_WAIT_DURATION_MS) {
                     currentStep = Step.CLOSE_CLAW;
-                    robot.claw.close();
+                    // Here we close based on useMediumClose
+                    if (useMediumClose) {
+                        robot.claw.closeMedium();
+                    } else {
+                        robot.claw.close();
+                    }
                     stepStartTime = System.currentTimeMillis();
                 }
                 break;
@@ -111,9 +121,18 @@ public class HomeState extends BaseState {
 
     @Override
     public void onUserInput(UserInput input) {
-        if (input == UserInput.RIGHT_TRIGGER ) {
-            currentStep = Step.OPEN_CLAW_BEFORE_PICKUP;
-            robot.claw.open();
+        // If right trigger pressed at WAIT_FOR_INPUT: normal flow
+        // If left trigger pressed at WAIT_FOR_INPUT: medium close flow
+        if (currentStep == Step.WAIT_FOR_INPUT) {
+            if (input == UserInput.RIGHT_TRIGGER) {
+                useMediumClose = false;
+                currentStep = Step.OPEN_CLAW_BEFORE_PICKUP;
+                robot.claw.open();
+            } else if (input == UserInput.PRIMARY_BUTTON) {
+                useMediumClose = true;
+                currentStep = Step.OPEN_CLAW_BEFORE_PICKUP;
+                robot.claw.open();
+            }
         }
     }
 

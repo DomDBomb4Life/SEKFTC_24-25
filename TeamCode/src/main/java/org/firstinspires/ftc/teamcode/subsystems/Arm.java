@@ -21,7 +21,7 @@ public class Arm {
     private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
 
     // Zero position angle (where encoder count is zero)
-    private double ZERO_POSITION_ANGLE = -18.0;
+    private double ZERO_POSITION_ANGLE = -18.0; //TODO
 
     // Target angle
     private double targetAngle = ZERO_POSITION_ANGLE; // Start at -18 degrees as default
@@ -37,6 +37,9 @@ public class Arm {
 
         // Motor configuration
         configureMotor(armMotor);
+    }
+    public void OverridePosition(){
+        ZERO_POSITION_ANGLE = 137.0;
     }
 
     private void configureMotor(DcMotorEx motor) {
@@ -100,7 +103,7 @@ public class Arm {
 
     // Adjust target angle incrementally
     public void adjustTargetAngle(double increment) {
-        moveToAngle(targetAngle + increment);
+        moveToAngleStrong(targetAngle + increment);
     }
 
     // Convert angle to encoder counts

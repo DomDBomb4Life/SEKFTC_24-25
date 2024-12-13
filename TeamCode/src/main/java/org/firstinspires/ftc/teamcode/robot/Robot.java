@@ -21,6 +21,8 @@ public class Robot {
     public PickupState pickupState;
     public ObservationState observationState;
     public LevelOneAscentState levelOneAscentState;
+    public LevelTwoAscentState levelTwoAscentState;
+
 
     public InitializeArmState initializeArmState;
 
@@ -41,6 +43,7 @@ public class Robot {
         pickupState = new PickupState(this, isAutonomous);
         observationState = new ObservationState(this, isAutonomous);
         levelOneAscentState = new LevelOneAscentState(this, isAutonomous);
+        levelTwoAscentState = new LevelTwoAscentState(this, isAutonomous);
 
         stateController = new StateController(idleState);
         if (!isAutonomous){arm.moveToAngle(0);}
@@ -92,7 +95,7 @@ public class Robot {
     }
 
     public void onLevelOneAscentButtonPressed() {
-        stateController.setState(levelOneAscentState);
+        stateController.setState(levelTwoAscentState);
     }
 
     public void onPickupButtonPressed() {

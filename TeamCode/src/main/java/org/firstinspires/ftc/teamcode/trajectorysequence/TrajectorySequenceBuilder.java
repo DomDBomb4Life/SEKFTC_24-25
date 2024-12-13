@@ -543,22 +543,23 @@ public class TrajectorySequenceBuilder {
     }
 
     private List<SequenceSegment> projectGlobalMarkersToLocalSegments(List<TrajectoryMarker> markers, List<SequenceSegment> sequenceSegments) {
-        if (sequenceSegments.isEmpty()) return Collections.emptyList();
-
+        if (sequenceSegments.isEmpty()) {
+            throw new IllegalArgumentException("sequenceSegments cannot be empty");
+        }
+    
         markers.sort(Comparator.comparingDouble(TrajectoryMarker::getTime));
-
+    
         int segmentIndex = 0;
         double currentTime = 0;
-
+    
         for (TrajectoryMarker marker : markers) {
             SequenceSegment segment = null;
-
             double markerTime = marker.getTime();
             double segmentOffsetTime = 0;
-
+    
+            // Locate the segment for this marker
             while (segmentIndex < sequenceSegments.size()) {
                 SequenceSegment seg = sequenceSegments.get(segmentIndex);
-
                 if (currentTime + seg.getDuration() >= markerTime) {
                     segment = seg;
                     segmentOffsetTime = markerTime - currentTime;
@@ -568,39 +569,39 @@ public class TrajectorySequenceBuilder {
                     segmentIndex++;
                 }
             }
+    
+            // Clamp segmentIndex and assign to last segment if necessary
             if (segmentIndex >= sequenceSegments.size()) {
-                segment = sequenceSegments.get(sequenceSegments.size() - 1);
+                segmentIndex = sequenceSegments.size() - 1;
+                segment = sequenceSegments.get(segmentIndex);
                 segmentOffsetTime = segment.getDuration();
             }
-
+    
+            // Create a new segment with the added marker
             SequenceSegment newSegment = null;
-
             if (segment instanceof WaitSegment) {
                 WaitSegment thisSegment = (WaitSegment) segment;
-
                 List<TrajectoryMarker> newMarkers = new ArrayList<>(thisSegment.getMarkers());
                 newMarkers.add(new TrajectoryMarker(segmentOffsetTime, marker.getCallback()));
-
                 newSegment = new WaitSegment(thisSegment.getStartPose(), thisSegment.getDuration(), newMarkers);
             } else if (segment instanceof TurnSegment) {
                 TurnSegment thisSegment = (TurnSegment) segment;
-
                 List<TrajectoryMarker> newMarkers = new ArrayList<>(thisSegment.getMarkers());
                 newMarkers.add(new TrajectoryMarker(segmentOffsetTime, marker.getCallback()));
-
                 newSegment = new TurnSegment(thisSegment.getStartPose(), thisSegment.getTotalRotation(), thisSegment.getMotionProfile(), newMarkers);
             } else if (segment instanceof TrajectorySegment) {
                 TrajectorySegment thisSegment = (TrajectorySegment) segment;
-
                 List<TrajectoryMarker> newMarkers = new ArrayList<>(thisSegment.getTrajectory().getMarkers());
                 newMarkers.add(new TrajectoryMarker(segmentOffsetTime, marker.getCallback()));
-
                 newSegment = new TrajectorySegment(new Trajectory(thisSegment.getTrajectory().getPath(), thisSegment.getTrajectory().getProfile(), newMarkers));
             }
-
-            sequenceSegments.set(segmentIndex, newSegment);
+    
+            // Safeguard before setting
+            if (segmentIndex < sequenceSegments.size()) {
+                sequenceSegments.set(segmentIndex, newSegment);
+            }
         }
-
+    
         return sequenceSegments;
     }
 

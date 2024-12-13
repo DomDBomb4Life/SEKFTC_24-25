@@ -1,13 +1,13 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.drive.DriveTrain;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 @TeleOp(name = "TeleOp Mode")
-public class TeleOpMode extends LinearOpMode {
+public class TeleOpModeRight extends LinearOpMode {
 
     private DriveTrain driveTrain;
     private Robot robot;
@@ -31,6 +31,7 @@ public class TeleOpMode extends LinearOpMode {
     public void runOpMode() {
         driveTrain = new DriveTrain(hardwareMap);
         robot = new Robot(hardwareMap);
+        robot.arm.OverridePosition();
 
         waitForStart();
 

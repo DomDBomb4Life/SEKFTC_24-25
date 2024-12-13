@@ -78,10 +78,14 @@ public class AutonomousRight extends OpMode {
         //Push second sample
         seqBuilder.strafeRight(48);
         seqBuilder.strafeLeft(24);
-
+        seqBuilder.addDisplacementMarker(() -> {
+            robot.arm.moveToAngle(137);
+        });
         //Park w/ 3 sec on timer
         seqBuilder.addTemporalMarker(27, () -> {});
         seqBuilder.strafeRight(24);
+
+
 
         TrajectorySequence sequence = seqBuilder.build();
         driveTrain.followTrajectorySequenceAsync(sequence);
