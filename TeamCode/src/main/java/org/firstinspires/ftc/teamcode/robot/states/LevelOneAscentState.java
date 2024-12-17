@@ -46,6 +46,7 @@ public class LevelOneAscentState extends BaseState {
 
             case MOVE_VIPER_AGAIN:
                 if (robot.arm.isCloseToTarget()) {
+                    robot.arm.moveToAngleStrong(85);
                 }
                 break;
 
