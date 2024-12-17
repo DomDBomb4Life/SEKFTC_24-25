@@ -79,8 +79,8 @@ public class AutonomousLeft extends OpMode {
         seqBuilder.lineToLinearHeading(FieldConstants.ASCENT_ZONE_POSITION);
         seqBuilder.forward(6);
 
-        seqBuilder.addTemporalMarkerOffset(0.25,() -> {
-            robot.onRightTriggerPressed();
+        seqBuilder.addTemporalMarkerOffset(0.5,() -> {
+            robot.arm.moveToAngleStrong(85);
         });
 
         TrajectorySequence sequence = seqBuilder.build();

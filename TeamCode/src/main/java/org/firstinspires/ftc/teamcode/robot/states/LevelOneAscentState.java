@@ -36,7 +36,7 @@ public class LevelOneAscentState extends BaseState {
         switch (currentStep) {
             case MOVE_TO_POSITIONS:
                 if (robot.wrist.isAtTarget() && robot.arm.isCloseToTarget()) {
-                    currentStep = isAutonomous ? Step.MOVE_VIPER_AGAIN : Step.WAIT_FOR_TRIGGER;
+                    currentStep = Step.WAIT_FOR_TRIGGER;
                 }
                 break;
 

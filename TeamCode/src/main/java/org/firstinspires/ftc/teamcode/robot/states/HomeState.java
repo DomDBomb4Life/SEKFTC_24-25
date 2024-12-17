@@ -70,7 +70,7 @@ public class HomeState extends BaseState {
             case WAIT_AFTER_OPENING_CLAW:
                 if (System.currentTimeMillis() - stepStartTime >= WAIT_DURATION_MS) {
                     currentStep = Step.MOVE_WRIST_TO_PICKUP_POSITION;
-                    robot.wrist.setAngle(125);
+                    robot.wrist.setAngle(SAFETY_WRIST_ANGLE);
                 }
                 break;
 

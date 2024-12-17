@@ -55,7 +55,7 @@ public class ScoringBasketState extends BaseState {
                 break;
 
             case WAIT_TO_OPEN_CLAW:
-                if (isAutonomous && (System.currentTimeMillis() - waitStartTime >= 200)) {
+                if (isAutonomous && (System.currentTimeMillis() - waitStartTime >= 500)) {
                     currentStep = Step.OPEN_CLAW;
                 }
                 // Wait for input in TeleOp or delay in Autonomous
