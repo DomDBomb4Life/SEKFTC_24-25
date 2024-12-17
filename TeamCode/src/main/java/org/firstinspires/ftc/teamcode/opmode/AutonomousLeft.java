@@ -95,6 +95,8 @@ public class AutonomousLeft extends OpMode {
         telemetry.addData("Current Pose", driveTrain.getPoseEstimate());
         telemetry.addData("Current Robot State", robot.getCurrentStateName());
         telemetry.addData("Current Robot Substate", robot.getCurrentSubstate());
+        telemetry.addData("Arm Angle", robot.arm.getCurrentAngle());
+        telemetry.addData("Arm Target", robot.arm.getTargetAngle());
         telemetry.update();
     }
 }
