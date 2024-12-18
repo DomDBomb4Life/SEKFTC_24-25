@@ -172,6 +172,9 @@ public class TeleOpMode extends LinearOpMode {
         telemetry.addData("Wrist Target", robot.wrist.getTargetAngle());
         telemetry.addData("Claw Position", robot.claw.getAngle());
         telemetry.addData("Claw Target", robot.claw.getTargetAngle());
+        telemetry.addData("Claw Servo Position", robot.claw.getPosition());
+
+
     }
 
     private boolean isButtonJustPressed(boolean currentState, boolean previousState) {
