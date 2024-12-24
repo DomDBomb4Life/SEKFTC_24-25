@@ -44,7 +44,7 @@ public class AutonomousLeft extends OpMode {
         seqBuilder.addTemporalMarkerOffset(-2, () -> {
             robot.setState(robot.scoringBasketState);
         });
-        seqBuilder.waitSeconds(4);
+        seqBuilder.waitSeconds(5);
 
         // For each sample position
         for (Pose2d samplePosition : FieldConstants.SAMPLE_POSITIONS) {
@@ -55,20 +55,20 @@ public class AutonomousLeft extends OpMode {
                 robot.setState(robot.homeState);
             });
 
-            seqBuilder.waitSeconds(1.0);
+            seqBuilder.waitSeconds(0.5);
             // Simulate driving forward and closing claw
             seqBuilder.addTemporalMarkerOffset(0.0,() -> {
                 robot.onRightTriggerPressed();
             });
 
-            seqBuilder.waitSeconds(1.0);
+            seqBuilder.waitSeconds(1.25);
 
             // Return to net
             seqBuilder.lineToLinearHeading(FieldConstants.NET_POSITION);
-            seqBuilder.addTemporalMarkerOffset(-1, () -> {
+            seqBuilder.addTemporalMarkerOffset(-1.2, () -> {
                 robot.setState(robot.scoringBasketState);
             });
-            seqBuilder.waitSeconds(5);
+            seqBuilder.waitSeconds(5.2);
         }
 
         // Move to ascent zone
@@ -77,10 +77,10 @@ public class AutonomousLeft extends OpMode {
         });
 
         seqBuilder.lineToLinearHeading(FieldConstants.ASCENT_ZONE_POSITION);
-        seqBuilder.forward(6);
 
-        seqBuilder.addTemporalMarkerOffset(0.5,() -> {
-            robot.arm.moveToAngleStrong(85);
+        seqBuilder.addTemporalMarkerOffset(0.2,() -> {
+            robot.arm.moveToAngleStrong(75);
+            robot.wrist.setAngle(90);
         });
 
         TrajectorySequence sequence = seqBuilder.build();

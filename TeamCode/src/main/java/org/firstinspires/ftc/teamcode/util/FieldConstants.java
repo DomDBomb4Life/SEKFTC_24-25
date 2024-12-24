@@ -23,12 +23,12 @@ public class FieldConstants {
 
     // Key field targets
     public static final Pose2d NET_POSITION = new Pose2d(58, 55, Math.toRadians(225));
-    public static final Pose2d ASCENT_ZONE_POSITION = new Pose2d(1.5 * TILE_SIZE, 0, Math.toRadians(180));
-    public static final Pose2d SPECIMEN_SCORING_POSITION = new Pose2d(0, 40, Math.toRadians(270));
+    public static final Pose2d ASCENT_ZONE_POSITION = new Pose2d(28.6, -16, Math.toRadians(180));
+    public static final Pose2d SPECIMEN_SCORING_POSITION = new Pose2d(0, 42.8, Math.toRadians(270));
 
     // Sample positions
     public static final Pose2d[] SAMPLE_POSITIONS = {
-            new Pose2d(48.67, 41.8, Math.toRadians(270)),
-            new Pose2d(59.3, 41.8, Math.toRadians(270))
+            new Pose2d(48.67, 43, Math.toRadians(270)),
+            new Pose2d(59.8, 42.5, Math.toRadians(270))
     };
 }

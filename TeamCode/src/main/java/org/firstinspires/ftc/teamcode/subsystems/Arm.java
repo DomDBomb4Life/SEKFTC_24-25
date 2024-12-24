@@ -21,7 +21,7 @@ public class Arm {
     private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
 
     // Zero position angle (where encoder count is zero)
-    private double ZERO_POSITION_ANGLE = -18.0; //TODO
+    private double ZERO_POSITION_ANGLE = -12.2; //TODO
 
     // Target angle
     private double targetAngle = ZERO_POSITION_ANGLE; // Start at -18 degrees as default
@@ -32,14 +32,14 @@ public class Arm {
         armMotor = hardwareMap.get(DcMotorEx.class, "Arm");
 
         if (isAutonomous){
-            ZERO_POSITION_ANGLE = 137.0;
+            ZERO_POSITION_ANGLE = 136.3;
         }
 
         // Motor configuration
         configureMotor(armMotor);
     }
     public void OverridePosition(){
-        ZERO_POSITION_ANGLE = 137.0;
+        ZERO_POSITION_ANGLE = 136.3;
     }
 
     private void configureMotor(DcMotorEx motor) {

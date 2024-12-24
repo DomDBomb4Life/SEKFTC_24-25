@@ -26,7 +26,7 @@ public class ObservationState extends BaseState {
     @Override
     protected void start() {
         currentStep = Step.LIFT_VIPERLIFT_TO_PRE_HEIGHT;
-        robot.viperLift.moveToPosition(630);
+        robot.viperLift.moveToPosition(1000);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class ObservationState extends BaseState {
             case LIFT_VIPERLIFT_TO_PRE_HEIGHT:
                 if (robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.MOVE_ARM_DOWN_BACKWARDS_AND_OPEN_CLAW;
-                    robot.arm.moveToAngle(180);
+                    robot.arm.moveToAngle(175);
                     robot.wrist.setAngle(90);
                     robot.claw.open();
                 }
@@ -67,7 +67,7 @@ public class ObservationState extends BaseState {
             case WAIT_CLAW_CLOSE_DELAY:
                 if (System.currentTimeMillis() - waitStartTime >= OPEN_CLAW_DELAY) {
                     currentStep = Step.LIFT_VIPERLIFT_TO_SECOND_HEIGHT;
-                    robot.viperLift.moveToPosition(553);
+                    robot.viperLift.moveToPosition(1200);
                 }
                 break;
 

@@ -43,16 +43,15 @@ public class AutonomousRight extends OpMode {
 
         // Score specimen at SPECIMEN_SCORING_POSITION
         seqBuilder.lineToLinearHeading(FieldConstants.SPECIMEN_SCORING_POSITION);
-        seqBuilder.addTemporalMarkerOffset(-1.0,() -> {
+        seqBuilder.addTemporalMarkerOffset(-2.0,() -> {
             robot.setState(robot.scoringSpecimenState);
         });
         seqBuilder.waitSeconds(3);
         seqBuilder.addTemporalMarkerOffset(-2.0,() -> {
             robot.onRightTriggerPressed();
         });
-        seqBuilder.addTemporalMarkerOffset(0.3,() -> {
-            robot.onPrimaryButtonPressed();
-        });
+
+
         seqBuilder.back(2);
         seqBuilder.waitSeconds(1);
         seqBuilder.addDisplacementMarker(() -> {
@@ -66,24 +65,21 @@ public class AutonomousRight extends OpMode {
         seqBuilder.lineToLinearHeading(pushPos2);
 
         //Push first sample
-        seqBuilder.strafeRight(48);
-        seqBuilder.strafeLeft(48);
+        seqBuilder.strafeRight(42);
+        seqBuilder.strafeLeft(42);
         seqBuilder.lineToLinearHeading(pushPos3);
 
         //Push second sample
-        seqBuilder.strafeRight(48);
-        seqBuilder.strafeLeft(48);
+        seqBuilder.strafeRight(42);
+        seqBuilder.strafeLeft(42);
         seqBuilder.lineToLinearHeading(pushPos4);
 
         //Push second sample
-        seqBuilder.strafeRight(48);
-        seqBuilder.strafeLeft(24);
-        seqBuilder.addDisplacementMarker(() -> {
+        seqBuilder.strafeRight(42);
+        //Park w/ 3 sec on timer
+        seqBuilder.addTemporalMarker(27, () -> {
             robot.arm.moveToAngle(137);
         });
-        //Park w/ 3 sec on timer
-        seqBuilder.addTemporalMarker(27, () -> {});
-        seqBuilder.strafeRight(24);
 
 
 
