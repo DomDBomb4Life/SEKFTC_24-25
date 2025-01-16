@@ -111,8 +111,8 @@ public class DriveTrainRR extends MecanumDrive {
 
         // Reverse motors if necessary
         // Match your original motor directions
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // If using encoders
         if (RUN_USING_ENCODER) {
