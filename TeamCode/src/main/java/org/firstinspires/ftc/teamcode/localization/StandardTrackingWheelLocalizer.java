@@ -41,7 +41,7 @@ public class StandardTrackingWheelLocalizer extends ThreeTrackingWheelLocalizer 
         lastEncoderVelocities = lastTrackingEncoderVelocities;
 
         // Initialize the encoders using the hardware map
-        leftEncoder = new Encoder(hardwareMap, "BackL");
+        leftEncoder = new Encoder(hardwareMap, "FrontL");
         rightEncoder = new Encoder(hardwareMap, "FrontR");
         frontEncoder = new Encoder(hardwareMap, "BackR");
 

@@ -31,6 +31,7 @@ public class Arm {
         // Initialize motor
         armMotor = hardwareMap.get(DcMotorEx.class, "Arm");
 
+
         if (isAutonomous){
             ZERO_POSITION_ANGLE = 136.3;
         }
@@ -44,7 +45,6 @@ public class Arm {
 
     private void configureMotor(DcMotorEx motor) {
         motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        motor.setDirection(DcMotorEx.Direction.REVERSE);
         motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
         // Set PIDF coefficients for RUN_TO_POSITION

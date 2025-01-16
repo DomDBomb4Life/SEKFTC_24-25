@@ -28,8 +28,8 @@ public class DriveTrain {
         backRight = hardwareMap.get(DcMotor.class, "BackR");
 
         // Set motor directions
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Set all motors to brake when power is zero
         setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
