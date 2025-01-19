@@ -16,7 +16,7 @@ public class Arm {
     private static final double ANGLE_MARGIN = 2.0; // Margin for angle tolerance in degrees
 
     // Encoder counts per revolution (CPR) for the motor
-    private static final double ENCODER_CPR = 1425.1; // Adjust based on your motor (e.g., Neverest 40)
+    private static final double ENCODER_CPR = 537.7; // Adjust based on your motor (e.g., Neverest 40)
     private static final double GEAR_RATIO = 1.0; // Adjust if gears are used
     private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
 

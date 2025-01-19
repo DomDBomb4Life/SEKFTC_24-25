@@ -32,7 +32,7 @@ public class ViperLift {
         configureMotor(rightLiftMotor);
 
         // Change the direction of one of the motors if necessary
-        leftLiftMotor.setDirection(DcMotor.Direction.REVERSE);
+        rightLiftMotor.setDirection(DcMotor.Direction.REVERSE);
 
         // Set initial positions
         resetEncoders();

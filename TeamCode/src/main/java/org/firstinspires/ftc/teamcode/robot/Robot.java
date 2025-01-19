@@ -11,6 +11,7 @@ public class Robot {
     public final Arm arm;
     public final Claw claw;
     public final Wrist wrist;
+    public final Winch winch;
 
     // States
     private StateController stateController;
@@ -35,6 +36,7 @@ public class Robot {
         wrist = new Wrist(hardwareMap, claw);
         arm = new Arm(hardwareMap, isAutonomous);
         viperLift = new ViperLift(hardwareMap);
+        winch = new Winch(hardwareMap);
 
         idleState = new IdleState(this, isAutonomous);
         homeState = new HomeState(this, isAutonomous);
