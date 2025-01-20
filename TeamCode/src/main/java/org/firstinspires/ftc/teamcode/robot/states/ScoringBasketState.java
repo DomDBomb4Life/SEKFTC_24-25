@@ -24,9 +24,9 @@ public class ScoringBasketState extends BaseState {
     @Override
     protected void start() {
         currentStep = Step.LIFT_UP;
-        robot.viperLift.moveToPosition(7100);
-        robot.arm.moveToAngle(75);
-        robot.wrist.setAngle(33);
+        robot.viperLift.moveToPosition(4174);
+        robot.arm.moveToAngle(102);
+        robot.wrist.setAngle(74);
 
 
     }
@@ -44,8 +44,8 @@ public class ScoringBasketState extends BaseState {
             case LIFT_UP:
                 if (robot.viperLift.isCloseToTarget()) {
                     currentStep = Step.MOVE_ARM_WRIST;
-                    robot.arm.moveToAngle(123);
-                    robot.wrist.setAngle(33);
+                    robot.arm.moveToAngle(120);
+                    robot.wrist.setAngle(144);
                 }
                 break;
 

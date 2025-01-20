@@ -19,7 +19,7 @@ public class HomeState extends BaseState {
     private Step currentStep;
     private static final double SAFETY_ARM_ANGLE = 0.0;
     private static final double SAFETY_WRIST_ANGLE = 125.0;
-    private static final double PICKUP_ARM_ANGLE = -14.0;
+    private static final double PICKUP_ARM_ANGLE = -16.0;
     private static final double PICKUP_WRIST_ANGLE = 125.0;
     private long stepStartTime;
     private static final long WAIT_DURATION_MS = 100;
@@ -36,7 +36,7 @@ public class HomeState extends BaseState {
     protected void start() {
         currentStep = Step.MOVE_TO_SAFETY_POSITION;
         robot.arm.moveToAngle(0);
-        robot.wrist.setAngle(146);
+        robot.wrist.setAngle(43);
         robot.claw.open();
     }
 

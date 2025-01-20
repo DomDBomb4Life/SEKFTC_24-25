@@ -26,7 +26,10 @@ public class ObservationState extends BaseState {
     @Override
     protected void start() {
         currentStep = Step.LIFT_VIPERLIFT_TO_PRE_HEIGHT;
-        robot.viperLift.moveToPosition(1000);
+        robot.viperLift.moveToPosition(0);
+        robot.wrist.setAngle(110);
+        robot.arm.moveToAngle(157);
+        robot.claw.open();
     }
 
     @Override
@@ -40,19 +43,12 @@ public class ObservationState extends BaseState {
 
         switch (currentStep) {
             case LIFT_VIPERLIFT_TO_PRE_HEIGHT:
-                if (robot.viperLift.isCloseToTarget()) {
-                    currentStep = Step.MOVE_ARM_DOWN_BACKWARDS_AND_OPEN_CLAW;
-                    robot.arm.moveToAngle(175);
-                    robot.wrist.setAngle(90);
-                    robot.claw.open();
+                if (robot.viperLift.isCloseToTarget()  &&  robot.arm.isCloseToTarget() && robot.wrist.isAtTarget()) {
+                    currentStep = Step.WAIT_FOR_TRIGGER;
+
                 }
                 break;
 
-            case MOVE_ARM_DOWN_BACKWARDS_AND_OPEN_CLAW:
-                if (robot.arm.isCloseToTarget() && robot.wrist.isAtTarget()) {
-                    currentStep = Step.WAIT_FOR_TRIGGER;
-                }
-                break;
 
             case WAIT_FOR_TRIGGER:
                 // Wait for user input (RIGHT_TRIGGER)
@@ -67,7 +63,7 @@ public class ObservationState extends BaseState {
             case WAIT_CLAW_CLOSE_DELAY:
                 if (System.currentTimeMillis() - waitStartTime >= OPEN_CLAW_DELAY) {
                     currentStep = Step.LIFT_VIPERLIFT_TO_SECOND_HEIGHT;
-                    robot.viperLift.moveToPosition(1200);
+                    robot.viperLift.moveToPosition(731);
                 }
                 break;
 
@@ -76,6 +72,7 @@ public class ObservationState extends BaseState {
                     currentStep = Step.MOVE_ARM_UP;
                     robot.arm.moveToAngle(90);
                     robot.wrist.setAngle(90);
+
                 }
                 break;
 

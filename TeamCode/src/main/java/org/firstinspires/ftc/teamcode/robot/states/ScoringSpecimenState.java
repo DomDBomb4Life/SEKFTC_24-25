@@ -24,7 +24,9 @@ public class ScoringSpecimenState extends BaseState {
     @Override
     protected void start() {
         currentStep = Step.LIFT_VIPERLIFT_UP;
-        robot.viperLift.moveToPosition(1685);
+        robot.viperLift.moveToPosition(238);
+        robot.arm.moveToAngle(71);
+        robot.wrist.setAngle(55);
     }
 
     @Override
@@ -38,10 +40,8 @@ public class ScoringSpecimenState extends BaseState {
 
         switch (currentStep) {
             case LIFT_VIPERLIFT_UP:
-                if (robot.viperLift.isCloseToTarget()) {
-                    currentStep = Step.MOVE_ARM_DOWN_FORWARDS;
-                    robot.arm.moveToAngle(38);
-                    robot.wrist.setAngle(117);
+                if (robot.viperLift.isCloseToTarget() && robot.arm.isCloseToTarget() && robot.wrist.isAtTarget()) {
+                    currentStep = Step.WAIT_FOR_RIGHT_TRIGGER;
                 }
                 break;
 
@@ -56,7 +56,7 @@ public class ScoringSpecimenState extends BaseState {
                 break;
 
             case MOVE_VIPER_LIFT_UP_TO_HOOK:
-                robot.viperLift.moveToPosition(4100);
+                robot.viperLift.moveToPosition(1144);
 //                robot.arm.moveToAngle(105);
                 currentStep = Step.OPEN_CLAW;
                 break;
