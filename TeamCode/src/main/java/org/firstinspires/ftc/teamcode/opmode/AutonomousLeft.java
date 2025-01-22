@@ -44,7 +44,7 @@ public class AutonomousLeft extends OpMode {
         seqBuilder.addTemporalMarkerOffset(-2, () -> {
             robot.setState(robot.scoringBasketState);
         });
-        seqBuilder.waitSeconds(5);
+        seqBuilder.waitSeconds(2.5);
 
         // For each sample position
         for (Pose2d samplePosition : FieldConstants.SAMPLE_POSITIONS) {
@@ -68,7 +68,7 @@ public class AutonomousLeft extends OpMode {
             seqBuilder.addTemporalMarkerOffset(-1.2, () -> {
                 robot.setState(robot.scoringBasketState);
             });
-            seqBuilder.waitSeconds(5.2);
+            seqBuilder.waitSeconds(2.5);
         }
 
         // Move to ascent zone

@@ -11,30 +11,26 @@ public class ViperLift {
     private DcMotor rightLiftMotor;
 
     // Encoder positions
-    private static final int POSITION_MIN = 0;         // Fully retracted position
-    private static final int POSITION_MAX = 11000;     // Fully extended position (example value)
-    private static final int POSITION_MARGIN = 50;     // Margin for position tolerance
+    private static final int POSITION_MIN = 0;
+    private static final int POSITION_MAX = 11000;
+    private static final int POSITION_MARGIN = 50;
 
-    // Target position
+    // Current target
     private int targetPosition = POSITION_MIN;
-
-    // Encoder offset
     private int encoderOffset = 0;
 
-    // Constructor
+    // Optional synergy with the Winch
+    private Winch attachedWinch = null;
+    private boolean synergyEnabled = false;
+
     public ViperLift(HardwareMap hardwareMap) {
-        // Initialize motors
         leftLiftMotor = hardwareMap.get(DcMotor.class, "LiftL");
         rightLiftMotor = hardwareMap.get(DcMotor.class, "LiftR");
-
-        // Motor configurations
         configureMotor(leftLiftMotor);
         configureMotor(rightLiftMotor);
 
-        // Change the direction of one of the motors if necessary
         rightLiftMotor.setDirection(DcMotor.Direction.REVERSE);
 
-        // Set initial positions
         resetEncoders();
     }
 
@@ -44,7 +40,6 @@ public class ViperLift {
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    // Reset encoders
     public void resetEncoders() {
         leftLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -53,86 +48,75 @@ public class ViperLift {
         encoderOffset = 0;
     }
 
-    // Initialize position without moving the lift
     public void initializePosition(int position) {
-        // Stop motors
-        leftLiftMotor.setPower(0);
-        rightLiftMotor.setPower(0);
-
-        // Reset encoders
+        stop();
         leftLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightLiftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        // Set offset to match the physical position
         encoderOffset = position;
 
-        // Set motors back to RUN_USING_ENCODER
         leftLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightLiftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    // Move to a specific position
     public void moveToPosition(int position) {
-        // Clamp position within bounds
         targetPosition = Math.max(POSITION_MIN, Math.min(position, POSITION_MAX));
+        int adjusted = targetPosition - encoderOffset;
 
-        // Adjust target positions to account for the encoderOffset
-        int adjustedTargetPosition = targetPosition - encoderOffset;
+        leftLiftMotor.setTargetPosition(adjusted);
+        rightLiftMotor.setTargetPosition(adjusted);
 
-        // Set target position for both motors
-        leftLiftMotor.setTargetPosition(adjustedTargetPosition);
-        rightLiftMotor.setTargetPosition(adjustedTargetPosition);
-
-        // Apply power
         leftLiftMotor.setPower(1.0);
         rightLiftMotor.setPower(1.0);
 
-        // Set motors to run to position
         leftLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightLiftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
-    // Adjust target position incrementally
     public void adjustTargetPosition(int increment) {
         if (isCloseToTarget()) {
             moveToPosition(targetPosition + increment);
         }
     }
 
-    // Stop the lift
     public void stop() {
         leftLiftMotor.setPower(0);
         rightLiftMotor.setPower(0);
     }
 
-    // Get current position
     public int getCurrentPosition() {
-        // Apply the offset
-        return ((leftLiftMotor.getCurrentPosition() + rightLiftMotor.getCurrentPosition()) / 2) + encoderOffset;
+        int avg = (leftLiftMotor.getCurrentPosition() + rightLiftMotor.getCurrentPosition()) / 2;
+        return avg + encoderOffset;
     }
 
-    // Get target position
     public int getTargetPosition() {
         return targetPosition;
     }
 
-    // Check if lift is close to the target position
     public boolean isCloseToTarget() {
-        int currentPosition = getCurrentPosition();
-        return Math.abs(currentPosition - targetPosition) <= POSITION_MARGIN;
+        return Math.abs(getCurrentPosition() - targetPosition) <= POSITION_MARGIN;
     }
 
-    // Update method to be called in the main loop (if needed)
-    public void update() {
-        // Implement PID control or other control logic here if necessary
-    }
-
-    // Additional methods for preset positions
     public void moveToMin() {
         moveToPosition(POSITION_MIN);
     }
 
     public void moveToMax() {
         moveToPosition(POSITION_MAX);
+    }
+
+    // ---------- Winch Synergy -----------
+    public void setWinch(Winch w, boolean enable) {
+        this.attachedWinch = w;
+        this.synergyEnabled = enable;
+    }
+
+    // Called each loop
+    public void update() {
+        // If synergy is enabled, feed the ViperLift position to the Winch's update:
+        if (synergyEnabled && attachedWinch != null) {
+            attachedWinch.update(getCurrentPosition());
+        }
+        // Additional ViperLift logic or PID can go here
     }
 }
