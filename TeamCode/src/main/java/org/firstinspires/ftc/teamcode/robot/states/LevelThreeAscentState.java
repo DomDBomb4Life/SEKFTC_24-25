@@ -4,18 +4,47 @@ package org.firstinspires.ftc.teamcode.robot.states;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 /**
- * A state for performing a Level 3 Ascent which uses both the ViperLift and Winch
- * to keep the robot level at all times. The steps are hypothetical placeholders and can be
- * adjusted for your actual mechanical design and timing.
+ * Refined Level 3 Ascent with more detailed steps:
+ *   1. Attach winch to high rung
+ *   2. Attach arm hook to low rung
+ *   3. Attach side panel hook to low rung
+ *   4. Detach arm hook from low rung
+ *   5. Attach arm hook to top rung
+ *   6. Retract everything for final ascend
  */
 public class LevelThreeAscentState extends BaseState {
+
     public enum Step {
-        ATTACH_WINCH,           // Keep tension, ensure it's attached
-        WAIT_FOR_TRIGGER_1,     // Wait for user input before detaching
-        DETACH_WINCH,           // Detach from the arm so the hook is on the bar
-        SYNC_WITH_VIPER,        // Winch + ViperLift working together to keep the robot level
-        WAIT_FOR_TRIGGER_2,     // Wait for user input to override
-        OVERRIDE_PULL,          // The final big pull up
+        // Step 1: Attach Winch to High Rung
+        LIFT_VIPERLIFT_FULL,         // Lift the ViperLift up
+        MOVE_ARM_DOWN,               // Move arm down
+        WAIT_FOR_TRIGGER_1,          // Wait for user input
+        MOVE_VIPERLIFT_DOWN,         // Move ViperLift partially down
+        MOVE_ARM_BACK,               // Move arm back
+        MOVE_VIPERLIFT_MIDDLE,       // Move to a mid position, end of Step 1
+
+        // Step 2: Attach Arm Hook to Low Rung
+        MOVE_VIPERLIFT_LOW,          // Move ViperLift down nearly to bottom
+        MOVE_ARM_FORWARD,            // Attach hook forward
+        WAIT_FOR_TRIGGER_2,          // Wait for user input
+        RETRACT_VIPERLIFT_WINCH_SYNC,// Retract both to lock in low rung
+        WAIT_FOR_TRIGGER_3,          // Wait for user
+
+        // Step 3: Attach Side Panel Hook to Low Rung (Simplified)
+        ENGAGE_SIDE_PANEL_HOOK,      // Possibly any needed movements
+        WAIT_FOR_TRIGGER_4,          // Wait for user to confirm it's latched
+
+        // Step 4: Detach Arm Hook from Low Rung
+        DETACH_ARM_HOOK,             // Move arm away
+        WAIT_FOR_TRIGGER_5,
+
+        // Step 5: Attach Arm Hook to Top Rung
+        MOVE_VIPERLIFT_UP_A_BIT,
+        MOVE_ARM_90,                 // Move arm to 90 deg
+        WAIT_FOR_TRIGGER_6,
+
+        // Step 6: Complete final ascend
+        RETRACT_ALL_FOR_FINAL_ASCENT,
         COMPLETED
     }
 
@@ -27,14 +56,16 @@ public class LevelThreeAscentState extends BaseState {
 
     @Override
     protected void start() {
-        // Step 1: ensure the winch is in ATTACHED mode, minimal tension
-        currentStep = Step.ATTACH_WINCH;
-        robot.winch.setModeAttached(); 
+        currentStep = Step.LIFT_VIPERLIFT_FULL;
+        // Hypothetical positions
+        robot.viperLift.moveToPosition(3000);   // Lift up to 
+        // Winch attach mode to rung or minimal tension 
+        robot.winch.setModeAttached();
     }
 
     @Override
     protected void cleanup() {
-        // No special cleanup if we remain on the bar
+        // Possibly finalize
     }
 
     @Override
@@ -42,63 +73,152 @@ public class LevelThreeAscentState extends BaseState {
         if (!isActive) return;
 
         switch (currentStep) {
-            case ATTACH_WINCH:
-                // Possibly ensure the rope is taut. We do that automatically in the Winch's update.
-                // Move to WAIT_FOR_TRIGGER_1 (TeleOp prompt) or skip in Autonomous.
-                currentStep = isAutonomous ? Step.DETACH_WINCH : Step.WAIT_FOR_TRIGGER_1;
+            case LIFT_VIPERLIFT_FULL:
+                if (robot.viperLift.isCloseToTarget()) {
+                    currentStep = Step.MOVE_ARM_DOWN;
+                    robot.arm.moveToAngle(20);
+                }
+                break;
+
+            case MOVE_ARM_DOWN:
+                if (robot.arm.isCloseToTarget()) {
+                    currentStep = Step.WAIT_FOR_TRIGGER_1;
+                }
                 break;
 
             case WAIT_FOR_TRIGGER_1:
-                // Wait for operator to confirm we detach the winch from the arm
+                // Wait user input
                 break;
 
-            case DETACH_WINCH:
-                // We forcibly set the mode to DETACHED, so the hook stays on the top rung.
-                // Now the rope is controlling the angle in conjunction with the ViperLift.
-                robot.winch.setModeDetached();
-                currentStep = Step.SYNC_WITH_VIPER;
+            case MOVE_VIPERLIFT_DOWN:
+                robot.viperLift.moveToPosition(5000);
+                currentStep = Step.MOVE_ARM_BACK;
                 break;
 
-            case SYNC_WITH_VIPER:
-                // Winch + ViperLift are automatically coordinated via update logic. 
-                // We'll wait for user trigger if in TeleOp, or skip if in autonomous.
-                currentStep = isAutonomous ? Step.OVERRIDE_PULL : Step.WAIT_FOR_TRIGGER_2;
+            case MOVE_ARM_BACK:
+                if (robot.viperLift.isCloseToTarget()) {
+                    robot.arm.moveToAngle(120);
+                    currentStep = Step.MOVE_VIPERLIFT_MIDDLE;
+                }
+                break;
+
+            case MOVE_VIPERLIFT_MIDDLE:
+                // Move to mid
+                robot.viperLift.moveToPosition(4000);
+                if (robot.viperLift.isCloseToTarget()) {
+                    currentStep = Step.MOVE_VIPERLIFT_LOW;
+                    robot.viperLift.moveToPosition(500); 
+                }
+                break;
+
+            case MOVE_VIPERLIFT_LOW:
+                if (robot.viperLift.isCloseToTarget()) {
+                    currentStep = Step.MOVE_ARM_FORWARD;
+                    robot.arm.moveToAngle(-10);
+                }
+                break;
+
+            case MOVE_ARM_FORWARD:
+                if (robot.arm.isCloseToTarget()) {
+                    currentStep = Step.WAIT_FOR_TRIGGER_2;
+                }
                 break;
 
             case WAIT_FOR_TRIGGER_2:
-                // Wait for user input to do final big pull
+                // Wait user input
                 break;
 
-            case OVERRIDE_PULL:
-                // Final big pull. Winch is at full power to raise the robot.
+            case RETRACT_VIPERLIFT_WINCH_SYNC:
+                // Enable synergy or DETACHED if we want geometry-based approach
+                robot.winch.setModeDetached(); 
+                // Move ViperLift to 0 while the winch re-adjusts automatically
+                robot.viperLift.moveToPosition(0);
+                currentStep = Step.WAIT_FOR_TRIGGER_3;
+                break;
+
+            case WAIT_FOR_TRIGGER_3:
+                // Wait user input
+                break;
+
+            case ENGAGE_SIDE_PANEL_HOOK:
+                // Possibly do minimal movements or a wait
+                currentStep = Step.WAIT_FOR_TRIGGER_4;
+                break;
+
+            case WAIT_FOR_TRIGGER_4:
+                // Wait user input
+                break;
+
+            case DETACH_ARM_HOOK:
+                // Move arm away from rung
+                robot.arm.moveToAngle(90);
+                currentStep = Step.WAIT_FOR_TRIGGER_5;
+                break;
+
+            case WAIT_FOR_TRIGGER_5:
+                // Wait user input
+                break;
+
+            case MOVE_VIPERLIFT_UP_A_BIT:
+                // Move ViperLift up partially
+                robot.viperLift.moveToPosition(2000);
+                currentStep = Step.MOVE_ARM_90;
+                break;
+
+            case MOVE_ARM_90:
+                if (robot.viperLift.isCloseToTarget()) {
+                    robot.arm.moveToAngle(90);
+                    currentStep = Step.WAIT_FOR_TRIGGER_6;
+                }
+                break;
+
+            case WAIT_FOR_TRIGGER_6:
+                // Wait user input
+                break;
+
+            case RETRACT_ALL_FOR_FINAL_ASCENT:
+                // final step: override pull if needed
                 robot.winch.setModeOverride();
-                // Possibly also do a ViperLift move if needed.
-                // Once done, we set to COMPLETED or rely on user input again.
+                robot.viperLift.moveToPosition(0);
                 currentStep = Step.COMPLETED;
                 break;
 
             case COMPLETED:
-                // Done. We remain in override or any final state needed.
+                // done
                 break;
         }
     }
 
     @Override
     public void onUserInput(UserInput input) {
-        if (!isAutonomous) {
-            if (input == UserInput.RIGHT_TRIGGER) {
-                switch (currentStep) {
-                    case WAIT_FOR_TRIGGER_1:
-                        // Switch to DETACH_WINCH
-                        currentStep = Step.DETACH_WINCH;
-                        break;
-                    case WAIT_FOR_TRIGGER_2:
-                        // Switch to OVERRIDE_PULL
-                        currentStep = Step.OVERRIDE_PULL;
-                        break;
-                    default:
-                        break;
-                }
+        if (!isAutonomous && input == UserInput.RIGHT_TRIGGER) {
+            switch (currentStep) {
+                case WAIT_FOR_TRIGGER_1:
+                    currentStep = Step.MOVE_VIPERLIFT_DOWN;
+                    break;
+
+                case WAIT_FOR_TRIGGER_2:
+                    currentStep = Step.RETRACT_VIPERLIFT_WINCH_SYNC;
+                    break;
+
+                case WAIT_FOR_TRIGGER_3:
+                    currentStep = Step.ENGAGE_SIDE_PANEL_HOOK;
+                    break;
+
+                case WAIT_FOR_TRIGGER_4:
+                    currentStep = Step.DETACH_ARM_HOOK;
+                    break;
+
+                case WAIT_FOR_TRIGGER_5:
+                    currentStep = Step.MOVE_VIPERLIFT_UP_A_BIT;
+                    break;
+
+                case WAIT_FOR_TRIGGER_6:
+                    currentStep = Step.RETRACT_ALL_FOR_FINAL_ASCENT;
+                    break;
+
+                default:
+                    break;
             }
         }
     }
