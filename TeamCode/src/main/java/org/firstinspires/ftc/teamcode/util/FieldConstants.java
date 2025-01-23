@@ -26,9 +26,10 @@ public class FieldConstants {
     public static final Pose2d ASCENT_ZONE_POSITION = new Pose2d(28.6, -16, Math.toRadians(180));
     public static final Pose2d SPECIMEN_SCORING_POSITION = new Pose2d(0, 42.8, Math.toRadians(270));
 
-    // Sample positions
-    public static final Pose2d[] SAMPLE_POSITIONS = {
-            new Pose2d(48.67, 43, Math.toRadians(270)),
-            new Pose2d(59.8, 42.5, Math.toRadians(270))
-    };
+     // Sample positions
+     public static final Pose2d[] SAMPLE_POSITIONS = {
+        new Pose2d(48.67, 43, Math.toRadians(270)),
+        new Pose2d(59.8, 42.5, Math.toRadians(270)),
+        new Pose2d(52.45,39.68, Math.toRadians(310))
+};
 }
