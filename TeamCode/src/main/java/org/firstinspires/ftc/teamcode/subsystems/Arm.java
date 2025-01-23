@@ -33,7 +33,7 @@ public class Arm {
 
 
         if (isAutonomous){
-            ZERO_POSITION_ANGLE = 136.3;
+            ZERO_POSITION_ANGLE = 157;
         }
 
         // Motor configuration

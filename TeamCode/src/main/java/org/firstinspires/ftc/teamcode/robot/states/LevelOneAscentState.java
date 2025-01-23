@@ -20,8 +20,8 @@ public class LevelOneAscentState extends BaseState {
     protected void start() {
         currentStep = Step.MOVE_TO_POSITIONS;
         robot.viperLift.moveToPosition(0);
-        robot.arm.moveToAngle(40);
-        robot.wrist.setAngle(120);
+        robot.arm.moveToAngle(30);
+        robot.wrist.setAngle(90);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class LevelOneAscentState extends BaseState {
 
             case MOVE_VIPER_AGAIN:
                 if (robot.arm.isCloseToTarget()) {
-                    robot.arm.moveToAngleStrong(85);
+                    robot.arm.moveToAngleStrong(55);
                 }
                 break;
 

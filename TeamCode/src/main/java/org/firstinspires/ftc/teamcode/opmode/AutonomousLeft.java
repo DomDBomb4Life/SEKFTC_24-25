@@ -25,6 +25,7 @@ public class AutonomousLeft extends OpMode {
     public void init() {
         robot = new Robot(hardwareMap, true);
         driveTrain = new DriveTrainRR(hardwareMap);
+        robot.arm.moveToAngle(157);
 
         // Set initial pose for LEFT start
         driveTrain.setPoseEstimate(FieldConstants.LEFT_START);
@@ -51,7 +52,7 @@ public class AutonomousLeft extends OpMode {
             seqBuilder.lineToLinearHeading(samplePosition);
 
             // Simulate pickup process
-            seqBuilder.addTemporalMarkerOffset(-0.5, () -> {
+            seqBuilder.addTemporalMarkerOffset(-1, () -> {
                 robot.setState(robot.homeState);
             });
 
