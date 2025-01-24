@@ -17,7 +17,7 @@ public class DriveConstants {
      * Motor constants that should be listed in your motor's datasheet.
      */
     public static final double TICKS_PER_REV = 537.6; // Example for GoBILDA 312 RPM motors
-    public static final double MAX_RPM = 312;
+    public static final double MAX_RPM = 275;
 
     /*
      * Set RUN_USING_ENCODER to true to enable built-in hub velocity control using drive encoders.
@@ -63,7 +63,7 @@ public class DriveConstants {
      * Drive constraints for trajectory generation.
      */
     public static double MAX_VEL = rpmToVelocity(MAX_RPM);
-    public static double MAX_ACCEL = 30;
+    public static double MAX_ACCEL = 20;
     public static double MAX_ANG_VEL = Math.toRadians(180);
     public static double MAX_ANG_ACCEL = Math.toRadians(180);
 
