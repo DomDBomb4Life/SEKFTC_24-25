@@ -71,7 +71,7 @@ public class LevelTwoAscentState extends BaseState {
                 // If we're waiting at WAIT_FOR_TRIGGER_1, proceed to LIFT_VIPERLIFT
                 if (currentStep == Step.WAIT_FOR_TRIGGER_1 && robot.viperLift.isCloseToTarget()) {
                     robot.viperLift.moveToPosition(1857);
-                    robot.arm.oscillate
+                    robot.arm.oscillate(45, 65);
                     currentStep = Step.LOCKING_IN;
                 }
             }

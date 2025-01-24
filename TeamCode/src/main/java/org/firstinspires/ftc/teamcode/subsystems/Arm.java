@@ -69,6 +69,25 @@ public class Arm {
         armMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
     }
 
+    public void OverridePosition(){
+        ZERO_POSITION_ANGLE = 136.3;
+    }
+
+    public void moveToAngleStrong(double angle) {
+        // Clamp angle within bounds
+        targetAngle = Math.max(ANGLE_MIN, Math.min(angle, ANGLE_MAX));
+
+        // Calculate target encoder counts based on the calibrated zero position
+        int targetPosition = angleToCounts(targetAngle);
+
+        // Set target position
+        armMotor.setTargetPosition(targetPosition);
+
+        // Apply power and set mode
+        armMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        armMotor.setPower(1.0); // Use a moderate power for smooth movement
+    }
+
     // Move to a specific angle
     public void moveToAngle(double angle) {
         // Cancel oscillation if active
@@ -128,6 +147,10 @@ public class Arm {
     public double getCurrentAngle() {
         int currentPosition = armMotor.getCurrentPosition();
         return countsToAngle(currentPosition);
+    }
+        // Get target angle
+    public double getTargetAngle() {
+        return targetAngle;
     }
 
     // Check if arm is close to the target angle
