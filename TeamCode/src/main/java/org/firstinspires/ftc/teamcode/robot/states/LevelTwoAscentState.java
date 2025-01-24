@@ -32,9 +32,8 @@ public class LevelTwoAscentState extends BaseState {
     @Override
     protected void start() {
         // Initial step: move arm down so we can get under the bottom hook
-        currentStep = Step.WAIT_FOR_TRIGGER_1;
-        robot.arm.moveToAngle(65);
-        robot.wrist.setAngle(10);
+        currentStep = Step.MOVE_ARM_DOWN;
+        
         // Viper lift stays at its initial position (assume 0)
         robot.viperLift.moveToPosition(4300);
     }
@@ -50,9 +49,13 @@ public class LevelTwoAscentState extends BaseState {
 
         switch (currentStep) {
 
-            case WAIT_FOR_TRIGGER_1:
-                // In TeleOp, wait for user input (RIGHT_TRIGGER)
-                // In Autonomous, we never hit this step because we skip to LIFT_VIPERLIFT directly
+            case MOVE_ARM_DOWN:
+            if (robot.viperLift.isCloseToTarget()) {
+                robot.arm.moveToAngle(65);
+                robot.wrist.setAngle(10);
+                currentStep = Step.WAIT_FOR_TRIGGER_1;
+            }
+                
                 break;
 
             case COMPLETED:
@@ -68,6 +71,7 @@ public class LevelTwoAscentState extends BaseState {
                 // If we're waiting at WAIT_FOR_TRIGGER_1, proceed to LIFT_VIPERLIFT
                 if (currentStep == Step.WAIT_FOR_TRIGGER_1 && robot.viperLift.isCloseToTarget()) {
                     robot.viperLift.moveToPosition(1857);
+                    robot.arm.oscillate
                     currentStep = Step.LOCKING_IN;
                 }
             }
