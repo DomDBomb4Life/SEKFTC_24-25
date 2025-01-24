@@ -67,6 +67,7 @@ public class ScoringBasketState extends BaseState {
 
             case OPEN_CLAW:
                 robot.claw.open();
+                robot.wrist.setAngle(90);
                 waitStartTime = System.currentTimeMillis();
                 currentStep = Step.WAIT_FOR_CLAW_OPEN;
                 break;

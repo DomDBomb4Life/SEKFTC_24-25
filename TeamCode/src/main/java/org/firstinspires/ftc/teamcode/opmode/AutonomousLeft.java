@@ -26,6 +26,7 @@ public class AutonomousLeft extends OpMode {
         robot = new Robot(hardwareMap, true);
         driveTrain = new DriveTrainRR(hardwareMap);
         robot.arm.moveToAngle(157);
+        robot.wrist.setAngle(10);
 
         // Set initial pose for LEFT start
         driveTrain.setPoseEstimate(FieldConstants.LEFT_START);
@@ -39,20 +40,23 @@ public class AutonomousLeft extends OpMode {
         TrajectorySequenceBuilder seqBuilder = driveTrain.trajectorySequenceBuilder(FieldConstants.LEFT_START);
 
         // Drive to net
-        seqBuilder.lineToLinearHeading(FieldConstants.NET_POSITION);
-
-        // Score preloaded specimen
-        seqBuilder.addTemporalMarkerOffset(-2, () -> {
-            robot.setState(robot.scoringBasketState);
+        seqBuilder.lineToLinearHeading(FieldConstants.SPECIMEN_SCORING_POSITION_LEFT);
+        seqBuilder.addTemporalMarkerOffset(-2.0,() -> {
+            robot.setState(robot.scoringSpecimenState);
         });
-        seqBuilder.waitSeconds(2.5);
+        seqBuilder.waitSeconds(3);
+        seqBuilder.addTemporalMarkerOffset(-2.0,() -> {
+            robot.onRightTriggerPressed();
+            robot.viperLift.moveToPosition(0);
+        });
+
 
         // For each sample position
         for (Pose2d samplePosition : FieldConstants.SAMPLE_POSITIONS) {
             seqBuilder.lineToLinearHeading(samplePosition);
 
             // Simulate pickup process
-            seqBuilder.addTemporalMarkerOffset(-1, () -> {
+            seqBuilder.addTemporalMarkerOffset(-1.25, () -> {
                 robot.setState(robot.homeState);
             });
 

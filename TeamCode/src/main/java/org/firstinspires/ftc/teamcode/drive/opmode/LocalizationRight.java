@@ -29,7 +29,7 @@ import java.util.LinkedList;
  * encoder localizer heading may be significantly off if the track width has not been tuned).
  */
 @TeleOp(group = "drive")
-public class LocalizationTest extends LinearOpMode {
+public class LocalizationRight extends LinearOpMode {
     TelemetryPacket packet = new TelemetryPacket();
     Canvas fieldOverlay = packet.fieldOverlay();
     private FtcDashboard dashboard;
@@ -81,7 +81,7 @@ public class LocalizationTest extends LinearOpMode {
 
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());
-            telemetry.addData("heading", poseEstimate.getHeading());
+            telemetry.addData("heading", Math.toDegrees(poseEstimate.getHeading()));
             telemetry.update();
 //            dashboard.sendTelemetryPacket(packet);
 

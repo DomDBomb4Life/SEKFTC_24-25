@@ -83,7 +83,7 @@ public class Arm {
 
         // Apply power and set mode
         armMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        armMotor.setPower(0.5); // Use a moderate power for smooth movement
+        armMotor.setPower(1.0); // Use a moderate power for smooth movement
     }
 
     public void moveToAngleStrong(double angle) {

@@ -12,7 +12,7 @@ public class ViperLift {
 
     // Encoder positions
     private static final int POSITION_MIN = 0;
-    private static final int POSITION_MAX = 11000;
+    private static final int POSITION_MAX = 4500;
     private static final int POSITION_MARGIN = 50;
 
     // Current target
