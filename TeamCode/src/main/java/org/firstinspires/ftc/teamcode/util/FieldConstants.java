@@ -27,14 +27,14 @@ public class FieldConstants {
 
     public static final Pose2d ASCENT_ZONE_POSITION = new Pose2d(29.2, 1.3, Math.toRadians(180));
 
-    public static final Pose2d SPECIMEN_SCORING_POSITION = new Pose2d(-8,36.5 , Math.toRadians(270));
+    public static final Pose2d SPECIMEN_SCORING_POSITION = new Pose2d(-8,36.4 , Math.toRadians(270));
 
-    public static final Pose2d SPECIMEN_SCORING_POSITION_LEFT = new Pose2d(6.9,36.5 , Math.toRadians(270));
+    public static final Pose2d SPECIMEN_SCORING_POSITION_LEFT = new Pose2d(6.9,36.4 , Math.toRadians(270));
 
     // Sample positions
     public static final Pose2d[] SAMPLE_POSITIONS = {
-            new Pose2d(47.8, 45.9, Math.toRadians(270)),
-            new Pose2d(58.2, 45.6, Math.toRadians(270)),
-            new Pose2d(52.45,39.68, Math.toRadians(310))
+            new Pose2d(47.5, 46.2, Math.toRadians(270)),
+            new Pose2d(56.6, 46.1, Math.toRadians(270)),
+            new Pose2d(54.32,42.34, Math.toRadians(303.84))
     };
 }

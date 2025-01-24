@@ -21,9 +21,9 @@ public class AutonomousLeft extends OpMode {
     private DriveTrainRR driveTrain;
 
     // Example explicit sample positions (replace with actual from FieldConstants or your config)
-    private static final Pose2d SAMPLE_1 = new Pose2d(52, 42, Math.toRadians(270));
-    private static final Pose2d SAMPLE_2 = new Pose2d(60, 42, Math.toRadians(265));
-    private static final Pose2d SAMPLE_3 = new Pose2d(68, 41.8, Math.toRadians(270));
+    private static final Pose2d SAMPLE_1 = FieldConstants.SAMPLE_POSITIONS[0];
+    private static final Pose2d SAMPLE_2 = FieldConstants.SAMPLE_POSITIONS[1];
+    private static final Pose2d SAMPLE_3 = FieldConstants.SAMPLE_POSITIONS[2];
 
     @Override
     public void init() {
@@ -56,9 +56,10 @@ public class AutonomousLeft extends OpMode {
         seqBuilder.waitSeconds(3);
 
         // Optionally close claw or trigger further action
-        seqBuilder.addTemporalMarkerOffset(-1.5, () -> {
+        seqBuilder.addTemporalMarkerOffset(-2.2, () -> {
             robot.onRightTriggerPressed();
-            // Return lift to 0 after scoring
+        });
+        seqBuilder.addTemporalMarkerOffset(-0.5,() -> {
             robot.viperLift.moveToPosition(0);
         });
 

@@ -36,7 +36,7 @@ public class DriveConstants {
      */
     public static double WHEEL_RADIUS = 1.8898; // in
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (motor) speed
-    public static double TRACK_WIDTH = 8.622; // in
+    public static double TRACK_WIDTH = 8.666; // in
 
     /*
      * Feedforward parameters for the drive motors.
@@ -45,7 +45,7 @@ public class DriveConstants {
 //    public static double kV = 1.0 / rpmToVelocity(MAX_RPM);
     public static double kV = 0.01865;
 
-    public static double kA = 0.00077;
+    public static double kA = 0.00021;
     public static double kStatic = 0.09341;
 
     /*

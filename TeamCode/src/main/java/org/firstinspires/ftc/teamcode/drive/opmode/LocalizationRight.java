@@ -45,7 +45,7 @@ public class LocalizationRight extends LinearOpMode {
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         double speed;
-        Pose2d startPose = FieldConstants.LEFT_START;
+        Pose2d startPose = FieldConstants.RIGHT_START;
         dashboard = FtcDashboard.getInstance();
         dashboard.setTelemetryTransmissionInterval(25);
 

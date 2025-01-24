@@ -5,9 +5,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
-/**
- * Arm subsystem for controlling the robot's arm motor.
- */
 public class Arm {
 
     // Motor
@@ -24,121 +21,108 @@ public class Arm {
     private static final double COUNTS_PER_DEGREE = (ENCODER_CPR * GEAR_RATIO) / 360.0;
 
     // Zero position angle (where encoder count is zero)
-    private double zeroPositionAngle = -12.2; // TODO: Calibrate this value
+    private double ZERO_POSITION_ANGLE = -12.2; // Default
 
     // Target angle
-    private double targetAngle = zeroPositionAngle; // Start at zero position by default
+    private double targetAngle = ZERO_POSITION_ANGLE; // Start angle
 
-    // Oscillation parameters
-    private boolean isOscillating = false;
-    private double oscillateAngle1 = 0.0;
-    private double oscillateAngle2 = 0.0;
-    private boolean moveToFirstAngle = true;
+    // Fields for wiggling
+    private boolean wiggleEnabled = false;
+    private double wiggleAngleA = 0.0;
+    private double wiggleAngleB = 0.0;
 
     // Constructor
-    public Arm(HardwareMap hardwareMap, boolean isAutonomous) {
+    public Arm(HardwareMap hardwareMap, Boolean isAutonomous) {
         // Initialize motor
         armMotor = hardwareMap.get(DcMotorEx.class, "Arm");
+
+        // If this is autonomous mode, change zero offset if desired
         if (isAutonomous) {
-            zeroPositionAngle = 157.0;
+            ZERO_POSITION_ANGLE = 157;
         }
+
         // Motor configuration
-        configureMotor();
+        configureMotor(armMotor);
     }
 
-    // Configure the motor settings
-    private void configureMotor() {
-        armMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        armMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        armMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-
-        // Set PIDF coefficients for RUN_TO_POSITION
-        PIDFCoefficients pidfCoefficients = armMotor.getPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION);
-        // Adjust the PIDF coefficients as needed
-        pidfCoefficients.p = 10.0; // Increase P for tighter control
-        pidfCoefficients.i = 0.0;
-        pidfCoefficients.d = 0.0;
-        pidfCoefficients.f = 0.0;
-        armMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, pidfCoefficients);
-    }
-
-    // Initialize the arm encoder
-    public void initializeEncoder(double zeroPos) {
-        zeroPositionAngle = zeroPos;
-        armMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        armMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-    }
-
+    // Example method to override position offset
     public void OverridePosition(){
         ZERO_POSITION_ANGLE = 136.3;
     }
 
-    public void moveToAngleStrong(double angle) {
+    // Motor setup
+    private void configureMotor(DcMotorEx motor) {
+        motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+
+        // Set PIDF coefficients for RUN_TO_POSITION
+        PIDFCoefficients pidfCoefficients = motor.getPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+        // Adjust the PIDF coefficients as needed
+        pidfCoefficients.p = 10.0;
+        pidfCoefficients.i = 0.0;
+        pidfCoefficients.d = 0.0;
+        pidfCoefficients.f = 0.0;
+
+        motor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, pidfCoefficients);
+        // Set mode to RUN_USING_ENCODER (for real-time velocity control if needed)
+        motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+    }
+
+    // Initialize the arm encoder
+    public void initializeEncoder(double zeroPos) {
+        armMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        ZERO_POSITION_ANGLE = zeroPos;
+    }
+
+    // Move to a specific angle (regular)
+    public void moveToAngle(double angle) {
+        // Cancel wiggling if user calls normal move
         // Clamp angle within bounds
         targetAngle = Math.max(ANGLE_MIN, Math.min(angle, ANGLE_MAX));
 
-        // Calculate target encoder counts based on the calibrated zero position
+        // Calculate target encoder counts
         int targetPosition = angleToCounts(targetAngle);
 
         // Set target position
         armMotor.setTargetPosition(targetPosition);
 
-        // Apply power and set mode
+        // Use RUN_TO_POSITION mode
         armMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        armMotor.setPower(1.0); // Use a moderate power for smooth movement
+        // Apply power
+        armMotor.setPower(0.5);
     }
 
-    // Move to a specific angle
-    public void moveToAngle(double angle) {
-        // Cancel oscillation if active
-        if (isOscillating) {
-            isOscillating = false;
-        }
-        // Clamp angle within bounds
-        targetAngle = clampAngle(angle);
-        // Calculate target encoder counts based on the calibrated zero position
+    // Same as moveToAngle but we label it "Strong" if you want distinct usage
+    public void moveToAngleStrong(double angle) {
+        // Cancel wiggling if user calls normal move
+        targetAngle = Math.max(ANGLE_MIN, Math.min(angle, ANGLE_MAX));
         int targetPosition = angleToCounts(targetAngle);
-        // Set target position
+
         armMotor.setTargetPosition(targetPosition);
-        // Apply power and set mode
         armMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        armMotor.setPower(1.0); // Use full power for movement
+        armMotor.setPower(1.0);
     }
 
     // Adjust target angle incrementally
     public void adjustTargetAngle(double increment) {
-        moveToAngle(targetAngle + increment);
-    }
-
-    // Oscillate between two angles
-    public void oscillate(double angle1, double angle2) {
-        // Set oscillation parameters
-        isOscillating = true;
-        oscillateAngle1 = clampAngle(angle1);
-        oscillateAngle2 = clampAngle(angle2);
-        moveToFirstAngle = true;
-        // Start oscillation by moving to the first angle
-        moveToAngle(oscillateAngle1);
-    }
-
-    // Clamp angle within the minimum and maximum limits
-    private double clampAngle(double angle) {
-        return Math.max(ANGLE_MIN, Math.min(angle, ANGLE_MAX));
+        moveToAngleStrong(targetAngle + increment);
     }
 
     // Convert angle to encoder counts
     private int angleToCounts(double angle) {
-        return (int) ((angle - zeroPositionAngle) * COUNTS_PER_DEGREE);
+        return (int) ((angle - ZERO_POSITION_ANGLE) * COUNTS_PER_DEGREE);
     }
 
     // Convert encoder counts to angle
     private double countsToAngle(int counts) {
-        return (counts / COUNTS_PER_DEGREE) + zeroPositionAngle;
+        return (counts / COUNTS_PER_DEGREE) + ZERO_POSITION_ANGLE;
     }
 
-    // Stop the arm
+    // Stop the arm’s motion
     public void stop() {
-        isOscillating = false; // Cancel oscillation if active
+        wiggleEnabled = false;
         armMotor.setPower(0);
         armMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
     }
@@ -148,7 +132,8 @@ public class Arm {
         int currentPosition = armMotor.getCurrentPosition();
         return countsToAngle(currentPosition);
     }
-        // Get target angle
+
+    // Get target angle
     public double getTargetAngle() {
         return targetAngle;
     }
@@ -159,26 +144,48 @@ public class Arm {
         return Math.abs(currentAngle - targetAngle) <= ANGLE_MARGIN;
     }
 
+    // Start oscillating between two angles
+    public void oscillate(double angleA, double angleB) {
+        // Enable wiggle mode
+        wiggleEnabled = true;
+        wiggleAngleA = angleA;
+        wiggleAngleB = angleB;
+        
+
+        // Move to first angle
+        moveToAngleStrong(angleA);
+    }
+
+    // Stop oscillation
+    public void stopWiggle() {
+        wiggleEnabled = false;
+    }
+
     // Update method to be called periodically
     public void update() {
-        if (isOscillating) {
+        // Existing check (keeps motor powered if we’re near target)
+        if(isCloseToTarget()) {
+            armMotor.setPower(1.0);
+        }
+
+        // If we’re wiggling, switch targets when close
+        if (wiggleEnabled ) {
+            // If the current target is A, switch to B; else switch to A
             if (isCloseToTarget()) {
-                // Switch to the other angle
-                if (moveToFirstAngle) {
-                    moveToAngle(oscillateAngle2);
+                if (targetAngle == wiggleAngleA) {
+                    moveToAngleStrong(wiggleAngleB);
                 } else {
-                    moveToAngle(oscillateAngle1);
+                    moveToAngleStrong(wiggleAngleA);
                 }
-                // Toggle the flag
-                moveToFirstAngle = !moveToFirstAngle;
             }
         }
     }
 
-    // Set power to the arm motor (e.g., to make it go limp)
+    // Set power to the arm motor (for manual override, making arm go limp, etc.)
     public void setPower(double power) {
-        isOscillating = false; // Cancel oscillation if active
+        wiggleEnabled = false; // Cancels wiggling if manually set
         armMotor.setPower(power);
+
         if (power == 0.0) {
             armMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
         } else {

@@ -33,7 +33,7 @@ public class LevelTwoAscentState extends BaseState {
     protected void start() {
         // Initial step: move arm down so we can get under the bottom hook
         currentStep = Step.MOVE_ARM_DOWN;
-        
+
         // Viper lift stays at its initial position (assume 0)
         robot.viperLift.moveToPosition(4300);
     }
@@ -55,16 +55,17 @@ public class LevelTwoAscentState extends BaseState {
                 robot.wrist.setAngle(10);
                 currentStep = Step.WAIT_FOR_TRIGGER_1;
             }
-                
-                break;
 
-            case COMPLETED:
-                // Done
-                break;
+            case LOCKING_IN:
+            if (robot.viperLift.isCloseToTarget()) {
+                
+            }
+            break;
+
+
         }
     }
 
-    @Override
     public void onUserInput(UserInput input) {
         if (!isAutonomous) {
             if (input == UserInput.RIGHT_TRIGGER) {
@@ -74,6 +75,12 @@ public class LevelTwoAscentState extends BaseState {
                     robot.arm.oscillate(45, 65);
                     currentStep = Step.LOCKING_IN;
                 }
+                if (currentStep == Step.LOCKING_IN && robot.viperLift.isCloseToTarget()) {
+                    robot.arm.stopWiggle();
+                robot.arm.moveToAngle(65);
+                    currentStep = Step.LOCKING_IN;
+                }
+                
             }
         }
         // In Autonomous mode, no user input is needed
