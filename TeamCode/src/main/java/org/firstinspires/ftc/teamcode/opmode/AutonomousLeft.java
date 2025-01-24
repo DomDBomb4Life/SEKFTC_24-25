@@ -47,6 +47,8 @@ public class AutonomousLeft extends OpMode {
         seqBuilder.waitSeconds(3);
         seqBuilder.addTemporalMarkerOffset(-2.0,() -> {
             robot.onRightTriggerPressed();
+        });
+        seqBuilder.addTemporalMarkerOffset(-1.0,() -> {
             robot.viperLift.moveToPosition(0);
         });
 
