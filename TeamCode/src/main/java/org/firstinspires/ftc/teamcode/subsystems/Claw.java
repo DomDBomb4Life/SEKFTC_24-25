@@ -13,8 +13,8 @@ public class Claw {
     private static final double CLAW_MAX_POSITION = 1.0;
 
     // Angles for the claw (in degrees)
-    private static final double closed = -35;        // Full close
-    private static final double open = 30;           // Open position
+    private static final double closed = -10;        // Full close
+    private static final double open = 25;           // Open position
     private static final double mediumClosed = 13;  // Added: Medium close position
 
     private static final double POSITION_THRESHOLD = 0.02;
