@@ -5,33 +5,20 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 /**
- * The Winch subsystem, responsible for controlling a motor that reels a cable in or out
- * to keep the robot level during advanced ascents. This updated version uses geometry/trigonometry
- * in DETACHED mode to compute a spool position/power as the ViperLift changes.
+ * The Winch subsystem, responsible for controlling a motor that reels a cable
+ * in or out to maintain appropriate slack or tension.
  */
 public class Winch {
 
+    // Winch operating mode
     public enum Mode {
-        /**
-         * The winch hook is still attached to the robot's arm.
-         * We keep minimal tension (low power) to avoid rope slack, but not enough to strain.
-         */
-        ATTACHED,
-
-        /**
-         * The hook is detached from the arm and latched onto a rung.
-         * We must compute spool extension or power using trig based on the ViperLift’s position.
-         */
-        DETACHED,
-
-        /**
-         * A high-power override mode (final big pull). We reel in the rope at max power.
-         */
-        OVERRIDE
+        ATTACHED,   // minimal tension
+        DETACHED,   // automatically adjusts spool for Slack
+        OVERRIDE    // user manually controls spool power
     }
 
     private DcMotor winchMotor;
-    private Mode currentMode = Mode.ATTACHED;
+    private Mode currentMode = Mode.DETACHED;
 
     // Minimal tension power in ATTACHED mode
     private static final double LOW_TENSION_POWER = 0.05;
@@ -41,124 +28,92 @@ public class Winch {
 
     // If we want to operate in a run-to-position style, we can store target positions
     private int targetPosition = 0;
-    private boolean runToPosition = false;
+    public boolean runToPosition = true;
 
     // -----------------------------
-    // Geometry/Trigonometry Fields
+    // Slack-based constants
     // -----------------------------
-    // Hypothetical geometry constants: treat the robot as a rectangle with:
-    //   - ViperLift extension on the "left edge."
-    //   - The Winch at the "bottom-right corner."
-    // We do an example function that calculates spool length from the lift extension.
-    private double baseRobotHeight = 300.0;   // in ticks or mm (example)
-    private double baseRobotWidth  = 200.0;   // in ticks or mm (example)
-    private double spoolTicksPerMM = 2.0;     // how many winch ticks per mm of rope
+    // We want:   ViperLift=0     => Winch=704
+    //            ViperLift=3993  => Winch=8528
+    private static final int VIPER_MIN = 0;
+    private static final int VIPER_MAX = 3993;
+    private static final int WINCH_MIN = 704;
+    private static final int WINCH_MAX = 8528;
+
     /**
-     * If the ViperLift extends from 0 to 1000 (arbitrary ticks),
-     * we compute diagonal as sqrt( (baseRobotWidth)^2 + (baseRobotHeight + extension)^2 ).
-     * This is purely demonstration logic; you will need to tune actual geometry.
+     * Constructor
      */
-
     public Winch(HardwareMap hardwareMap) {
         // Initialize the motor
         winchMotor = hardwareMap.get(DcMotor.class, "WinchMotor");
         winchMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        winchMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         winchMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        winchMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
     }
 
     /**
-     * Main update method: must be called in the robot loop.
-     * In DETACHED mode, we do geometry-based spool adjustments.
-     * In ATTACHED or OVERRIDE, simpler logic is used.
+     * Main update method: must be called repeatedly (e.g. in TeleOp loop).
+     * Depending on the Mode, we either set minimal tension, keep Slack automatically,
+     * or let the user override with manual power.
      *
-     * @param viperPosition the current extension of the ViperLift in ticks (0..~11000).
+     * @param viperPosition the current extension of the ViperLift in ticks (0..~3993).
      */
     public void update(int viperPosition) {
-        // If we are in runToPosition mode, that typically overrides normal operation:
-        if (runToPosition) {
-            // If you want to do partial logic or check motor status, do so here
-            return;
-        }
+        // If we are in runToPosition mode, that overrides normal operation:
 
-        switch (currentMode) {
-            case ATTACHED:
-                // Keep rope taut with minimal power
-                winchMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                winchMotor.setPower(LOW_TENSION_POWER);
-                break;
-
-            case DETACHED:
-                // Use geometry/trig to find how much spool needed
-                winchMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                int spoolTarget = computeTrigonometricSpoolPosition(viperPosition);
-                winchMotor.setTargetPosition(spoolTarget);
-
-                // Use some moderate power for leveling
-                // If it's too low, you won't keep level; if too high, it might strain
-                winchMotor.setPower(0.6);
-                break;
-
-            case OVERRIDE:
-                // Final big pull: max power
-                winchMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                winchMotor.setPower(MAX_POWER);
-                break;
+        if(runToPosition == true) {
+            targetPosition = computeSlackSpoolPosition(viperPosition);
+            winchMotor.setTargetPosition(targetPosition);
+            winchMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            // Use a moderate power to move spool
+            winchMotor.setPower(1.0);
+        }else{
+            winchMotor.setTargetPosition(targetPosition);
+            winchMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            // Use a moderate power to move spool
+            winchMotor.setPower(1.0);
         }
     }
-
-    /**
-     * Example geometry-based formula:
-     *   - Let "vertical" = (baseRobotHeight + extension).
-     *   - Let "horizontal" = baseRobotWidth.
-     *   - Hypotenuse = sqrt(vertical^2 + horizontal^2).
-     * Convert that hypotenuse to spool ticks using spoolTicksPerMM.
-     */
-    private int computeTrigonometricSpoolPosition(int viperLiftTicks) {
-        // Convert viperLiftTicks to "extension mm" (placeholder)
-        double extensionMM = viperLiftTicks / 10.0; // assume 1 tick = 0.1 mm
-        double vertical = baseRobotHeight + extensionMM;
-        double horizontal = baseRobotWidth;
-
-        double diagonalMM = Math.sqrt(vertical * vertical + horizontal * horizontal);
-
-        // Convert diagonal mm to spool ticks
-        double spoolTicks = diagonalMM * spoolTicksPerMM;
-
-        return (int) Math.round(spoolTicks);
+    public void adjustTargetAngle(int increment) {
+        targetPosition += increment;
     }
 
     /**
-     * Manual override for user input: spool power.
-     * Immediately sets Mode to OVERRIDE so geometry-based logic is suspended.
+     * Given the ViperLift ticks, linearly map to the needed spool position
+     * to maintain slack:
+     *
+     *   ViperLift=0    => Winch=704
+     *   ViperLift=3993 => Winch=8528
+     *
+     * We'll clamp the lift range just in case.
      */
-    public void setPower(double power) {
-        currentMode = Mode.OVERRIDE;
+    private int computeSlackSpoolPosition(int viperLiftTicks) {
+        // 1) Clamp
+        int clamped = Math.max(VIPER_MIN, Math.min(VIPER_MAX, viperLiftTicks));
+
+        // 2) Linear interpolation from [VIPER_MIN..VIPER_MAX] => [WINCH_MIN..WINCH_MAX]
+        double slope = (double)(WINCH_MAX - WINCH_MIN) / (double)(VIPER_MAX - VIPER_MIN);
+        double spool = WINCH_MIN + slope * (clamped - VIPER_MIN);
+
+        // Round to nearest integer
+        return (int)Math.round(spool);
+    }
+
+    public void manualPower(double power){
+        if(runToPosition == false) {
+            winchMotor.setPower(power);
+        }
+
+    }
+
+    public void manual(){
         winchMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        winchMotor.setPower(power);
     }
 
-    /**
-     * Run to a user-specified spool position (in encoder ticks).
-     * This method overrides normal "update" logic until stopRunToPosition() is called.
-     */
-    public void setTargetPosition(int position) {
-        runToPosition = true;
-        targetPosition = position;
-        winchMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        winchMotor.setTargetPosition(position);
-        winchMotor.setPower(MAX_POWER);
-    }
 
-    /**
-     * Cancel runToPosition mode, revert to normal "Mode" logic in update().
-     */
-    public void stopRunToPosition() {
-        runToPosition = false;
-        winchMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        winchMotor.setPower(0.0);
-    }
+
+
 
     // ----------- Mode Setters ----------
     public void setModeAttached() {

@@ -54,6 +54,7 @@ public class Robot {
     public void update() {
         stateController.update();
         arm.update();
+        winch.update(viperLift.targetPosition);
     }
 
     public void setState(State newState) {

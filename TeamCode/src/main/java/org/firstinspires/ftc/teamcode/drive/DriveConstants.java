@@ -63,7 +63,7 @@ public class DriveConstants {
      * Drive constraints for trajectory generation.
      */
     public static double MAX_VEL = rpmToVelocity(MAX_RPM);
-    public static double MAX_ACCEL = 20;
+    public static double MAX_ACCEL = 25;
     public static double MAX_ANG_VEL = Math.toRadians(180);
     public static double MAX_ANG_ACCEL = Math.toRadians(180);
 

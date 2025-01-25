@@ -22,8 +22,8 @@ public class HomeState extends BaseState {
     private static final double PICKUP_ARM_ANGLE = -16.0;
     private static final double PICKUP_WRIST_ANGLE = 125.0;
     private long stepStartTime;
-    private static final long WAIT_DURATION_MS = 100;
-    private static final long ARM_WAIT_DURATION_MS = 750;
+    private long WAIT_DURATION_MS = 100;
+    private static final long ARM_WAIT_DURATION_MS = 500;
 
 
     private boolean useMediumClose = false; // Added: to track which close method to use
@@ -38,6 +38,9 @@ public class HomeState extends BaseState {
         robot.arm.moveToAngle(0);
         robot.wrist.setAngle(43);
         robot.claw.open();
+        if (isAutonomous){
+            WAIT_DURATION_MS = 300;
+        }
     }
 
     @Override
@@ -125,9 +128,16 @@ public class HomeState extends BaseState {
         // If left trigger pressed at WAIT_FOR_INPUT: medium close flow
         if (currentStep == Step.WAIT_FOR_INPUT) {
             if (input == UserInput.RIGHT_TRIGGER) {
-                useMediumClose = false;
-                currentStep = Step.OPEN_CLAW_BEFORE_PICKUP;
-                robot.claw.open();
+                if (isAutonomous){
+                    useMediumClose = false;
+                    currentStep = Step.MOVE_WRIST_TO_PICKUP_POSITION;
+                    robot.claw.open();
+                }
+                else {
+                    useMediumClose = false;
+                    currentStep = Step.OPEN_CLAW_BEFORE_PICKUP;
+                    robot.claw.open();
+                }
             } else if (input == UserInput.PRIMARY_BUTTON) {
                 useMediumClose = true;
                 currentStep = Step.OPEN_CLAW_BEFORE_PICKUP;

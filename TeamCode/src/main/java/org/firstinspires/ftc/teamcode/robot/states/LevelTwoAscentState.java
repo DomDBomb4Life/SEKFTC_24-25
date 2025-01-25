@@ -77,7 +77,7 @@ public class LevelTwoAscentState extends BaseState {
                 }
                 if (currentStep == Step.LOCKING_IN && robot.viperLift.isCloseToTarget()) {
                     robot.arm.stopWiggle();
-                robot.arm.moveToAngle(65);
+                    robot.arm.moveToAngle(65);
                     currentStep = Step.LOCKING_IN;
                 }
                 

@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
+import static org.firstinspires.ftc.teamcode.drive.DriveTrainRR.getAccelerationConstraint;
+
+import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationConstraint;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -8,6 +11,8 @@ import org.firstinspires.ftc.teamcode.drive.DriveTrainRR;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationConstraint;
+
 
 import org.firstinspires.ftc.teamcode.util.FieldConstants;
 
@@ -19,7 +24,6 @@ import org.firstinspires.ftc.teamcode.util.FieldConstants;
 public class AutonomousLeft extends OpMode {
     private Robot robot;
     private DriveTrainRR driveTrain;
-
     // Example explicit sample positions (replace with actual from FieldConstants or your config)
     private static final Pose2d SAMPLE_1 = FieldConstants.SAMPLE_POSITIONS[0];
     private static final Pose2d SAMPLE_2 = FieldConstants.SAMPLE_POSITIONS[1];
@@ -62,6 +66,9 @@ public class AutonomousLeft extends OpMode {
         seqBuilder.addTemporalMarkerOffset(-0.5,() -> {
             robot.viperLift.moveToPosition(0);
         });
+        seqBuilder.addTemporalMarkerOffset(0, () -> {
+            seqBuilder.setAccelConstraint(DriveTrainRR.getAccelerationConstraint(10.0));
+        });
 
         // 2) SAMPLE #1
         seqBuilder.lineToLinearHeading(SAMPLE_1);
@@ -69,26 +76,30 @@ public class AutonomousLeft extends OpMode {
         seqBuilder.addTemporalMarkerOffset(-1.2, () -> {
             robot.setState(robot.homeState);
         });
-        seqBuilder.waitSeconds(0.5);
-        seqBuilder.addTemporalMarkerOffset(0.0, () -> {
+        seqBuilder.addTemporalMarkerOffset(-0.25, () -> {
             // E.g., press right trigger to close claw
             robot.onRightTriggerPressed();
         });
-        seqBuilder.waitSeconds(1.0);
+        seqBuilder.waitSeconds(1.2);
 
         // Return to net
         seqBuilder.lineToLinearHeading(FieldConstants.NET_POSITION);
         seqBuilder.addTemporalMarkerOffset(-1.2, () -> {
             robot.setState(robot.scoringBasketState);
         });
-        seqBuilder.waitSeconds(2.0);
+        seqBuilder.waitSeconds(2.5);
+
 
         // 3) SAMPLE #2
-        seqBuilder.lineToLinearHeading(SAMPLE_2);
-        seqBuilder.addTemporalMarkerOffset(-1.2, () -> {
-            robot.setState(robot.homeState);
+        seqBuilder.addTemporalMarkerOffset(0.0, () -> {
+            robot.viperLift.moveToPosition(442);
         });
-        seqBuilder.waitSeconds(0.5);
+        seqBuilder.lineToLinearHeading(SAMPLE_2);
+        seqBuilder.addTemporalMarkerOffset(0.0, () -> {
+            robot.setState(robot.homeState);
+            robot.viperLift.moveToPosition(0);
+        });
+        seqBuilder.waitSeconds(1.0);
         seqBuilder.addTemporalMarkerOffset(0.0, () -> {
             robot.onRightTriggerPressed();
         });
@@ -96,40 +107,55 @@ public class AutonomousLeft extends OpMode {
 
         // Return to net
         seqBuilder.lineToLinearHeading(FieldConstants.NET_POSITION);
-        seqBuilder.addTemporalMarkerOffset(-1.0, () -> {
+        seqBuilder.addTemporalMarkerOffset(-1.2, () -> {
             robot.setState(robot.scoringBasketState);
         });
-        seqBuilder.waitSeconds(2.0);
+        seqBuilder.waitSeconds(2.5);
 
         // 4) SAMPLE #3
+        seqBuilder.addTemporalMarkerOffset(0.0, () -> {
+            robot.viperLift.moveToPosition(442);
+        });
         seqBuilder.lineToLinearHeading(SAMPLE_3);
-        seqBuilder.addTemporalMarkerOffset(-1.2, () -> {
+        seqBuilder.addTemporalMarkerOffset(0.0, () -> {
             robot.setState(robot.homeState);
+            robot.viperLift.moveToPosition(0);
         });
         seqBuilder.waitSeconds(0.5);
+        seqBuilder.turn(Math.toRadians(16));
+        seqBuilder.waitSeconds(0.5);
+
+
         seqBuilder.addTemporalMarkerOffset(0.0, () -> {
             robot.onRightTriggerPressed();
         });
         seqBuilder.waitSeconds(1.0);
 
-        // Return to net again
+        // Return to net
         seqBuilder.lineToLinearHeading(FieldConstants.NET_POSITION);
-        seqBuilder.addTemporalMarkerOffset(-1.0, () -> {
+        seqBuilder.addTemporalMarkerOffset(-1.2, () -> {
             robot.setState(robot.scoringBasketState);
         });
-        seqBuilder.waitSeconds(2.0);
+        seqBuilder.waitSeconds(2.5);
 
-        // 5) Move to ascent zone
-        seqBuilder.addTemporalMarkerOffset(-0.8, () -> {
-            robot.setState(robot.levelOneAscentState);
-        });
-        seqBuilder.lineToLinearHeading(FieldConstants.ASCENT_ZONE_POSITION);
 
-        // Possibly adjust arm/wrist
-        seqBuilder.addTemporalMarkerOffset(0.2, () -> {
-            robot.arm.moveToAngleStrong(75);
-            robot.wrist.setAngle(90);
+
+        seqBuilder.addTemporalMarkerOffset(0, () -> {
+            seqBuilder.resetAccelConstraint();
         });
+
+
+         // 5) Move to ascent zone
+         seqBuilder.addTemporalMarkerOffset(-0.8, () -> {
+             robot.setState(robot.levelOneAscentState);
+         });
+         seqBuilder.lineToLinearHeading(FieldConstants.ASCENT_ZONE_POSITION);
+
+         // Possibly adjust arm/wrist
+         seqBuilder.addTemporalMarkerOffset(0.2, () -> {
+             robot.arm.moveToAngleStrong(75);
+             robot.wrist.setAngle(90);
+         });
 
         // Build and start
         TrajectorySequence sequence = seqBuilder.build();

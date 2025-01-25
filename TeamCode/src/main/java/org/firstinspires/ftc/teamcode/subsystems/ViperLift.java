@@ -16,7 +16,7 @@ public class ViperLift {
     private static final int POSITION_MARGIN = 50;
 
     // Current target
-    private int targetPosition = POSITION_MIN;
+    public int targetPosition = POSITION_MIN;
     private int encoderOffset = 0;
 
     // Optional synergy with the Winch
