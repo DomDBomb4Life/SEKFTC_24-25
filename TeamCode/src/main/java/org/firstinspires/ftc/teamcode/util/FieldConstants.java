@@ -29,11 +29,11 @@ public class FieldConstants {
     
     public static final Pose2d SPECIMEN_SCORING_POSITION = new Pose2d(-8,36.4 , Math.toRadians(270));
 
-    public static final Pose2d SPECIMEN_SCORING_POSITION_LEFT = new Pose2d(6.9,36.4 , Math.toRadians(270));
+    public static final Pose2d SPECIMEN_SCORING_POSITION_LEFT = new Pose2d(6.9,35.8 , Math.toRadians(270));
     // Sample positions
     public static final Pose2d[] SAMPLE_POSITIONS = {
             new Pose2d(47.8, 45.9, Math.toRadians(270)),
-            new Pose2d(56.8, 44.9, Math.toRadians(270)),
+            new Pose2d(56.8, 45.9, Math.toRadians(270)),
             new Pose2d(51.057, 38.635, Math.toRadians(295))
     };
 }

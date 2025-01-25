@@ -36,13 +36,15 @@ public class AutonomousLeft extends OpMode {
 
         // Example of pre-positioning the arm/wrist
         robot.arm.moveToAngle(157);
-        robot.wrist.setAngle(10);
+        robot.wrist.setAngle(25);
+        robot.claw.close();
 
         // Set initial pose for LEFT start
         driveTrain.setPoseEstimate(FieldConstants.LEFT_START);
 
         telemetry.addLine("Initialized Left Auto (Expanded Version, No For-Loop)");
-    }
+        telemetry.addData("Claw Target", robot.claw.getTargetAngle());
+        telemetry.addData("Claw Servo Position", robot.claw.getPosition());    }
 
     @Override
     public void start() {
@@ -116,27 +118,27 @@ public class AutonomousLeft extends OpMode {
         seqBuilder.addTemporalMarkerOffset(0.0, () -> {
             robot.viperLift.moveToPosition(442);
         });
-        seqBuilder.lineToLinearHeading(SAMPLE_3);
-        seqBuilder.addTemporalMarkerOffset(0.0, () -> {
-            robot.setState(robot.homeState);
-            robot.viperLift.moveToPosition(0);
-        });
-        seqBuilder.waitSeconds(0.5);
-        seqBuilder.turn(Math.toRadians(16));
-        seqBuilder.waitSeconds(0.5);
-
-
-        seqBuilder.addTemporalMarkerOffset(0.0, () -> {
-            robot.onRightTriggerPressed();
-        });
-        seqBuilder.waitSeconds(1.0);
-
-        // Return to net
-        seqBuilder.lineToLinearHeading(FieldConstants.NET_POSITION);
-        seqBuilder.addTemporalMarkerOffset(-1.2, () -> {
-            robot.setState(robot.scoringBasketState);
-        });
-        seqBuilder.waitSeconds(2.5);
+//        seqBuilder.lineToLinearHeading(SAMPLE_3);
+//        seqBuilder.addTemporalMarkerOffset(0.0, () -> {
+//            robot.setState(robot.homeState);
+//            robot.viperLift.moveToPosition(0);
+//        });
+//        seqBuilder.waitSeconds(0.5);
+//        seqBuilder.turn(Math.toRadians(16));
+//        seqBuilder.waitSeconds(0.5);
+//
+//
+//        seqBuilder.addTemporalMarkerOffset(0.0, () -> {
+//            robot.onRightTriggerPressed();
+//        });
+//        seqBuilder.waitSeconds(1.0);
+//
+//        // Return to net
+//        seqBuilder.lineToLinearHeading(FieldConstants.NET_POSITION);
+//        seqBuilder.addTemporalMarkerOffset(-1.2, () -> {
+//            robot.setState(robot.scoringBasketState);
+//        });
+//        seqBuilder.waitSeconds(2.5);
 
 
 
@@ -144,16 +146,19 @@ public class AutonomousLeft extends OpMode {
             seqBuilder.resetAccelConstraint();
         });
 
-
+        seqBuilder.addTemporalMarkerOffset(0.0, () -> {
+            robot.viperLift.moveToPosition(0);
+        });
          // 5) Move to ascent zone
          seqBuilder.addTemporalMarkerOffset(-0.8, () -> {
              robot.setState(robot.levelOneAscentState);
          });
+
          seqBuilder.lineToLinearHeading(FieldConstants.ASCENT_ZONE_POSITION);
 
          // Possibly adjust arm/wrist
          seqBuilder.addTemporalMarkerOffset(0.2, () -> {
-             robot.arm.moveToAngleStrong(75);
+             robot.arm.moveToAngle(75);
              robot.wrist.setAngle(90);
          });
 

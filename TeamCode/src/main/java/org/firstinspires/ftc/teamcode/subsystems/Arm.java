@@ -68,7 +68,7 @@ public class Arm {
         motor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, pidfCoefficients);
         // Set mode to RUN_USING_ENCODER (for real-time velocity control if needed)
         motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        motor.setDirection(DcMotor.Direction.REVERSE);
+        // motor.setDirection(DcMotor.Direction.REVERSE);
 
     }
 
