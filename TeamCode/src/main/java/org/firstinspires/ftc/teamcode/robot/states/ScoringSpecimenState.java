@@ -56,7 +56,7 @@ public class ScoringSpecimenState extends BaseState {
                 break;
 
             case MOVE_VIPER_LIFT_UP_TO_HOOK:
-                robot.viperLift.moveToPosition(1360);
+                robot.viperLift.moveToPosition(1560);
 //                robot.arm.moveToAngle(105);
                 currentStep = Step.OPEN_CLAW;
                 break;

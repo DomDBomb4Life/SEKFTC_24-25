@@ -39,7 +39,7 @@ public class Arm {
 
         // If this is autonomous mode, change zero offset if desired
         if (isAutonomous) {
-            ZERO_POSITION_ANGLE = 157;
+            ZERO_POSITION_ANGLE = 139;
         }
 
         // Motor configuration

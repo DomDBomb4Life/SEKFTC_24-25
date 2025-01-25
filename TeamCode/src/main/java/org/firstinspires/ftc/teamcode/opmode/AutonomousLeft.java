@@ -35,8 +35,8 @@ public class AutonomousLeft extends OpMode {
         driveTrain = new DriveTrainRR(hardwareMap);
 
         // Example of pre-positioning the arm/wrist
-        robot.arm.moveToAngle(157);
-        robot.wrist.setAngle(25);
+        robot.arm.moveToAngle(139);
+        robot.wrist.setAngle(18);
         robot.claw.close();
 
         // Set initial pose for LEFT start
